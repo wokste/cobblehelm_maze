@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) 
         .add_startup_system(setup_scene)
         .add_startup_system(setup_player)
         .add_system(player::player_move)
@@ -16,11 +16,14 @@ fn main() {
 fn setup_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ambient_light: ResMut<AmbientLight>,
 ) {
     ambient_light.color = Color::WHITE;
     ambient_light.brightness = 0.5;
+
+    let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures.png");
 
     // plane
     commands.spawn(PbrBundle {
@@ -35,7 +38,13 @@ fn setup_scene(
     // The actual map
     commands.spawn(PbrBundle {
         mesh: meshes.add( map::map_to_mesh(&map)),
-        material: materials.add(Color::WHITE.into()),
+        material: materials.add(StandardMaterial {
+            base_color_texture: Some(texture_handle.clone()),
+            alpha_mode: AlphaMode::Opaque,
+            unlit: true,
+            ..default()
+            //Color::WHITE.into()
+        }),
         ..default()
     });
 }

@@ -159,7 +159,7 @@ impl MeshBuilder {
         let id2 = self.add_vertex(p + dir0 + dir1, normal, uv + uv0 + uv1);
         let id3 = self.add_vertex(p + dir1, normal, uv + uv1);
 
-        self.indices.extend_from_slice(&[id0, id1, id2, id0, id2, id3]);
+        self.indices.extend_from_slice(&[id0, id2, id1, id0, id3, id2]);
     }
 }
 
@@ -173,16 +173,16 @@ pub fn map_to_mesh(map : &Map) -> Mesh {
                 let p0 = Vec3::new(x as f32, 0.0, y as f32);
 
                 if !map.is_solid(x, y - 1) {
-                    builder.add_rect(p0, Vec3::Y, Vec3::X, tile.get_tex_id());
+                    builder.add_rect(p0, Vec3::X,Vec3::Y, tile.get_tex_id());
                 }
                 if !map.is_solid(x + 1, y) {
-                    builder.add_rect(p0 + Vec3::X, Vec3::Y, Vec3::Z, tile.get_tex_id());
+                    builder.add_rect(p0 + Vec3::X, Vec3::Z, Vec3::Y,tile.get_tex_id());
                 }
                 if !map.is_solid(x, y + 1) {
-                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::Y, Vec3::NEG_X, tile.get_tex_id());
+                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_X, Vec3::Y,tile.get_tex_id());
                 }
                 if !map.is_solid(x- 1, y) {
-                    builder.add_rect(p0 + Vec3::Z, Vec3::Y, Vec3::NEG_Z, tile.get_tex_id());
+                    builder.add_rect(p0 + Vec3::Z,  Vec3::NEG_Z, Vec3::Y,tile.get_tex_id());
                 }
             }
         }
