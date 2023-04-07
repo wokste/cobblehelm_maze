@@ -1,4 +1,6 @@
 mod map;
+mod mapgen;
+mod modelgen;
 mod player;
 
 use bevy::prelude::*;
@@ -25,11 +27,11 @@ fn setup_scene(
 
     let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures.png");
 
-    let map = map::make_map();
+    let map = mapgen::make_map();
 
     // The actual map
     commands.spawn(PbrBundle {
-        mesh: meshes.add( map::map_to_mesh(&map)),
+        mesh: meshes.add( modelgen::map_to_mesh(&map)),
         material: materials.add(StandardMaterial {
             base_color_texture: Some(texture_handle.clone()),
             alpha_mode: AlphaMode::Opaque,
