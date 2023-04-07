@@ -94,10 +94,14 @@ pub fn make_map() -> Map {
 
     add_room(&mut map, Tile::Floor1, Tile::Wall4, Coords::new(17, 17), Coords::new(27, 27));
 
+    add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(12, 20), Coords::new(14, 24));
+
     // Add corridors
     add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(7, 7), Coords::new(7, 22));
     add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(7, 22), Coords::new(22, 22));
-    add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(22, 7), Coords::new(22, 22));
+    add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(20, 7), Coords::new(20, 20));
+    add_room(&mut map, Tile::Floor1, Tile::Wall1, Coords::new(7, 7), Coords::new(22, 7));
+
 
     map
 }
@@ -105,7 +109,9 @@ pub fn make_map() -> Map {
 fn add_room(map : &mut Map, floor : Tile, wall : Tile, p0 : Coords, p1 : Coords) {
     for y in p0.y ..= p1.y {
         for x in p0.x ..= p1.x {
-            map.set_tile(x, y,floor);
+            if map.tile(x,y).is_solid() {
+                map.set_tile(x, y,floor);
+            }
         }   
     }
 
@@ -169,9 +175,11 @@ pub fn map_to_mesh(map : &Map) -> Mesh {
     for y in 0 .. map.tiles.rows() as i32 {
         for x in 0 .. map.tiles.cols() as i32 {
             let tile = map.tile(x,y);
-            if tile.is_solid() && !tile.is_void() {
-                let p0 = Vec3::new(x as f32, 0.0, y as f32);
+            let p0 = Vec3::new(x as f32, 0.0, y as f32);
+            if tile.is_void() {
 
+            } else if tile.is_solid() {
+                // Wall tiles
                 if !map.is_solid(x, y - 1) {
                     builder.add_rect(p0, Vec3::X,Vec3::Y, tile.get_tex_id());
                 }
@@ -184,6 +192,9 @@ pub fn map_to_mesh(map : &Map) -> Mesh {
                 if !map.is_solid(x- 1, y) {
                     builder.add_rect(p0 + Vec3::Z,  Vec3::NEG_Z, Vec3::Y,tile.get_tex_id());
                 }
+            } else {
+                // Floor tiles
+                builder.add_rect(p0, Vec3::X, Vec3::Z, tile.get_tex_id());
             }
         }
     }

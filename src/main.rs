@@ -25,14 +25,6 @@ fn setup_scene(
 
     let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures.png");
 
-    // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(32.0).into()),
-        material: materials.add(Color::rgb(0., 0., 0.).into()),
-        transform : Transform::from_xyz(16.0, 0.0, 16.0),
-        ..default()
-    });
-
     let map = map::make_map();
 
     // The actual map
