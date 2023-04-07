@@ -1,4 +1,5 @@
 use bevy::prelude::IVec2;
+use derive_more::{Add, Sub};
 use grid::*;
 
 pub struct Map {
@@ -6,31 +7,55 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn is_solid(&self, x : i32, y : i32) -> bool {
-        if x >= 0 && x < self.tiles.cols() as i32 && y >= 0 && y < self.tiles.rows() as i32 {
-            self.tiles[x as usize][y as usize].is_solid()
+    pub fn z_max(&self) -> i32 {self.tiles.rows() as i32}
+    pub fn x_max(&self) -> i32 {self.tiles.cols() as i32}
+
+    pub fn is_solid(&self, x : i32, z : i32) -> bool {
+        if x >= 0 && x < self.x_max() as i32 && z >= 0 && z < self.z_max() as i32 {
+            self.tiles[x as usize][z as usize].is_solid()
         } else {
             true
         }
     }
 
-    pub fn tile(&self, x : i32, y : i32) -> Tile {
-        self.tiles[x as usize][y as usize]
+    pub fn tile(&self, x : i32, z : i32) -> Tile {
+        self.tiles[x as usize][z as usize]
     }
 
-    pub fn set_tile(&mut self, x : i32, y : i32, tile : Tile) {
-        self.tiles[x as usize][y as usize] = tile
+    pub fn set_tile(&mut self, x : i32, z : i32, tile : Tile) {
+        self.tiles[x as usize][z as usize] = tile
+    }
+
+    pub fn set_tile_if<F>(&mut self, x : i32, z : i32, tile : Tile, f : F) where F: Fn(Tile) -> bool{
+        let old_tile = self.tiles[x as usize][z as usize];
+
+        if f(old_tile) {
+            self.tiles[x as usize][z as usize] = tile
+        }
+    }
+
+    pub fn random_square(&self) -> Coords {
+        for _ in 0 .. 1048576 {
+            let x = fastrand::i32(1 .. self.x_max() - 1);
+            let z = fastrand::i32(1 .. self.z_max() - 1);
+
+            if !self.tile(x,z).is_solid() {
+                return Coords::new(x as i32, z as i32);
+            }
+        }
+        panic!("Could not find a solid tile");
     }
 }
 
+#[derive(PartialEq, Eq, Add, Sub, Copy, Clone, Debug)]
 pub struct Coords {
     pub x : i32,
-    pub y : i32,
+    pub z : i32,
 }
 
 impl Coords {
-    pub fn new(x : i32,y : i32) -> Self {
-        Self {x,y}
+    pub fn new(x : i32, z : i32) -> Self {
+        Self {x,z}
     }
 }
 
