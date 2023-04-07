@@ -17,38 +17,25 @@ fn setup_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut ambient_light: ResMut<AmbientLight>,
 ) {
+    ambient_light.color = Color::WHITE;
+    ambient_light.brightness = 0.5;
+
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+        mesh: meshes.add(shape::Plane::from_size(32.0).into()),
+        material: materials.add(Color::rgb(0., 0., 0.).into()),
+        transform : Transform::from_xyz(16.0, 0.0, 16.0),
         ..default()
     });
 
     let map = map::make_map();
 
-    for y in 0 .. map.tiles.rows() {
-        for x in 0 .. map.tiles.cols() {
-            let tile = map.tiles[x][y];
-            if tile.is_solid() && !tile.is_void() {
-                // cube
-                commands.spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                    material: materials.add(tile.to_color().into()),
-                    transform: Transform::from_xyz(x as f32, 0.5, y as f32),
-                    ..default()
-                });
-            }
-        }
-    }
-    // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+    // The actual map
+    commands.spawn(PbrBundle {
+        mesh: meshes.add( map::map_to_mesh(&map)),
+        material: materials.add(Color::WHITE.into()),
         ..default()
     });
 }
@@ -62,7 +49,7 @@ fn setup_player(
 ) {
     // camera
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-2.0, 0.7, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(7.0, 0.7, 22.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     }).insert(player::PlayerBundle::default());
 }
