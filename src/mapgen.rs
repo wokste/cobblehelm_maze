@@ -1,20 +1,18 @@
 use grid::Grid;
 use crate::map::*;
 
-const FLOORS : [Tile;2] = [Tile::Floor1, Tile::Floor2];
-const WALLS : [Tile;4] = [Tile::Wall1, Tile::Wall2, Tile::Wall3, Tile::Wall4];
 
 pub fn make_map() -> Map {
     let mut map = Map{
         tiles : Grid::new(64,64),
     };
 
+    let styles = [(Tile::Wall1,Tile::Floor2), (Tile::Wall3, Tile::Floor1), (Tile::Wall4, Tile::Floor1)];
+
     let mut centers = vec![];
 
     for _ in 0 .. 100 {
-        let floor = FLOORS[fastrand::usize(0..FLOORS.len())];
-        let wall = WALLS[fastrand::usize(0..WALLS.len())];
-
+        let (wall, floor) = styles[fastrand::usize(0..styles.len())];
         let room = make_room(floor, wall, fastrand::usize(8..=8), fastrand::usize(8..=8));
 
         let offset = Coords::new(

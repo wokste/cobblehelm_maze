@@ -8,14 +8,13 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) 
-        .add_startup_system(setup_scene)
-        .add_startup_system(setup_player)
+        .add_startup_system(setup)
         .add_system(player::player_move)
         .run();
 }
 
 /// set up a simple 3D scene
-fn setup_scene(
+fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     asset_server: Res<AssetServer>,
@@ -41,18 +40,11 @@ fn setup_scene(
         }),
         ..default()
     });
-}
 
-
-/// set up a simple 3D scene
-fn setup_player(
-    mut commands: Commands,
-    //mut meshes: ResMut<Assets<Mesh>>,
-    //mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // camera
+    // Player
+    let player_pos = map.random_square();
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(7.0, 0.7, 22.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(player_pos.x as f32 + 0.5, 0.7, player_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     }).insert(player::PlayerBundle::default());
 }
