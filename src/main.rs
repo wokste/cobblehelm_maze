@@ -1,3 +1,4 @@
+mod map;
 mod player;
 
 use bevy::prelude::*;
@@ -23,13 +24,23 @@ fn setup_scene(
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
     });
-    // cube
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    });
+
+    let map = map::make_map();
+
+    for y in 0 .. map.tiles.rows() {
+        for x in 0 .. map.tiles.cols() {
+            let tile = map.tiles[x][y];
+            if tile.is_solid() && !tile.is_void() {
+                // cube
+                commands.spawn(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    material: materials.add(tile.to_color().into()),
+                    transform: Transform::from_xyz(x as f32, 0.5, y as f32),
+                    ..default()
+                });
+            }
+        }
+    }
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {

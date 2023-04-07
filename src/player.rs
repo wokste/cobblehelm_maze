@@ -63,10 +63,8 @@ where
 pub fn player_move(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    //windows: Res<Windows>,
     mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform)>,
 ) {
-    //let window = windows.get_primary().unwrap();
     for (key_map, stats, mut transform) in query.iter_mut() {
         let delta_time = time.delta_seconds();
 
@@ -78,20 +76,18 @@ pub fn player_move(
         let right = Vec3::new(local_z.z, 0., -local_z.x);
 
         for key in keys.get_pressed() {
-            //if window.cursor_locked() {
-                if validate_key(key_map.forward, key)   { velocity += forward }
-                if validate_key(key_map.backward, key)  { velocity -= forward }
-                if validate_key(key_map.left, key)      { velocity -= right }
-                if validate_key(key_map.right, key)     { velocity += right }
-                if validate_key(key_map.rot_left, key)  {
-                    rotation += stats.rot_rate * delta_time;
-                    if rotation > std::f32::consts::TAU { rotation -= std::f32::consts::TAU }
-                }
-                if validate_key(key_map.rot_right, key) {
-                    rotation -= stats.rot_rate * delta_time;
-                    if rotation < 0.0 { rotation += std::f32::consts::TAU }
-                }
-            //}
+            if validate_key(key_map.forward, key)   { velocity += forward }
+            if validate_key(key_map.backward, key)  { velocity -= forward }
+            if validate_key(key_map.left, key)      { velocity -= right }
+            if validate_key(key_map.right, key)     { velocity += right }
+            if validate_key(key_map.rot_left, key)  {
+                rotation += stats.rot_rate * delta_time;
+                if rotation > std::f32::consts::TAU { rotation -= std::f32::consts::TAU }
+            }
+            if validate_key(key_map.rot_right, key) {
+                rotation -= stats.rot_rate * delta_time;
+                if rotation < 0.0 { rotation += std::f32::consts::TAU }
+            }
         }
         transform.rotation = Quat::from_rotation_y(rotation);
 
