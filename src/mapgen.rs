@@ -1,11 +1,8 @@
-use grid::Grid;
 use crate::map::*;
 
 
 pub fn make_map() -> Map {
-    let mut map = Map{
-        tiles : Grid::new(64,64),
-    };
+    let mut map = Map::new(64,64);
 
     let styles = [(Tile::Wall1,Tile::Floor2), (Tile::Wall3, Tile::Floor1), (Tile::Wall4, Tile::Floor1)];
 
@@ -13,7 +10,7 @@ pub fn make_map() -> Map {
 
     for _ in 0 .. 100 {
         let (wall, floor) = styles[fastrand::usize(0..styles.len())];
-        let room = make_room(floor, wall, fastrand::usize(8..=8), fastrand::usize(8..=8));
+        let room = make_room(floor, wall, fastrand::i32(6..=10), fastrand::i32(6..=10));
 
         let offset = Coords::new(
             fastrand::i32(0 .. map.x_max() - room.x_max()),
@@ -32,10 +29,8 @@ pub fn make_map() -> Map {
     map
 }
 
-fn make_room(floor : Tile, wall : Tile, w : usize, h : usize) -> Map {
-    let mut map = Map {
-        tiles : Grid::<Tile>::new(w + 2,h + 2),
-    };
+fn make_room(floor : Tile, wall : Tile, w : i32, h : i32) -> Map {
+    let mut map = Map::new(w + 2,h + 2);
 
     for z in 1 .. map.z_max() - 1 {
         for x in 1 .. map.x_max() - 1 {

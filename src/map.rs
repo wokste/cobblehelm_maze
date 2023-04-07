@@ -1,36 +1,50 @@
 use bevy::prelude::IVec2;
 use derive_more::{Add, Sub};
-use grid::*;
 
 pub struct Map {
-    pub tiles : Grid<Tile>,
+    tiles : Vec<Tile>,
+    size : Coords,
 }
 
 impl Map {
-    pub fn z_max(&self) -> i32 {self.tiles.rows() as i32}
-    pub fn x_max(&self) -> i32 {self.tiles.cols() as i32}
+    pub fn new(x_max : i32, z_max : i32) -> Self {
+        Self {
+            tiles : vec![Tile::Void; (x_max * z_max) as usize],
+            size : Coords::new(x_max, z_max),
+        }
+    }
+
+    pub fn x_max(&self) -> i32 {self.size.x}
+    pub fn z_max(&self) -> i32 {self.size.z}
+
+    fn to_index(&self, x : i32, z : i32) -> usize {
+        assert!(x >= 0 && x < self.x_max() && z >= 0 && z < self.z_max());
+
+        (x + z * self.size.x) as usize
+    }
 
     pub fn is_solid(&self, x : i32, z : i32) -> bool {
-        if x >= 0 && x < self.x_max() as i32 && z >= 0 && z < self.z_max() as i32 {
-            self.tiles[x as usize][z as usize].is_solid()
+        if x >= 0 && x < self.x_max() && z >= 0 && z < self.z_max() {
+            self.tile(x,z).is_solid()
         } else {
             true
         }
     }
 
     pub fn tile(&self, x : i32, z : i32) -> Tile {
-        self.tiles[x as usize][z as usize]
+        self.tiles[self.to_index(x,z)]
     }
 
     pub fn set_tile(&mut self, x : i32, z : i32, tile : Tile) {
-        self.tiles[x as usize][z as usize] = tile
+        let index = self.to_index(x,z);
+        self.tiles[index] = tile
     }
 
     pub fn set_tile_if<F>(&mut self, x : i32, z : i32, tile : Tile, f : F) where F: Fn(Tile) -> bool{
-        let old_tile = self.tiles[x as usize][z as usize];
+        let old_tile = self.tile(x,z);
 
         if f(old_tile) {
-            self.tiles[x as usize][z as usize] = tile
+            self.set_tile(x, z, tile)
         }
     }
 
