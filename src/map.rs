@@ -10,23 +10,30 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn is_solid(&self, x : usize, y : usize) -> bool {
-        if x < self.tiles.cols() || y < self.tiles.rows() {
-            self.tiles[x][y].is_solid()
+    pub fn is_solid(&self, x : i32, y : i32) -> bool {
+        if x >= 0 && x < self.tiles.cols() as i32 && y >= 0 && y < self.tiles.rows() as i32 {
+            self.tiles[x as usize][y as usize].is_solid()
         } else {
             true
         }
     }
 
+    fn tile(&self, x : i32, y : i32) -> Tile {
+        self.tiles[x as usize][y as usize]
+    }
+
+    fn set_tile(&mut self, x : i32, y : i32, tile : Tile) {
+        self.tiles[x as usize][y as usize] = tile
+    }
 }
 
 pub struct Coords {
-    pub x : usize,
-    pub y : usize,
+    pub x : i32,
+    pub y : i32,
 }
 
 impl Coords {
-    fn new(x : usize,y : usize) -> Self {
+    fn new(x : i32,y : i32) -> Self {
         Self {x,y}
     }
 }
@@ -73,34 +80,39 @@ impl Default for Tile {
 // Map generation
 
 pub fn make_map() -> Map {
-    let mut tiles = Grid::new(32,32);
+    let mut map = Map{
+        tiles : Grid::new(32,32),
+    };
 
-    add_room(&mut tiles, Tile::Floor1, Tile::Wall1, Coords::new(2, 2), Coords::new(12, 12));
-    add_room(&mut tiles, Tile::Floor2, Tile::Wall1, Coords::new(17, 2), Coords::new(27, 12));
-    add_room(&mut tiles, Tile::Floor2, Tile::Wall3, Coords::new(2, 17), Coords::new(12, 27));
-    add_room(&mut tiles, Tile::Floor1, Tile::Wall4, Coords::new(17, 17), Coords::new(27, 27));
+    add_room(&mut map, Tile::Floor1, Tile::Wall1, Coords::new(2, 2), Coords::new(12, 12));
+
+    add_room(&mut map, Tile::Floor2, Tile::Wall1, Coords::new(18, 1), Coords::new(26, 13));
+    add_room(&mut map, Tile::Floor2, Tile::Wall1, Coords::new(16, 3), Coords::new(28, 11));
+
+    add_room(&mut map, Tile::Floor2, Tile::Wall3, Coords::new(2, 20), Coords::new(7, 27));
+    add_room(&mut map, Tile::Floor2, Tile::Wall3, Coords::new(5, 17), Coords::new(9, 27));
+
+    add_room(&mut map, Tile::Floor1, Tile::Wall4, Coords::new(17, 17), Coords::new(27, 27));
 
     // Add corridors
-    add_room(&mut tiles, Tile::Floor1, Tile::Wall2, Coords::new(7, 7), Coords::new(7, 22));
-    add_room(&mut tiles, Tile::Floor1, Tile::Wall2, Coords::new(7, 22), Coords::new(22, 22));
-    add_room(&mut tiles, Tile::Floor1, Tile::Wall2, Coords::new(22, 7), Coords::new(22, 22));
+    add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(7, 7), Coords::new(7, 22));
+    add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(7, 22), Coords::new(22, 22));
+    add_room(&mut map, Tile::Floor1, Tile::Wall2, Coords::new(22, 7), Coords::new(22, 22));
 
-    Map {
-        tiles
-    }
+    map
 }
 
-fn add_room(tiles : &mut Grid<Tile>, floor : Tile, wall : Tile, p0 : Coords, p1 : Coords) {
+fn add_room(map : &mut Map, floor : Tile, wall : Tile, p0 : Coords, p1 : Coords) {
     for y in p0.y ..= p1.y {
         for x in p0.x ..= p1.x {
-            tiles[x][y] = floor;
+            map.set_tile(x, y,floor);
         }   
     }
 
     for y in p0.y - 1 ..= p1.y + 1 {
         for x in p0.x - 1 ..= p1.x + 1 {
-            if tiles[x][y] == Tile::Void {
-                tiles[x][y] = wall;
+            if map.tile(x,y) == Tile::Void {
+                map.set_tile(x, y, wall);
             }
         }   
     }
@@ -154,9 +166,9 @@ impl MeshBuilder {
 pub fn map_to_mesh(map : &Map) -> Mesh {
     let mut builder = MeshBuilder::default();
 
-    for y in 0 .. map.tiles.rows() {
-        for x in 0 .. map.tiles.cols() {
-            let tile = map.tiles[x][y];
+    for y in 0 .. map.tiles.rows() as i32 {
+        for x in 0 .. map.tiles.cols() as i32 {
+            let tile = map.tile(x,y);
             if tile.is_solid() && !tile.is_void() {
                 let p0 = Vec3::new(x as f32, 0.0, y as f32);
 
