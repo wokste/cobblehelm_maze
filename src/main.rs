@@ -47,4 +47,22 @@ fn setup(
         transform: Transform::from_xyz(player_pos.x as f32 + 0.5, 0.7, player_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     }).insert(player::PlayerBundle::default());
+
+    /*for i in 1 .. 20 {
+        let monster_pos = map.random_square();
+        commands.spawn(PbrBundle {
+            mesh: meshes.add( Mesh),
+            material: materials.add(StandardMaterial {
+                base_color_texture: Some(texture_handle.clone()),
+                alpha_mode: AlphaMode::Opaque,
+                unlit: true,
+                ..default()
+                //Color::WHITE.into()
+            }),
+            transform: Transform::from_xyz(monster_pos.x as f32 + 0.5, 0.5, monster_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
+            ..default()
+        }).insert(player::MonsterBundle {
+            ..default()
+        });
+    }*/
 }

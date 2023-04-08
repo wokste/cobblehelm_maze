@@ -11,6 +11,13 @@ pub struct PlayerBundle {
 
 }
 
+
+#[derive(Default, Bundle)]
+pub struct MonsterBundle {
+    pub stats : CreatureStats,
+    pub sprite : Sprite,
+}
+
 #[derive(Component)]
 pub struct PlayerKeys {
     pub forward: &'static [KeyCode],
@@ -52,6 +59,9 @@ impl Default for CreatureStats {
         }
     }
 }
+
+#[derive(Component, Default)]
+pub struct Sprite;
 
 pub fn validate_key<T>(codes: &'static [T], key: &T) -> bool
 where

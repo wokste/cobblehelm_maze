@@ -39,10 +39,10 @@ impl MeshBuilder {
         let uv0 = Vec2::new(0.25,0.0);
         let uv1 = Vec2::new(0.0,0.25);
 
-        let id0 = self.add_vertex(p, normal, uv);
-        let id1 = self.add_vertex(p + dir0, normal, uv + uv0);
-        let id2 = self.add_vertex(p + dir0 + dir1, normal, uv + uv0 + uv1);
-        let id3 = self.add_vertex(p + dir1, normal, uv + uv1);
+        let id0 = self.add_vertex(p, normal, uv + uv0 + uv1);
+        let id1 = self.add_vertex(p + dir0, normal, uv + uv1);
+        let id2 = self.add_vertex(p + dir0 + dir1, normal, uv);
+        let id3 = self.add_vertex(p + dir1, normal, uv + uv0);
 
         self.indices.extend_from_slice(&[id0, id2, id1, id0, id3, id2]);
     }
