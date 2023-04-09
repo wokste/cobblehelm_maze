@@ -4,14 +4,13 @@ use bevy::{
     //Windows,
 };
 
-use crate::physics::{PhysicsBody, MapCollisionEvent};
+use crate::{physics::{PhysicsBody, MapCollisionEvent}, weapon::Team};
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub keys : PlayerKeys,
     pub stats : CreatureStats,
     pub physisc : PhysicsBody,
-    pub team : crate::weapon::Team,
     pub weapon : crate::weapon::Weapon,
 }
 
@@ -21,7 +20,6 @@ impl Default for PlayerBundle {
             keys : Default::default(),
             stats : Default::default(),
             physisc : PhysicsBody::new(MapCollisionEvent::Stop),
-            team : crate::weapon::Team::Players,
             weapon : crate::weapon::Weapon::new(crate::weapon::ProjectileType::BlueThing)
         }
     }
@@ -64,6 +62,7 @@ pub struct CreatureStats {
     pub rot_rate : f32,
     pub hp: i16,
     pub hp_max: i16,
+    pub team : Team,
 }
 
 impl Default for CreatureStats {
@@ -73,6 +72,7 @@ impl Default for CreatureStats {
             rot_rate : 3.5,
             hp: 20,
             hp_max: 20,
+            team: Team::Players,
         }
     }
 }
@@ -83,12 +83,13 @@ pub struct Sprite;
 pub fn player_move(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsBody)>,
+    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsBody, &mut crate::weapon::Weapon)>,
 ) {
     let delta_time = time.delta_seconds();
-    for (key_map, stats, mut transform, mut pb) in query.iter_mut() {
+    for (key_map, stats, mut transform, mut pb, mut weapon) in query.iter_mut() {
         let (_, mut rotation) = transform.rotation.to_axis_angle();
 
+        let mut firing = false;
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -107,9 +108,11 @@ pub fn player_move(
                 rotation -= stats.rot_rate * delta_time;
                 if rotation < 0.0 { rotation += std::f32::consts::TAU }
             }
+            if *key == key_map.fire      { firing = true }
         }
         transform.rotation = Quat::from_rotation_y(rotation);
 
         pb.velocity = velocity.normalize() * stats.speed;
+        weapon.firing = firing;
     }
 }

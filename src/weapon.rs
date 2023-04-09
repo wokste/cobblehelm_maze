@@ -1,26 +1,43 @@
-use bevy::{
-    prelude::{Component, Query, Res, Transform, Entity, Commands},
-    time::{Time, Timer, TimerMode},
-};
+use bevy::prelude::*;
 
-use crate::player::CreatureStats;
+use crate::{player::CreatureStats, physics::{PhysicsBody, MapCollisionEvent}};
 
-#[derive(Eq, PartialEq)]
-#[derive(Component)]
+#[derive(Eq, PartialEq, Copy, Clone)]
 pub enum Team {
     Players,
 //    Monsters,
 //    Environment,
 }
 
+#[derive(Copy, Clone)]
 pub enum ProjectileType {
 //    Fireball,
     BlueThing,
 }
 
+impl ProjectileType {
+    fn damage(&self) -> i16 {
+        match self {
+            ProjectileType::BlueThing => 2,
+        }
+    }
+
+    fn speed(&self) -> f32 {
+        match self {
+            ProjectileType::BlueThing => 6.0,
+        }
+    }
+
+    fn fire_speed(&self) -> f32 {
+        match self {
+            ProjectileType::BlueThing => 0.3,
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct Weapon {
-    firing : bool,
+    pub firing : bool,
     projectile : ProjectileType,
     cooldown : Timer,
 }
@@ -29,39 +46,62 @@ impl Weapon {
     pub fn new(projectile : ProjectileType) -> Self {
         Self {
             projectile,
-            cooldown : Timer::from_seconds(0.7, TimerMode::Repeating), // TODO: make time configurable
+            cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Repeating), // TODO: make time configurable
             firing : false,
+        }
+    }
+
+    fn make_projectile(&self, team : Team) -> Projectile {
+        Projectile {
+            team: team,
+            damage: self.projectile.damage(),
         }
     }
 }
 
 #[derive(Component)]
 pub struct Projectile {
-    spawn_type : ProjectileType,
     team : Team,
     damage : i16,
 }
 
 pub fn fire_weapons(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
-    mut query: Query<(&mut Weapon, &Transform)>,
+    mut query: Query<(&mut Weapon, &CreatureStats, &Transform)>,
 ) {
-    for (mut weapon, transform) in query.iter_mut() {
+    for (mut weapon, stats, transform) in query.iter_mut() {
         if weapon.firing && weapon.cooldown.tick(time.delta()).just_finished() {
-            println!("fire");
+            let mut proto_projectile = commands.spawn(PbrBundle {
+                mesh: meshes.add( Mesh::from(shape::Cube{ size: 0.2 })),
+                material: materials.add(StandardMaterial {
+                    //base_color_texture: Some(texture_handle.clone()),
+                    alpha_mode: AlphaMode::Blend,
+                    unlit: true,
+                    ..default()
+                    //Color::WHITE.into()
+                }),
+                transform: Transform::from_translation(transform.translation),
+                ..default()
+            });
+            
+            proto_projectile.insert(weapon.make_projectile(stats.team));
+            let velocity = transform.rotation * Vec3::NEG_Z * weapon.projectile.speed();
+            proto_projectile.insert(PhysicsBody::new(MapCollisionEvent::Destroy).set_velocity( velocity ));
         }
-        // TODO: Implement
     }
 }
 
 pub fn check_projectile_creature_collisions(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Projectile, &Transform)>,
-    mut target_query: Query<(&Team, &mut CreatureStats, &Transform)>,
+    mut target_query: Query<(&mut CreatureStats, &Transform)>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
-        for (target_team, mut stats, target_transform) in target_query.iter_mut() {
-            if projectile.team == *target_team {
+        for (mut stats, target_transform) in target_query.iter_mut() {
+            if projectile.team == stats.team {
                 continue;
             }
             
@@ -69,6 +109,7 @@ pub fn check_projectile_creature_collisions(
                 continue;
             }
 
+            println!("Boom");
             commands.entity(projectile_entity).despawn();
             stats.hp -= projectile.damage;
         }

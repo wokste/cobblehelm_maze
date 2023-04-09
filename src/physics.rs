@@ -21,6 +21,11 @@ impl PhysicsBody {
             velocity : Vec3::ZERO
         }
     }
+
+    pub fn set_velocity(mut self, velocity : Vec3) -> Self {
+        self.velocity = velocity;
+        self
+    }
 }
 
 fn check_map_collision(map : &crate::map::Map, pos : Vec3) -> Option<()> {
@@ -59,8 +64,5 @@ pub fn do_physics(
         }
 
         transform.translation = new_pos;
-
-
-        // TODO: Implement collisions
     }
 }
