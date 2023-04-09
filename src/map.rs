@@ -135,8 +135,11 @@ impl Default for MapData {
 }
 
 impl MapData {
+    /*
+    // TODO: Reenable for the 0.2 version
     pub fn can_see_player(&self, pos : Vec3) -> bool {
         // TODO: Better algorithm with LoS
         (pos).distance_squared(self.player_pos) < 25.0
     }
+    */
 }

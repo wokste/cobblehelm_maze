@@ -1,4 +1,4 @@
-use bevy::{prelude::{Vec3, Component, Query, Res, Transform}, time::Time};
+use bevy::{prelude::{Vec3, Component, Query, Res, Transform, Entity, Commands}, time::Time};
 
 use crate::map::MapData;
 
@@ -23,18 +23,44 @@ impl PhysicsBody {
     }
 }
 
+fn check_map_collision(map : &crate::map::Map, pos : Vec3) -> Option<()> {
+    // TODO: Better return type
+    // TODO: add a radius
+    if map.is_solid(f32::floor(pos.x) as i32, f32::floor(pos.z) as i32) {
+        Some(())
+    } else {
+        None
+    }
+}
+
 pub fn do_physics(
+    mut commands: Commands,
     time: Res<Time>,
-//    map: Res<MapData>, // TODO
-    mut query: Query<(&mut Transform, &PhysicsBody)>,
+    map: Res<MapData>,
+    mut query: Query<(Entity, &mut Transform, &PhysicsBody)>,
 ) {
     let delta_time = time.delta_seconds();
-    for (mut transform, pb) in query.iter_mut() {
-        if !pb.velocity.is_nan() {
-            transform.translation += pb.velocity * delta_time
+    for (entity, mut transform, pb) in query.iter_mut() {
+        if pb.velocity.is_nan() {
+            continue;
         }
+
+        let mut new_pos = transform.translation + pb.velocity * delta_time;
+        if let Some(()) = check_map_collision(&map.map, new_pos) {
+            match pb.on_hit_wall {
+                MapCollisionEvent::Stop => {
+                    new_pos = transform.translation;
+                    // TODO: Check if you can wall-slide
+                },
+                MapCollisionEvent::Destroy => {
+                    commands.entity(entity).despawn();
+                },
+            }
+        }
+
+        transform.translation = new_pos;
+
 
         // TODO: Implement collisions
     }
-    
 }
