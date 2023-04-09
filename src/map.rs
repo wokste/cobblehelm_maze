@@ -1,4 +1,4 @@
-use bevy::prelude::IVec2;
+use bevy::prelude::{IVec2, Resource, Vec3};
 use derive_more::{Add, Sub};
 
 pub struct Map {
@@ -116,4 +116,27 @@ impl Tile {
 
 impl Default for Tile {
     fn default() -> Self { Tile::_Void }
+}
+
+#[derive(Resource)]
+pub struct MapData {
+    pub map : Map,
+    pub player_pos : Vec3,
+}
+
+impl Default for MapData {
+    fn default() -> Self {
+        Self {
+            map : Map::new(1, 1),
+            player_pos : Vec3::ZERO,
+        }
+    }
+
+}
+
+impl MapData {
+    pub fn can_see_player(&self, pos : Vec3) -> bool {
+        // TODO: Better algorithm with LoS
+        (pos).distance_squared(self.player_pos) < 25.0
+    }
 }

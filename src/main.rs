@@ -1,7 +1,9 @@
 mod map;
 mod mapgen;
 mod modelgen;
+mod physics;
 mod player;
+mod weapon;
 
 use bevy::prelude::*;
 
@@ -9,7 +11,11 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) 
         .add_startup_system(setup)
+        .insert_resource(map::MapData::default())
         .add_system(player::player_move)
+        .add_system(physics::do_physics)
+        .add_system(weapon::check_projectile_creature_collisions)
+        .add_system(weapon::fire_weapons)
         .run();
 }
 
