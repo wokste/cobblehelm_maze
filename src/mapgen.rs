@@ -4,12 +4,12 @@ use crate::map::*;
 pub fn make_map() -> Map {
     let mut map = Map::new(64,64);
 
-    let styles = [Tile::Kitchen, Tile::Temple1, Tile::Temple2];
+    let styles = [Tile::Castle, Tile::TempleBrown, Tile::TempleGray, Tile::TempleGreen, Tile::Sewer, Tile::SewerCave, Tile::Demonic, Tile::DemonicCave, Tile::Beehive, Tile::Flesh, Tile::MetalIron, Tile::MetalBronze];
 
     let mut centers = vec![];
 
     for _ in 0 .. 100 {
-        let style = styles[fastrand::usize(0..styles.len())];
+        let style = styles[usize::min( fastrand::usize(0..styles.len()), fastrand::usize(0..styles.len()))];
         let room = make_room(style, fastrand::i32(6..14), fastrand::i32(6..14));
 
         let offset = Coords::new(

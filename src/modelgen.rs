@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Mesh, IVec2, Vec2, Vec3},
+    prelude::{Mesh, Vec2, Vec3},
     render::{render_resource::PrimitiveTopology, mesh}
 };
 use crate::map::Map;
@@ -32,12 +32,11 @@ impl MeshBuilder {
         id
     }
 
-    fn add_rect(&mut self, p : Vec3, dir0 : Vec3, dir1 : Vec3, tex_id : IVec2) {
+    fn add_rect(&mut self, p : Vec3, dir0 : Vec3, dir1 : Vec3, uv : Vec2) {
         let normal = dir0.cross(dir1);
 
-        let uv = Vec2::new(tex_id.x as f32 / 4.0, tex_id.y as f32 / 4.0 );
-        let uv0 = Vec2::new(0.25,0.0);
-        let uv1 = Vec2::new(0.0,0.25);
+        let uv0 = Vec2::new(1.0 / 32.0,0.0);
+        let uv1 = Vec2::new(0.0,1.0 / 8.0);
 
         let id0 = self.add_vertex(p, normal, uv + uv0 + uv1);
         let id1 = self.add_vertex(p + dir0, normal, uv + uv1);
@@ -57,20 +56,20 @@ pub fn map_to_mesh(map : &Map) -> Mesh {
             let p0 = Vec3::new(x as f32, 0.0, z as f32);
             if !tile.is_solid() {
                 // Floor tiles
-                builder.add_rect(p0, Vec3::X, Vec3::Z, tile.floor_tex_id());
+                builder.add_rect(p0, Vec3::X, Vec3::Z, tile.floor_tex_id().to_uv());
 
                 // Wall tiles
                 if map.is_solid(x, z - 1) {
-                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, tile.wall_tex_id());
+                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, tile.wall_tex_id().to_uv());
                 }
                 if map.is_solid(x + 1, z) {
-                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y,tile.wall_tex_id());
+                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y,tile.wall_tex_id().to_uv());
                 }
                 if map.is_solid(x, z + 1) {
-                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y,tile.wall_tex_id());
+                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y,tile.wall_tex_id().to_uv());
                 }
                 if map.is_solid(x- 1, z) {
-                    builder.add_rect(p0,  Vec3::Z, Vec3::Y,tile.wall_tex_id());
+                    builder.add_rect(p0,  Vec3::Z, Vec3::Y,tile.wall_tex_id().to_uv());
                 }
             }
         }

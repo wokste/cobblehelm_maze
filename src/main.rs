@@ -34,7 +34,7 @@ fn setup(
     ambient_light.color = Color::WHITE;
     ambient_light.brightness = 0.5;
 
-    let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures.png");
+    let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures2.png");
 
     map_data.map = mapgen::make_map();
 

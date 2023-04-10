@@ -83,7 +83,6 @@ pub fn do_physics(
                             transform.translation = new_pos;
                         }
                     }
-                    // TODO: Check if you can wall-slide
                 },
                 MapCollisionEvent::Destroy => {
                     commands.entity(entity).despawn();
