@@ -119,7 +119,6 @@ pub fn check_projectile_creature_collisions(
                 continue;
             }
 
-            println!("Boom");
             stats.hp -= projectile.damage;
 
             if stats.team != Team::Players && stats.hp <= 0 {
