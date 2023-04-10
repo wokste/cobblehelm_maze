@@ -107,10 +107,10 @@ pub fn fire_weapons(
 pub fn check_projectile_creature_collisions(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Projectile, &Transform)>,
-    mut target_query: Query<(&mut CreatureStats, &Transform)>,
+    mut target_query: Query<(Entity, &mut CreatureStats, &Transform)>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
-        for (mut stats, target_transform) in target_query.iter_mut() {
+        for (monster_entity, mut stats, target_transform) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
@@ -120,8 +120,13 @@ pub fn check_projectile_creature_collisions(
             }
 
             println!("Boom");
-            commands.entity(projectile_entity).despawn();
             stats.hp -= projectile.damage;
+
+            if stats.team != Team::Players && stats.hp <= 0 {
+                commands.entity(monster_entity).despawn();
+            }
+            
+            commands.entity(projectile_entity).despawn();
         }
     }
 }
