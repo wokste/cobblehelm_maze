@@ -1,3 +1,4 @@
+mod ai;
 mod map;
 mod mapgen;
 mod modelgen;
@@ -13,6 +14,8 @@ fn main() {
         .add_startup_system(setup)
         .insert_resource(map::MapData::default())
         .add_system(player::player_move)
+        .add_system(ai::ai_los)
+        .add_system(ai::ai_fire)
         .add_system(physics::do_physics)
         .add_system(weapon::check_projectile_creature_collisions)
         .add_system(weapon::fire_weapons)
@@ -55,21 +58,7 @@ fn setup(
         ..default()
     }).insert(player::PlayerBundle::default());
 
-    /*for i in 1 .. 20 {
-        let monster_pos = map.random_square();
-        commands.spawn(PbrBundle {
-            mesh: meshes.add( Mesh),
-            material: materials.add(StandardMaterial {
-                base_color_texture: Some(texture_handle.clone()),
-                alpha_mode: AlphaMode::Opaque,
-                unlit: true,
-                ..default()
-                //Color::WHITE.into()
-            }),
-            transform: Transform::from_xyz(monster_pos.x as f32 + 0.5, 0.5, monster_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        }).insert(player::MonsterBundle {
-            ..default()
-        });
-    }*/
+    for _ in 1 .. 20 {
+        ai::spawn_monster(&mut commands, &map_data, &mut meshes, &mut materials);
+    }
 }

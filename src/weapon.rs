@@ -5,13 +5,13 @@ use crate::{player::CreatureStats, physics::{PhysicsBody, MapCollisionEvent}};
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum Team {
     Players,
-//    Monsters,
+    Monsters,
 //    Environment,
 }
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
-//    Fireball,
+    Fireball,
     BlueThing,
 }
 
@@ -19,18 +19,29 @@ impl ProjectileType {
     fn damage(&self) -> i16 {
         match self {
             ProjectileType::BlueThing => 2,
+            ProjectileType::Fireball => 3,
         }
     }
 
     fn speed(&self) -> f32 {
         match self {
-            ProjectileType::BlueThing => 6.0,
+            ProjectileType::BlueThing => 8.0,
+            ProjectileType::Fireball => 5.0,
         }
     }
 
     fn fire_speed(&self) -> f32 {
         match self {
             ProjectileType::BlueThing => 0.3,
+            ProjectileType::Fireball => 0.6,
+        }
+    }
+
+    fn to_color(&self) -> Color {
+        match self {
+            ProjectileType::BlueThing => Color::CYAN,
+            ProjectileType::Fireball => Color::ORANGE_RED,
+
         }
     }
 }
@@ -77,11 +88,10 @@ pub fn fire_weapons(
             let mut proto_projectile = commands.spawn(PbrBundle {
                 mesh: meshes.add( Mesh::from(shape::Cube{ size: 0.2 })),
                 material: materials.add(StandardMaterial {
-                    //base_color_texture: Some(texture_handle.clone()),
+                    base_color: weapon.projectile.to_color(),
                     alpha_mode: AlphaMode::Blend,
                     unlit: true,
                     ..default()
-                    //Color::WHITE.into()
                 }),
                 transform: Transform::from_translation(transform.translation),
                 ..default()

@@ -71,6 +71,10 @@ impl Coords {
     pub fn new(x : i32, z : i32) -> Self {
         Self {x,z}
     }
+
+    pub fn from_vec(v : Vec3) -> Self {
+        Self {x : v.x.floor() as i32, z : v.z.floor() as i32}
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -135,11 +139,9 @@ impl Default for MapData {
 }
 
 impl MapData {
-    /*
     // TODO: Reenable for the 0.2 version
-    pub fn can_see_player(&self, pos : Vec3) -> bool {
+    pub fn can_see_player(&self, pos : Vec3, sight_radius : f32) -> bool {
         // TODO: Better algorithm with LoS
-        (pos).distance_squared(self.player_pos) < 25.0
+        (pos).distance_squared(self.player_pos) < sight_radius * sight_radius
     }
-    */
 }

@@ -25,12 +25,6 @@ impl Default for PlayerBundle {
     }
 }
 
-#[derive(Default, Bundle)]
-pub struct MonsterBundle {
-    pub stats : CreatureStats,
-    pub sprite : Sprite,
-}
-
 #[derive(Component)]
 pub struct PlayerKeys {
     pub forward: KeyCode,
@@ -40,6 +34,8 @@ pub struct PlayerKeys {
     pub rot_left: KeyCode,
     pub rot_right: KeyCode,
     pub fire: KeyCode,
+
+    pub rot_rate : f32,
 }
 
 impl Default for PlayerKeys {
@@ -51,7 +47,9 @@ impl Default for PlayerKeys {
             right: KeyCode::D,
             rot_left: KeyCode::Left,
             rot_right: KeyCode::Right,
-            fire: KeyCode::Space
+            fire: KeyCode::Space,
+            
+            rot_rate : 3.5,
         }
     }
 }
@@ -59,7 +57,6 @@ impl Default for PlayerKeys {
 #[derive(Component)]
 pub struct CreatureStats {
     pub speed: f32,
-    pub rot_rate : f32,
     pub hp: i16,
     pub hp_max: i16,
     pub team : Team,
@@ -69,7 +66,6 @@ impl Default for CreatureStats {
     fn default() -> Self {
         Self {
             speed: 6.0,
-            rot_rate : 3.5,
             hp: 20,
             hp_max: 20,
             team: Team::Players,
@@ -101,11 +97,11 @@ pub fn player_move(
             if *key == key_map.left      { velocity -= right }
             if *key == key_map.right     { velocity += right }
             if *key == key_map.rot_left  {
-                rotation += stats.rot_rate * delta_time;
+                rotation += key_map.rot_rate * delta_time;
                 if rotation > std::f32::consts::TAU { rotation -= std::f32::consts::TAU }
             }
             if *key == key_map.rot_right {
-                rotation -= stats.rot_rate * delta_time;
+                rotation -= key_map.rot_rate * delta_time;
                 if rotation < 0.0 { rotation += std::f32::consts::TAU }
             }
             if *key == key_map.fire      { firing = true }
