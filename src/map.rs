@@ -93,6 +93,7 @@ pub enum Tile {
     DemonicCave,
     MetalIron,
     MetalBronze,
+    Chips,
     Sewer,
     SewerCave,
 }
@@ -120,6 +121,7 @@ impl Tile {
             Tile::DemonicCave => TexCoords::new(26..30,4),
             Tile::MetalIron => TexCoords::new(8..10,4),
             Tile::MetalBronze => TexCoords::new(8..10,4),
+            Tile::Chips => TexCoords::new(29..32,1),
             Tile::Sewer => TexCoords::new(7..11,3),
             Tile::SewerCave => TexCoords::new(7..11,3),
             _ => TexCoords::new(0..8,4),
@@ -141,6 +143,7 @@ impl Tile {
             Tile::DemonicCave => TexCoords::new(25..29,2),
             Tile::MetalIron => TexCoords::new(29..30,2),
             Tile::MetalBronze => TexCoords::new(30..31,2),
+            Tile::Chips => TexCoords::new(29..32,1),
             Tile::Sewer => TexCoords::new(0..7,3),
             Tile::SewerCave => TexCoords::new(7..11,3),
             _ => TexCoords::new(0..8,4),

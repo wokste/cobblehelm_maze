@@ -36,7 +36,7 @@ fn setup(
 
     let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures2.png");
 
-    map_data.map = mapgen::make_map();
+    map_data.map = mapgen::make_map(fastrand::u8(1..=5));
 
     // The actual map
     commands.spawn(PbrBundle {
