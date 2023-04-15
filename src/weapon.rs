@@ -46,9 +46,15 @@ impl ProjectileType {
     }
 }
 
+pub enum FireMode {
+    NoFire,
+    Fire,
+    FireAt(Vec3),
+}
+
 #[derive(Component)]
 pub struct Weapon {
-    pub firing : bool,
+    pub firing : FireMode,
     projectile : ProjectileType,
     cooldown : Timer,
 }
@@ -58,7 +64,7 @@ impl Weapon {
         Self {
             projectile,
             cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Repeating), // TODO: make time configurable
-            firing : false,
+            firing : FireMode::NoFire,
         }
     }
 
@@ -84,7 +90,14 @@ pub fn fire_weapons(
     mut query: Query<(&mut Weapon, &CreatureStats, &Transform)>,
 ) {
     for (mut weapon, stats, transform) in query.iter_mut() {
-        if weapon.firing && weapon.cooldown.tick(time.delta()).just_finished() {
+        if weapon.cooldown.tick(time.delta()).just_finished() {
+            let direction = match weapon.firing {
+                FireMode::NoFire => { continue }
+                FireMode::Fire => transform.rotation * Vec3::NEG_Z,
+                FireMode::FireAt(target_pos) => {(target_pos - transform.translation).normalize()},
+            };
+            let velocity = direction * weapon.projectile.speed();
+
             let mut proto_projectile = commands.spawn(PbrBundle {
                 mesh: meshes.add( Mesh::from(shape::Cube{ size: 0.2 })),
                 material: materials.add(StandardMaterial {
@@ -98,7 +111,6 @@ pub fn fire_weapons(
             });
             
             proto_projectile.insert(weapon.make_projectile(stats.team));
-            let velocity = transform.rotation * Vec3::NEG_Z * weapon.projectile.speed();
             proto_projectile.insert(PhysicsBody::new(MapCollisionEvent::Destroy).set_velocity( velocity ));
         }
     }
@@ -121,8 +133,12 @@ pub fn check_projectile_creature_collisions(
 
             stats.hp -= projectile.damage;
 
-            if stats.team != Team::Players && stats.hp <= 0 {
-                commands.entity(monster_entity).despawn();
+            if stats.hp <= 0 {
+                if stats.team == Team::Players {
+                    // TODO: Game over
+                } else {
+                    commands.entity(monster_entity).despawn();
+                }
             }
             
             commands.entity(projectile_entity).despawn();

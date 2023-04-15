@@ -126,10 +126,10 @@ pub fn ai_fire(
     mut monster_query: Query<(&AI, &mut crate::weapon::Weapon)>,
 ) {
     for (ai, mut weapon) in monster_query.iter_mut() {
-        if let AIState::SeePlayer(_pos) = ai.state {
-            weapon.firing = true;
-        } else {
-            weapon.firing = false;
+        use crate::weapon::FireMode::*;
+        weapon.firing = match ai.state {
+            AIState::SeePlayer(pos) => FireAt(pos),
+            _ => NoFire,
         }
     }
 }

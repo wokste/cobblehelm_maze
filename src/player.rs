@@ -76,7 +76,7 @@ impl Default for CreatureStats {
 #[derive(Component, Default)]
 pub struct Sprite;
 
-pub fn player_move(
+pub fn player_input(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsBody, &mut crate::weapon::Weapon)>,
@@ -85,7 +85,7 @@ pub fn player_move(
     for (key_map, stats, mut transform, mut pb, mut weapon) in query.iter_mut() {
         let (_, mut rotation) = transform.rotation.to_axis_angle();
 
-        let mut firing = false;
+        let mut firing = crate::weapon::FireMode::NoFire ;
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -104,11 +104,20 @@ pub fn player_move(
                 rotation -= key_map.rot_rate * delta_time;
                 if rotation < 0.0 { rotation += std::f32::consts::TAU }
             }
-            if *key == key_map.fire      { firing = true }
+            if *key == key_map.fire      { firing = crate::weapon::FireMode::Fire }
         }
         transform.rotation = Quat::from_rotation_y(rotation);
 
         pb.velocity = velocity.normalize() * stats.speed;
         weapon.firing = firing;
+    }
+}
+
+pub fn update_map(
+    mut map_data: ResMut<crate::map::MapData>,
+    query: Query<(&PlayerKeys, &Transform)>,
+) {
+    for (_,transform) in query.iter() {
+        map_data.player_pos = transform.translation
     }
 }
