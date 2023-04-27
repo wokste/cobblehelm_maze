@@ -1,4 +1,4 @@
-use bevy::prelude::{Resource, Vec3, Vec2};
+use bevy::prelude::{Resource, Vec3};
 use derive_more::{Add, Sub};
 
 pub struct Map {
@@ -106,70 +106,7 @@ impl Tile {
             _ => false
         }
     }
-
-    pub fn floor_tex_id(&self) -> TexCoords {
-        match self {
-            Tile::Door1 => TexCoords::new(29..32,1),
-            Tile::Castle => TexCoords::new(0..8,4),
-            Tile::TempleBrown => TexCoords::new(14..18,4),
-            Tile::TempleGray => TexCoords::new(22..26,4),
-            Tile::TempleGreen => TexCoords::new(0..8,4),
-            Tile::Cave => TexCoords::new(10..14,4),
-            Tile::Beehive => TexCoords::new(0..8,4),
-            Tile::Flesh => TexCoords::new(18..22,4),
-            Tile::Demonic => TexCoords::new(26..30,4),
-            Tile::DemonicCave => TexCoords::new(26..30,4),
-            Tile::MetalIron => TexCoords::new(8..10,4),
-            Tile::MetalBronze => TexCoords::new(8..10,4),
-            Tile::Chips => TexCoords::new(29..32,1),
-            Tile::Sewer => TexCoords::new(7..11,3),
-            Tile::SewerCave => TexCoords::new(7..11,3),
-            _ => TexCoords::new(0..8,4),
-            
-        }
-    }
-
-    pub fn wall_tex_id(&self) -> TexCoords {
-        match self {
-            Tile::Door1 => TexCoords::new(29..32,1), // TODO: Better door tile
-            Tile::Castle => TexCoords::new(0..12,0),
-            Tile::TempleBrown => TexCoords::new(12..20,0),
-            Tile::TempleGray => TexCoords::new(20..32,0),
-            Tile::TempleGreen => TexCoords::new(0..10,2),
-            Tile::Cave => TexCoords::new(0..12,1),
-            Tile::Beehive => TexCoords::new(12..22,1),
-            Tile::Flesh => TexCoords::new(22..29,1),
-            Tile::Demonic => TexCoords::new(14..25,2),
-            Tile::DemonicCave => TexCoords::new(25..29,2),
-            Tile::MetalIron => TexCoords::new(29..30,2),
-            Tile::MetalBronze => TexCoords::new(30..31,2),
-            Tile::Chips => TexCoords::new(29..32,1),
-            Tile::Sewer => TexCoords::new(0..7,3),
-            Tile::SewerCave => TexCoords::new(7..11,3),
-            _ => TexCoords::new(0..8,4),
-        }
-    }
 }
-
-#[derive(Clone)]
-pub struct TexCoords {
-    pub x : std::ops::Range<u8>,
-    pub y : u8,
-}
-
-impl TexCoords {
-    fn new(x : std::ops::Range<u8>, y : u8) -> Self {
-        Self{x,y}
-    }
-
-    pub fn to_uv(&self) -> Vec2 {
-        let x = fastrand::u8(self.x.clone());
-        let y = self.y;
-
-        Vec2::new(x as f32 / 32.0, y as f32 / 8.0)
-    }
-}
-
 
 impl Default for Tile {
     fn default() -> Self { Tile::_Void }

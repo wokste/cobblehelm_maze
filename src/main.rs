@@ -1,9 +1,11 @@
 mod ai;
+mod combat;
 mod map;
 mod mapgen;
 mod modelgen;
 mod physics;
 mod player;
+mod rendering;
 mod weapon;
 
 use bevy::prelude::*;

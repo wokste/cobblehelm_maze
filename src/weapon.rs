@@ -1,13 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{player::CreatureStats, physics::{PhysicsBody, MapCollisionEvent}};
-
-#[derive(Eq, PartialEq, Copy, Clone)]
-pub enum Team {
-    Players,
-    Monsters,
-//    Environment,
-}
+use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEvent}};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
@@ -18,8 +11,8 @@ pub enum ProjectileType {
 impl ProjectileType {
     fn damage(&self) -> i16 {
         match self {
-            ProjectileType::BlueThing => 2,
-            ProjectileType::Fireball => 3,
+            ProjectileType::BlueThing => 3,
+            ProjectileType::Fireball => 2,
         }
     }
 
@@ -63,7 +56,7 @@ impl Weapon {
     pub fn new(projectile : ProjectileType) -> Self {
         Self {
             projectile,
-            cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Repeating), // TODO: make time configurable
+            cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Repeating),
             firing : FireMode::NoFire,
         }
     }
@@ -127,7 +120,7 @@ pub fn check_projectile_creature_collisions(
                 continue;
             }
             
-            if projectile_transform.translation.distance_squared(target_transform.translation) > 1.0 { // TODO: Distance
+            if projectile_transform.translation.distance_squared(target_transform.translation) > 1.0 { // TODO: Projectile and monster radius
                 continue;
             }
 

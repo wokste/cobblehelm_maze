@@ -4,14 +4,18 @@ use bevy::{
     //Windows,
 };
 
-use crate::{physics::{PhysicsBody, MapCollisionEvent}, weapon::Team};
+use crate::{
+    combat::CreatureStats,
+    physics::{PhysicsBody, MapCollisionEvent},
+    weapon::{Weapon, ProjectileType}
+};
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
     pub keys : PlayerKeys,
     pub stats : CreatureStats,
     pub physisc : PhysicsBody,
-    pub weapon : crate::weapon::Weapon,
+    pub weapon : Weapon,
 }
 
 impl Default for PlayerBundle {
@@ -20,7 +24,7 @@ impl Default for PlayerBundle {
             keys : Default::default(),
             stats : Default::default(),
             physisc : PhysicsBody::new(MapCollisionEvent::Stop),
-            weapon : crate::weapon::Weapon::new(crate::weapon::ProjectileType::BlueThing)
+            weapon : Weapon::new(ProjectileType::BlueThing)
         }
     }
 }
@@ -53,28 +57,6 @@ impl Default for PlayerKeys {
         }
     }
 }
-
-#[derive(Component)]
-pub struct CreatureStats {
-    pub speed: f32,
-    pub hp: i16,
-    pub hp_max: i16,
-    pub team : Team,
-}
-
-impl Default for CreatureStats {
-    fn default() -> Self {
-        Self {
-            speed: 6.0,
-            hp: 20,
-            hp_max: 20,
-            team: Team::Players,
-        }
-    }
-}
-
-#[derive(Component, Default)]
-pub struct Sprite;
 
 pub fn player_input(
     keys: Res<Input<KeyCode>>,

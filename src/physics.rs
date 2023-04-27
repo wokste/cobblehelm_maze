@@ -42,7 +42,6 @@ fn split_deltas(delta : Vec3) -> [Vec3;2] {
 
 fn check_map_collision(map : &crate::map::Map, pos : Vec3, radius : f32) -> bool {
     // TODO: Better return type
-    // TODO: add a radius
     let x0 = f32::floor(pos.x - radius) as i32;
     let x1 = f32::floor(pos.x + radius) as i32;
     let z0 = f32::floor(pos.z - radius) as i32;

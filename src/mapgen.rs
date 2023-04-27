@@ -56,17 +56,20 @@ pub fn make_map(level : u8) -> Map {
 
     let mut centers = vec![];
 
-    for _ in 0 .. 100 {
+    for _ in 0 .. 50 {
         let style = *styles.rooms.rand_front_loaded();
         let room = make_room(style, fastrand::i32(6..14), fastrand::i32(6..14));
 
-        let offset = Coords::new(
-            fastrand::i32(0 .. map.x_max() - room.x_max()),
-            fastrand::i32(0 .. map.z_max() - room.z_max())
-        );
-        
-        if check_place_room(&mut map, &room, offset).is_ok() {
-            centers.push(offset + room.random_square());
+        for _ in 0 .. 5 {
+            let offset = Coords::new(
+                fastrand::i32(0 .. map.x_max() - room.x_max()),
+                fastrand::i32(0 .. map.z_max() - room.z_max())
+            );
+            
+            if check_place_room(&mut map, &room, offset).is_ok() {
+                centers.push(offset + room.random_square());
+                break;
+            }
         }
     }
 

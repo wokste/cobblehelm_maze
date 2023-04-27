@@ -1,6 +1,6 @@
 use bevy::{prelude::*};
 
-use crate::{map::{MapData, Coords}, player::CreatureStats, weapon::Team};
+use crate::{map::{MapData, Coords}, combat::CreatureStats, combat::Team};
 
 #[derive(Copy,Clone)]
 pub enum MonsterType {
@@ -17,7 +17,7 @@ impl MonsterType {
         }
     }
 
-    pub fn make_stats(&self) -> crate::player::CreatureStats {
+    pub fn make_stats(&self) -> CreatureStats {
         use MonsterType::*;
         match self {
             EyeMonster => {CreatureStats{
@@ -103,7 +103,7 @@ pub fn spawn_monster(
         transform: Transform::from_xyz(monster_pos.x as f32 + 0.5, 0.5, monster_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     })
-        .insert(crate::player::Sprite)
+        .insert(crate::rendering::Sprite)
         .insert(monster_type.make_ai())
         .insert(monster_type.make_stats())
         .insert(monster_type.make_weapon());
