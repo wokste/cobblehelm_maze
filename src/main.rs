@@ -44,7 +44,7 @@ fn setup(
         mesh: meshes.add( modelgen::map_to_mesh(&map_data.map)),
         material: materials.add(StandardMaterial {
             base_color_texture: Some(texture_handle.clone()),
-            alpha_mode: AlphaMode::Opaque,
+            alpha_mode: AlphaMode::Mask(0.5),
             unlit: true,
             ..default()
             //Color::WHITE.into()
@@ -54,10 +54,12 @@ fn setup(
 
     // Player
     let player_pos = map_data.map.random_square();
+    let player_pos = Vec3::new(player_pos.x as f32 + 0.5, 0.7, player_pos.z as f32 + 0.5);
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(player_pos.x as f32 + 0.5, 0.7, player_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_translation(player_pos).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     }).insert(player::PlayerBundle::default());
+    map_data.player_pos = player_pos;
 
     for _ in 1 .. 20 {
         ai::spawn_monster(&mut commands, &map_data, &mut meshes, &mut materials);

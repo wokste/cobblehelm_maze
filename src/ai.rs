@@ -88,7 +88,7 @@ pub fn spawn_monster(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
 ) {
-    let monster_pos = map_data.map.random_square();
+    let monster_pos = map_data.map.random_square(); // TODO: LoS check
     let monster_type = MonsterType::rand();
 
     commands.spawn(PbrBundle {
