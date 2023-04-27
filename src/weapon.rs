@@ -39,6 +39,7 @@ impl ProjectileType {
     }
 }
 
+#[derive(PartialEq, Copy, Clone)]
 pub enum FireMode {
     NoFire,
     Fire,
@@ -47,16 +48,24 @@ pub enum FireMode {
 
 #[derive(Component)]
 pub struct Weapon {
-    pub firing : FireMode,
+    firing : FireMode,
     projectile : ProjectileType,
     cooldown : Timer,
 }
 
 impl Weapon {
+    pub fn set_fire_state(&mut self, firing : FireMode) {
+        self.firing = firing;
+
+        if self.cooldown.paused() && firing != FireMode::NoFire {
+            self.cooldown.unpause();
+        }
+    }
+
     pub fn new(projectile : ProjectileType) -> Self {
         Self {
             projectile,
-            cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Repeating),
+            cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Once),
             firing : FireMode::NoFire,
         }
     }
@@ -83,12 +92,14 @@ pub fn fire_weapons(
     mut query: Query<(&mut Weapon, &CreatureStats, &Transform)>,
 ) {
     for (mut weapon, stats, transform) in query.iter_mut() {
-        if weapon.cooldown.tick(time.delta()).just_finished() {
+        if weapon.cooldown.tick(time.delta()).finished() {
             let direction = match weapon.firing {
                 FireMode::NoFire => { continue }
                 FireMode::Fire => transform.rotation * Vec3::NEG_Z,
                 FireMode::FireAt(target_pos) => {(target_pos - transform.translation).normalize()},
             };
+            weapon.cooldown.reset();
+
             let velocity = direction * weapon.projectile.speed();
 
             let mut proto_projectile = commands.spawn(PbrBundle {

@@ -127,9 +127,10 @@ pub fn ai_fire(
 ) {
     for (ai, mut weapon) in monster_query.iter_mut() {
         use crate::weapon::FireMode::*;
-        weapon.firing = match ai.state {
+        let firing = match ai.state {
             AIState::SeePlayer(pos) => FireAt(pos),
             _ => NoFire,
-        }
+        };
+        weapon.set_fire_state(firing);
     }
 }

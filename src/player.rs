@@ -91,7 +91,7 @@ pub fn player_input(
         transform.rotation = Quat::from_rotation_y(rotation);
 
         pb.velocity = velocity.normalize() * stats.speed;
-        weapon.firing = firing;
+        weapon.set_fire_state(firing);
     }
 }
 
