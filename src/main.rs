@@ -1,9 +1,9 @@
 mod ai;
 mod combat;
 mod map;
-mod mapgen;
 mod modelgen;
 mod physics;
+mod procgen;
 mod player;
 mod rendering;
 mod weapon;
@@ -39,7 +39,7 @@ fn setup(
 
     let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures2.png");
 
-    map_data.map = mapgen::make_map(fastrand::u8(1..=5));
+    map_data.map = procgen::make_map(fastrand::u8(1..=5));
 
     // The actual map
     commands.spawn(PbrBundle {

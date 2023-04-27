@@ -15,8 +15,8 @@ pub struct CreatureStats {
     pub team : Team,
 }
 
-impl Default for CreatureStats {
-    fn default() -> Self {
+impl CreatureStats {
+    pub fn player() -> Self {
         Self {
             speed: 6.0,
             hp: 20,

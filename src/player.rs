@@ -22,7 +22,7 @@ impl Default for PlayerBundle {
     fn default() -> Self {
         Self {
             keys : Default::default(),
-            stats : Default::default(),
+            stats : CreatureStats::player(),
             physisc : PhysicsBody::new(MapCollisionEvent::Stop),
             weapon : Weapon::new(ProjectileType::BlueThing)
         }

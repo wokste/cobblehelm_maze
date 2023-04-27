@@ -1,23 +1,13 @@
 use crate::map::*;
 
-trait RandItem{
-    type Item;
+mod corridors;
+mod graph;
+mod randitem;
+mod rooms;
 
-    fn rand_front_loaded(&self) -> &Self::Item;
-}
+use randitem::RandItem;
 
-impl<T> RandItem for Vec<T> {
-    type Item = T;
-    
-    fn rand_front_loaded(&self) -> &Self::Item {
-        let len = self.len();
-        let id0 = fastrand::usize(0..len);
-        let id1 = fastrand::usize(0..len + 1);
-        &self[usize::min( id0, id1)]
-    }
-}
-
-struct LevelStyle {
+pub struct LevelStyle {
     corridors : Vec<Tile>,
     rooms: Vec<Tile>,
     doors : Vec<Tile>
@@ -58,7 +48,7 @@ pub fn make_map(level : u8) -> Map {
 
     for _ in 0 .. 50 {
         let style = *styles.rooms.rand_front_loaded();
-        let room = make_room(style, fastrand::i32(6..14), fastrand::i32(6..14));
+        let room = rooms::make_room(style, fastrand::i32(6..14), fastrand::i32(6..14));
 
         for _ in 0 .. 5 {
             let offset = Coords::new(
@@ -73,32 +63,8 @@ pub fn make_map(level : u8) -> Map {
         }
     }
 
-    for i in 0 .. centers.len() - 1 {
-        connect_rooms(&mut map, &styles, centers[i], centers[i + 1]);
-    }
-
-    map
-}
-
-fn make_room(style : Tile, w : i32, h : i32) -> Map {
-    let mut map = Map::new(w,h);
-
-    for z in 1 .. h - 1 {
-        for x in 1 .. w - 1 {
-            map.set_tile(x, z, style);
-        }
-    }
-
-    // Add walls
-    for z in 0 .. h {
-        for x in 0 .. w {
-            if !map.tile(x,z).is_solid() {
-                map.set_tile_if(x - 1, z, Tile::_Wall, |o| o == Tile::_Void);
-                map.set_tile_if(x + 1, z, Tile::_Wall, |o| o == Tile::_Void);
-                map.set_tile_if(x, z - 1, Tile::_Wall, |o| o == Tile::_Void);
-                map.set_tile_if(x, z + 1, Tile::_Wall, |o| o == Tile::_Void);
-            }
-        }
+    for edge in graph::make_tree(centers) {
+        corridors::connect_rooms(&mut map, &styles, edge);
     }
 
     map
@@ -126,26 +92,4 @@ fn check_place_room(map : &mut Map, room : &Map, offset : Coords) -> Result<(),(
     }
 
     Result::Ok(())
-}
-
-fn connect_rooms(map : &mut Map, level_style : &LevelStyle, p0 : Coords, p1 : Coords) {
-    let tile = *level_style.corridors.rand_front_loaded();
-    let door_tile = if level_style.doors.is_empty() { tile } else {*level_style.doors.rand_front_loaded() };
-
-    let x0 = std::cmp::min(p0.x, p1.x);
-    let x1 = std::cmp::max(p0.x, p1.x);
-    let z0 = std::cmp::min(p0.z, p1.z);
-    let z1 = std::cmp::max(p0.z, p1.z);
-
-    // X axis
-    for x in x0 ..= x1 {
-        map.set_tile_if(x, p1.z, tile, |t| t == Tile::_Void);
-        map.set_tile_if(x, p1.z, door_tile, |t| t == Tile::_Wall);
-    }
-
-    // Y axis
-    for z in z0 ..= z1 {
-        map.set_tile_if(p0.x, z, tile, |t| t == Tile::_Void);
-        map.set_tile_if(p0.x, z, door_tile, |t| t == Tile::_Wall);
-    }
 }
