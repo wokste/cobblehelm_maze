@@ -10,7 +10,7 @@ struct PrimData{
 
 impl PrimData {
     fn new(graph : &Vec<Coords>, inside : usize, outside : usize) -> Self {
-        Self {inside, outside, cost : graph[inside].manhattan_dist(graph[outside])}
+        Self {inside, outside, cost : graph[inside].eucledian_dist_sq(graph[outside])}
     }
 }
 

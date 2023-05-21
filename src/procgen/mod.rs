@@ -13,6 +13,31 @@ pub struct LevelStyle {
     doors : Vec<Tile>
 }
 
+pub enum RoomShape {
+    Organic,
+    Constructed,
+}
+
+impl From<Tile> for RoomShape {
+    fn from(tile: Tile) -> Self {
+        assert!(tile != Tile::_Void);
+        assert!(tile != Tile::_Wall);
+
+        use RoomShape::*;
+        match tile {
+            Tile::Castle => Constructed,
+            Tile::TempleBrown => Constructed,
+            Tile::TempleGray => Constructed,
+            Tile::TempleGreen => Constructed,
+            Tile::Demonic => Constructed,
+            Tile::Sewer => Constructed,
+            Tile::MetalIron => Constructed,
+            Tile::MetalBronze => Constructed,
+            _ => Organic,
+        }
+    }
+}
+
 pub fn make_map(level : u8) -> Map {
     let mut map = Map::new(64,64);
 

@@ -76,9 +76,16 @@ impl Coords {
         Self {x : v.x.floor() as i32, z : v.z.floor() as i32}
     }
 
+    /*
     pub fn manhattan_dist(self, other : Self) -> i32 {
         let d = self - other;
         d.x.abs() + d.z.abs()
+    }
+    */
+
+    pub fn eucledian_dist_sq(self, other : Self) -> i32 {
+        let d = self - other;
+        d.x * d.x + d.z * d.z
     }
 }
 
