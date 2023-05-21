@@ -73,7 +73,7 @@ pub fn make_map(level : u8) -> Map {
 
     for _ in 0 .. 50 {
         let style = *styles.rooms.rand_front_loaded();
-        let room = rooms::make_room(style, fastrand::i32(6..14), fastrand::i32(6..14));
+        let room = rooms::make_room(style);
 
         for _ in 0 .. 5 {
             let offset = Coords::new(
@@ -91,6 +91,8 @@ pub fn make_map(level : u8) -> Map {
     for edge in graph::make_tree(centers) {
         corridors::connect_rooms(&mut map, &styles, edge);
     }
+
+    print_map(&map);
 
     map
 }
@@ -117,4 +119,17 @@ fn check_place_room(map : &mut Map, room : &Map, offset : Coords) -> Result<(),(
     }
 
     Result::Ok(())
+}
+
+fn print_map(map : &Map) {
+    for z in 0 .. map.z_max() {
+        for x in 0 .. map.x_max() {
+            match map.tile(x, z) {
+                Tile::_Void => print!("[ ]"),
+                Tile::_Wall => print!("[X]"),
+                _ => print!(" . "),
+            }
+        }
+        println!();
+    }
 }

@@ -1,13 +1,15 @@
+use std::f32::consts::TAU;
+
+use bevy::prelude::Vec2;
+
 use crate::map::{Tile, Map};
 
-pub fn make_room(style : Tile, w : i32, h : i32) -> Map {
+pub fn make_room(style : Tile) -> Map {
     let shape = super::RoomShape::from(style);
     
-    let mut map = Map::new(w,h);
-
-    match shape {
-        super::RoomShape::Organic => add_organic_floor(style, &mut map),
-        super::RoomShape::Constructed => add_constructed_floor(style, &mut map),
+    let mut map = match shape {
+        super::RoomShape::Organic => make_organic_floor(style, fastrand::i32(6..14), fastrand::i32(6..14)),
+        super::RoomShape::Constructed => make_constructed_floor(style, fastrand::i32(4..12), fastrand::i32(4..12)),
     };
 
     add_walls(&mut map);
@@ -15,35 +17,45 @@ pub fn make_room(style : Tile, w : i32, h : i32) -> Map {
     map
 }
 
-fn add_organic_floor(style : Tile, map : &mut Map) {
-    let x_max = map.x_max();
-    let z_max = map.z_max();
-    for z in 1 .. z_max - 1 {
-        for x in 1 .. x_max - 1 {
-            let x_border = x == 1 || x == x_max - 2;
-            let z_border = z == 1 || z == z_max - 2;
+fn make_organic_floor(style : Tile, x_max : i32, z_max : i32) -> Map {
+    let mut map = Map::new(x_max + 2,z_max + 2);
 
-            if x_border && z_border { continue }
-            if (x_border || z_border) && fastrand::bool() { continue }
+    let center = Vec2::new(x_max as f32 + 1.0, z_max as f32 + 1.0) / 2.0;
+    let scale = Vec2::new(2.0 / (x_max as f32), 2.0 / (z_max as f32));
 
-            map.set_tile(x, z, style);
+    let ang_spikes = fastrand::i32(3..=5) as f32;
+    let ang_offset = fastrand::f32() * TAU;
+
+    for z in 1 .. z_max + 1 {
+        for x in 1 .. x_max + 1 {
+            let pos = Vec2::new(x as f32, z as f32);
+            let delta = (pos - center) * scale;
+
+            let len = delta.length();
+            let angle = delta.x.atan2(delta.y);
+
+            let len_max = (angle * ang_spikes + ang_offset).sin() * 0.25 + 0.75;
+
+            if angle.is_nan() || len < len_max {
+                map.set_tile(x, z, style);
+            }
         }
     }
+    map
 }
 
-fn add_constructed_floor(style : Tile, map : &mut Map) {
-    let x_max = map.x_max();
-    let z_max = map.z_max();
-    for z in 1 .. z_max - 1 {
-        for x in 1 .. x_max - 1 {
+fn make_constructed_floor(style : Tile, x_max : i32, z_max : i32) -> Map {
+    let mut map = Map::new(x_max + 2,z_max + 2);
+    for z in 1 .. z_max + 1 {
+        for x in 1 .. x_max + 1 {
             map.set_tile(x, z, style);
         }
     }
 
     if fastrand::bool() && z_max % 2 == 1 {
         let x0 = 2;
-        let x1 = x_max - 3;
-        for z in (2..z_max-2).step_by(2) {
+        let x1 = x_max - 1;
+        for z in (2..z_max).step_by(2) {
             map.set_tile(x0, z, Tile::_Void);
             map.set_tile(x1, z, Tile::_Void);
         }
@@ -51,12 +63,13 @@ fn add_constructed_floor(style : Tile, map : &mut Map) {
 
     if fastrand::bool() && x_max % 2 == 1 {
         let z0 = 2;
-        let z1 = z_max - 3;
-        for x in (2..x_max-2).step_by(2) {
+        let z1 = z_max - 1;
+        for x in (2..x_max).step_by(2) {
             map.set_tile(x, z0, Tile::_Void);
             map.set_tile(x, z1, Tile::_Void);
         }
     }
+    map
 }
 
 fn add_walls(map : &mut Map) {
