@@ -4,37 +4,33 @@ use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEv
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
-    Fireball,
-    BlueThing,
+    RedSpikes,
+    BlueBlob,
+    Shock,
 }
 
 impl ProjectileType {
     fn damage(&self) -> i16 {
         match self {
-            ProjectileType::BlueThing => 3,
-            ProjectileType::Fireball => 2,
+            ProjectileType::BlueBlob => 3,
+            ProjectileType::RedSpikes => 1,
+            ProjectileType::Shock => 4,
         }
     }
 
     fn speed(&self) -> f32 {
         match self {
-            ProjectileType::BlueThing => 8.0,
-            ProjectileType::Fireball => 5.0,
-        }
-    }
-
-    fn fire_speed(&self) -> f32 {
-        match self {
-            ProjectileType::BlueThing => 0.3,
-            ProjectileType::Fireball => 0.6,
+            ProjectileType::BlueBlob => 8.0,
+            ProjectileType::RedSpikes => 6.0,
+            ProjectileType::Shock => 2.0,
         }
     }
 
     fn make_uv(&self) -> TexCoords {
-        use ProjectileType::*;
         match self {
-            Fireball => TexCoords::new(0..1, 6),
-            BlueThing => TexCoords::new(1..2, 6),
+            ProjectileType::RedSpikes => TexCoords::new(0..1, 6),
+            ProjectileType::BlueBlob => TexCoords::new(1..2, 6),
+            ProjectileType::Shock => TexCoords::new(2..3, 6),
         }
     }
 }
@@ -62,10 +58,10 @@ impl Weapon {
         }
     }
 
-    pub fn new(projectile : ProjectileType) -> Self {
+    pub fn new(projectile : ProjectileType, fire_speed: f32) -> Self {
         Self {
             projectile,
-            cooldown : Timer::from_seconds(projectile.fire_speed(), TimerMode::Once),
+            cooldown : Timer::from_seconds(fire_speed, TimerMode::Once),
             firing : FireMode::NoFire,
         }
     }

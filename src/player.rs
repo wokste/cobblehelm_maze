@@ -24,7 +24,7 @@ impl Default for PlayerBundle {
             keys : Default::default(),
             stats : CreatureStats::player(),
             physisc : PhysicsBody::new(MapCollisionEvent::Stop),
-            weapon : Weapon::new(ProjectileType::BlueThing)
+            weapon : Weapon::new(ProjectileType::BlueBlob, 0.3)
         }
     }
 }

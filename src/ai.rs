@@ -13,7 +13,7 @@ impl MonsterType {
     pub fn make_ai(&self) -> AI {
         use MonsterType::*;
         match self {
-            Imp => {AI::new(5.0)},
+            Imp => {AI::new(2.5)},
             EyeMonster => {AI::new(5.0)},
             Goliath => { AI::new(9.0)}
         }
@@ -46,9 +46,9 @@ impl MonsterType {
     pub fn make_weapon(&self) -> crate::weapon::Weapon {
         use MonsterType::*;
         match self {
-            Imp => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Fireball)},
-            EyeMonster => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Fireball)},
-            Goliath => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Fireball)}
+            Imp => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Shock, 1.8)},
+            EyeMonster => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.6)},
+            Goliath => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.9)}
         }
     }
 
@@ -100,7 +100,9 @@ pub fn spawn_monster(
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res : &mut ResMut<SpriteResource>,
 ) {
-    let pos = map_data.map.random_square(); // TODO: LoS check
+    // TODO: LoS check
+    // TODO: Monster check
+    let pos = map_data.map.random_square();
     let monster_type = MonsterType::rand();
     let uv = monster_type.make_uv();
 
