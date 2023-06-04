@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEvent}};
+use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEvent}, rendering::TexCoords};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
@@ -30,11 +30,11 @@ impl ProjectileType {
         }
     }
 
-    fn to_color(&self) -> Color {
+    fn make_uv(&self) -> TexCoords {
+        use ProjectileType::*;
         match self {
-            ProjectileType::BlueThing => Color::CYAN,
-            ProjectileType::Fireball => Color::ORANGE_RED,
-
+            Fireball => TexCoords::new(0..1, 6),
+            BlueThing => TexCoords::new(1..2, 6),
         }
     }
 }
@@ -86,10 +86,10 @@ pub struct Projectile {
 
 pub fn fire_weapons(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
     mut query: Query<(&mut Weapon, &CreatureStats, &Transform)>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut render_res : ResMut<crate::rendering::SpriteResource>,
 ) {
     for (mut weapon, stats, transform) in query.iter_mut() {
         if weapon.cooldown.tick(time.delta()).finished() {
@@ -102,18 +102,10 @@ pub fn fire_weapons(
 
             let velocity = direction * weapon.projectile.speed();
 
-            let mut proto_projectile = commands.spawn(PbrBundle {
-                mesh: meshes.add( Mesh::from(shape::Cube{ size: 0.2 })),
-                material: materials.add(StandardMaterial {
-                    base_color: weapon.projectile.to_color(),
-                    alpha_mode: AlphaMode::Blend,
-                    unlit: true,
-                    ..default()
-                }),
-                transform: Transform::from_translation(transform.translation),
-                ..default()
-            });
-            
+            let uv = weapon.projectile.make_uv();
+
+            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.3, &mut meshes, &mut render_res));
+            proto_projectile.insert(crate::rendering::FaceCamera);
             proto_projectile.insert(weapon.make_projectile(stats.team));
             proto_projectile.insert(PhysicsBody::new(MapCollisionEvent::Destroy).set_velocity( velocity ));
         }

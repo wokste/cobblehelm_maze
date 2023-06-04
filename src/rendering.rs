@@ -11,12 +11,12 @@ const TILE_X : usize = 32;
 const TILE_Y : usize = 8;
 
 #[derive(Resource, Default)]
-pub struct RenderRes {
+pub struct SpriteResource {
     pub sprite_cache: HashMap<usize, Handle<Mesh>>,
     pub material: Handle<StandardMaterial>,
 }
 
-impl RenderRes {
+impl SpriteResource {
     pub fn get_mesh(&mut self, index : usize, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
         if let Some(handle) = self.sprite_cache.get(&index) {
             return handle.clone();
@@ -75,7 +75,7 @@ impl TexCoords {
         pos : Vec3,
         anim_speed : f32,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res : &mut ResMut<RenderRes>,
+        render_res : &mut ResMut<SpriteResource>,
     ) -> SpriteBundle {
         let frames = Range::<usize> {
             start: self.x.start as usize + self.y as usize * TILE_X,
@@ -142,7 +142,7 @@ pub fn animate_sprites(
     time: Res<Time>,
     mut query: Query<(&mut Animation, &mut Sprite3d, &mut Handle<Mesh>)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<RenderRes>,
+    mut render_res: ResMut<SpriteResource>,
 ) {
     for (mut animation, mut sprite, mut mesh) in query.iter_mut() {
         animation.timer.tick(time.delta());

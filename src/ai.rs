@@ -1,6 +1,6 @@
 use bevy::{prelude::*};
 
-use crate::{map::{MapData, Coords}, combat::CreatureStats, combat::Team, rendering::{TexCoords, RenderRes}};
+use crate::{map::{MapData, Coords}, combat::CreatureStats, combat::Team, rendering::{TexCoords, SpriteResource}};
 
 #[derive(Copy,Clone)]
 pub enum MonsterType {
@@ -98,7 +98,7 @@ pub fn spawn_monster(
     commands: &mut Commands,
     map_data: &ResMut<crate::map::MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
-    render_res : &mut ResMut<RenderRes>,
+    render_res : &mut ResMut<SpriteResource>,
 ) {
     let pos = map_data.map.random_square(); // TODO: LoS check
     let monster_type = MonsterType::rand();
