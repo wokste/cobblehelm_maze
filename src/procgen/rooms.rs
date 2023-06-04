@@ -9,7 +9,7 @@ pub fn make_room(style : Tile) -> Map {
     
     let mut map = match shape {
         super::RoomShape::Organic => make_organic_floor(style, fastrand::i32(6..14), fastrand::i32(6..14)),
-        super::RoomShape::Constructed => make_constructed_floor(style, fastrand::i32(4..12), fastrand::i32(4..12)),
+        super::RoomShape::Constructed => make_constructed_floor(style, fastrand::i32(5..14), fastrand::i32(4..12)),
     };
 
     add_walls(&mut map);
@@ -52,16 +52,7 @@ fn make_constructed_floor(style : Tile, x_max : i32, z_max : i32) -> Map {
         }
     }
 
-    if fastrand::bool() && z_max % 2 == 1 {
-        let x0 = 2;
-        let x1 = x_max - 1;
-        for z in (2..z_max).step_by(2) {
-            map.set_tile(x0, z, Tile::_Void);
-            map.set_tile(x1, z, Tile::_Void);
-        }
-    }
-
-    if fastrand::bool() && x_max % 2 == 1 {
+    if x_max % 2 == 1 && z_max > 6 && fastrand::bool() {
         let z0 = 2;
         let z1 = z_max - 1;
         for x in (2..x_max).step_by(2) {

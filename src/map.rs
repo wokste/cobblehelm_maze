@@ -16,6 +16,7 @@ impl Map {
 
     pub fn x_max(&self) -> i32 {self.size.x}
     pub fn z_max(&self) -> i32 {self.size.z}
+    pub fn max(&self) -> Coords {self.size}
 
     fn to_index(&self, x : i32, z : i32) -> usize {
         assert!(x >= 0 && x < self.x_max() && z >= 0 && z < self.z_max());
@@ -68,6 +69,8 @@ pub struct Coords {
 }
 
 impl Coords {
+    pub const ZERO : Coords = Coords{x:0,z:0};
+
     pub fn new(x : i32, z : i32) -> Self {
         Self {x,z}
     }
@@ -84,6 +87,8 @@ impl Coords {
             z : self.z as f32 + 0.5
         }
     }
+
+    pub fn transpose(self) -> Self { Self {x : self.z, z : self.x } }
 
     /*
     pub fn manhattan_dist(self, other : Self) -> i32 {
@@ -156,3 +161,15 @@ impl MapData {
         (pos).distance_squared(self.player_pos) < sight_radius * sight_radius
     }
 }
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_transpose_coords() {
+        let c = Coords::new(13,37);
+        assert_eq!(c.transpose().transpose(), c);
+    }
+} 

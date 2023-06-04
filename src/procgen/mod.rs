@@ -2,10 +2,13 @@ use crate::map::*;
 
 mod corridors;
 mod graph;
+mod map_transform;
 mod randitem;
 mod rooms;
 
 use randitem::RandItem;
+
+use self::map_transform::MapTransform;
 
 pub struct LevelStyle {
     corridors : Vec<Tile>,
@@ -76,13 +79,10 @@ pub fn make_map(level : u8) -> Map {
         let room = rooms::make_room(style);
 
         for _ in 0 .. 5 {
-            let offset = Coords::new(
-                fastrand::i32(0 .. map.x_max() - room.x_max()),
-                fastrand::i32(0 .. map.z_max() - room.z_max())
-            );
+            let transform = MapTransform::make_rand(map.max(),room.max());
             
-            if check_place_room(&mut map, &room, offset).is_ok() {
-                centers.push(offset + room.random_square());
+            if check_place_room(&mut map, &room, &transform).is_ok() {
+                centers.push(transform.map(room.random_square()));
                 break;
             }
         }
@@ -97,11 +97,12 @@ pub fn make_map(level : u8) -> Map {
     map
 }
 
-fn check_place_room(map : &mut Map, room : &Map, offset : Coords) -> Result<(),()> {
+fn check_place_room(map : &mut Map, room : &Map, transform : &MapTransform) -> Result<(),()> {
     for sz in 0 .. room.z_max() {
         for sx in 0 .. room.x_max() {
             let src = room.tile(sx, sz);
-            let dst = map.tile(sx + offset.x,sz + offset.z);
+            let dst = transform.map_xz(sx,sz);
+            let dst = map.tile(dst.x,dst.z);
 
             if src != Tile::_Void && dst != Tile::_Void && src != dst {
                 return Result::Err(());
@@ -112,8 +113,9 @@ fn check_place_room(map : &mut Map, room : &Map, offset : Coords) -> Result<(),(
     for sz in 0 .. room.z_max() {
         for sx in 0 .. room.x_max() {
             let src = room.tile(sx, sz);
+            let dst = transform.map_xz(sx,sz);
             if src != Tile::_Void {
-                map.set_tile(sx + offset.x, sz + offset.z, src);
+                map.set_tile(dst.x, dst.z, src);
             }
         }
     }

@@ -30,7 +30,7 @@ impl ProjectileType {
         match self {
             ProjectileType::RedSpikes => TexCoords::new(0..1, 6),
             ProjectileType::BlueBlob => TexCoords::new(1..2, 6),
-            ProjectileType::Shock => TexCoords::new(2..3, 6),
+            ProjectileType::Shock => TexCoords::new(2..5, 6),
         }
     }
 }
@@ -100,7 +100,7 @@ pub fn fire_weapons(
 
             let uv = weapon.projectile.make_uv();
 
-            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.3, &mut meshes, &mut render_res));
+            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.1, &mut meshes, &mut render_res));
             proto_projectile.insert(crate::rendering::FaceCamera);
             proto_projectile.insert(weapon.make_projectile(stats.team));
             proto_projectile.insert(PhysicsBody::new(MapCollisionEvent::Destroy).set_velocity( velocity ));
