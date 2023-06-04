@@ -1,9 +1,10 @@
 use bevy::{prelude::*};
 
-use crate::{map::{MapData, Coords}, combat::CreatureStats, combat::Team};
+use crate::{map::{MapData, Coords}, combat::CreatureStats, combat::Team, rendering::{TexCoords, RenderRes}};
 
 #[derive(Copy,Clone)]
 pub enum MonsterType {
+    Imp,
     EyeMonster,
     Goliath,
 }
@@ -12,6 +13,7 @@ impl MonsterType {
     pub fn make_ai(&self) -> AI {
         use MonsterType::*;
         match self {
+            Imp => {AI::new(5.0)},
             EyeMonster => {AI::new(5.0)},
             Goliath => { AI::new(9.0)}
         }
@@ -20,6 +22,12 @@ impl MonsterType {
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType::*;
         match self {
+            Imp => {CreatureStats{
+                speed: 6.,
+                hp: 1,
+                hp_max: 1,
+                team: Team::Monsters,
+            }},
             EyeMonster => {CreatureStats{
                 speed: 6.,
                 hp: 2,
@@ -38,6 +46,7 @@ impl MonsterType {
     pub fn make_weapon(&self) -> crate::weapon::Weapon {
         use MonsterType::*;
         match self {
+            Imp => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Fireball)},
             EyeMonster => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Fireball)},
             Goliath => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Fireball)}
         }
@@ -45,18 +54,21 @@ impl MonsterType {
 
     pub fn rand() -> Self {
         let r = fastrand::u32(1..=6);
-        if r < 4 {
+        if r < 3 {
+            Self::Imp
+        } else if r < 6 {
             Self::EyeMonster
         } else {
             Self::Goliath
         }
     }
 
-    fn to_color(&self) -> Color {
+    fn make_uv(&self) -> TexCoords {
         use MonsterType::*;
         match self {
-            EyeMonster => Color::ORANGE,
-            Goliath => Color::LIME_GREEN
+            Imp => TexCoords::new(0..1, 7),
+            EyeMonster => TexCoords::new(4..7, 7),
+            Goliath => TexCoords::new(8..9, 7)
         }
     }
 }
@@ -86,24 +98,14 @@ pub fn spawn_monster(
     commands: &mut Commands,
     map_data: &ResMut<crate::map::MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
+    render_res : &mut ResMut<RenderRes>,
 ) {
-    let monster_pos = map_data.map.random_square(); // TODO: LoS check
+    let pos = map_data.map.random_square(); // TODO: LoS check
     let monster_type = MonsterType::rand();
+    let uv = monster_type.make_uv();
 
-    commands.spawn(PbrBundle {
-        mesh: meshes.add( Mesh::from(shape::Cube{ size: 0.5 })),
-        material: materials.add(StandardMaterial {
-            base_color: monster_type.to_color(),
-            alpha_mode: AlphaMode::Opaque,
-            unlit: true,
-            ..default()
-            //Color::WHITE.into()
-        }),
-        transform: Transform::from_xyz(monster_pos.x as f32 + 0.5, 0.5, monster_pos.z as f32 + 0.5).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    })
-        .insert(crate::rendering::Sprite)
+    commands.spawn(uv.to_sprite_bundle(pos.to_vec(), 0.3, meshes, render_res))
+        .insert(crate::rendering::FaceCamera)
         .insert(monster_type.make_ai())
         .insert(monster_type.make_stats())
         .insert(monster_type.make_weapon());

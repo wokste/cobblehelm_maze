@@ -12,45 +12,58 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) 
-        .add_startup_system(setup)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_startup_system(game_setup)
+        .add_startup_system(level_setup.after(game_setup))
         .insert_resource(map::MapData::default())
+        .insert_resource(rendering::RenderRes::default())
         .add_system(player::player_input)
-        .add_system(ai::ai_los)
-        .add_system(ai::ai_fire)
-        .add_system(physics::do_physics)
         .add_system(player::update_map)
+        .add_system(ai::ai_los.after(player::update_map))
+        .add_system(ai::ai_fire.after(ai::ai_los))
+        .add_system(physics::do_physics.after(player::player_input))
         .add_system(weapon::check_projectile_creature_collisions)
-        .add_system(weapon::fire_weapons)
+        .add_system(weapon::fire_weapons.after(player::player_input).after(ai::ai_fire))
+
+        .add_system(rendering::face_camera.after(physics::do_physics))
+        .add_system(rendering::animate_sprites)
+
         .run();
 }
 
-/// set up a simple 3D scene
-fn setup(
-    mut commands: Commands,
+fn game_setup(
     asset_server: Res<AssetServer>,
-    mut map_data: ResMut<map::MapData>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ambient_light: ResMut<AmbientLight>,
+    mut render_res: ResMut<rendering::RenderRes>,
 ) {
     ambient_light.color = Color::WHITE;
     ambient_light.brightness = 0.5;
 
-    let texture_handle = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures2.png");
+    let texture = asset_server.load("C:/Users/wokste/Desktop/labyrinth_textures2.png");
 
+    render_res.material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture),
+        alpha_mode: AlphaMode::Mask(0.5),
+        unlit: true,
+        ..default()
+        //Color::WHITE.into()
+    });
+}
+
+/// set up the game
+fn level_setup(
+    mut commands: Commands,
+    mut map_data: ResMut<map::MapData>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut render_res: ResMut<rendering::RenderRes>,
+) {
     map_data.map = procgen::make_map(fastrand::u8(1..=5));
 
     // The actual map
     commands.spawn(PbrBundle {
         mesh: meshes.add( modelgen::map_to_mesh(&map_data.map)),
-        material: materials.add(StandardMaterial {
-            base_color_texture: Some(texture_handle.clone()),
-            alpha_mode: AlphaMode::Mask(0.5),
-            unlit: true,
-            ..default()
-            //Color::WHITE.into()
-        }),
+        material: render_res.material.clone(),
         ..default()
     });
 
@@ -64,6 +77,6 @@ fn setup(
     map_data.player_pos = player_pos;
 
     for _ in 1 .. 20 {
-        ai::spawn_monster(&mut commands, &map_data, &mut meshes, &mut materials);
+        ai::spawn_monster(&mut commands, &map_data, &mut meshes, &mut render_res);
     }
 }

@@ -76,6 +76,15 @@ impl Coords {
         Self {x : v.x.floor() as i32, z : v.z.floor() as i32}
     }
 
+    pub fn to_vec(&self) -> Vec3 {
+        // TODO: Height
+        Vec3 {
+            x : self.x as f32 + 0.5,
+            y: 0.5,
+            z : self.z as f32 + 0.5
+        }
+    }
+
     /*
     pub fn manhattan_dist(self, other : Self) -> i32 {
         let d = self - other;
