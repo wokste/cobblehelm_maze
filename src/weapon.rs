@@ -112,6 +112,7 @@ pub fn check_projectile_creature_collisions(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Projectile, &Transform)>,
     mut target_query: Query<(Entity, &mut CreatureStats, &Transform)>,
+    mut hud: ResMut<crate::hud::HUDInfo>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
         for (monster_entity, mut stats, target_transform) in target_query.iter_mut() {
@@ -130,6 +131,7 @@ pub fn check_projectile_creature_collisions(
                     // TODO: Game over
                 } else {
                     commands.entity(monster_entity).despawn();
+                    hud.score_points(10); // TODO: What kind of score to use?
                 }
             }
             

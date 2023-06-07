@@ -1,5 +1,6 @@
 mod ai;
 mod combat;
+mod hud;
 mod map;
 mod modelgen;
 mod physics;
@@ -9,14 +10,17 @@ mod rendering;
 mod weapon;
 
 use bevy::prelude::*;
+use bevy_egui::{EguiPlugin};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_plugin(EguiPlugin)
         .add_startup_system(game_setup)
         .add_startup_system(level_setup.after(game_setup))
         .insert_resource(map::MapData::default())
         .insert_resource(rendering::SpriteResource::default())
+        .insert_resource(hud::HUDInfo::default())
         .add_system(player::player_input)
         .add_system(player::update_map)
         .add_system(ai::ai_los.after(player::update_map))
@@ -27,6 +31,7 @@ fn main() {
 
         .add_system(rendering::face_camera.after(physics::do_physics))
         .add_system(rendering::animate_sprites)
+        .add_system(hud::render_hud)
 
         .run();
 }
