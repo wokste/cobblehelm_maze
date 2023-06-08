@@ -1,26 +1,26 @@
 mod ai;
 mod combat;
-mod hud;
 mod map;
 mod modelgen;
 mod physics;
 mod procgen;
 mod player;
 mod rendering;
+mod ui;
 mod weapon;
 
 use bevy::prelude::*;
-use bevy_egui::{EguiPlugin};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
-        .add_plugin(EguiPlugin)
+        //.add_plugin(EguiPlugin)
+        .add_plugin(ui::UIPlugin)
         .add_startup_system(game_setup)
         .add_startup_system(level_setup.after(game_setup))
         .insert_resource(map::MapData::default())
         .insert_resource(rendering::SpriteResource::default())
-        .insert_resource(hud::HUDInfo::default())
+        .insert_resource(GameInfo::default())
         .add_system(player::player_input)
         .add_system(player::update_map)
         .add_system(ai::ai_los.after(player::update_map))
@@ -31,7 +31,7 @@ fn main() {
 
         .add_system(rendering::face_camera.after(physics::do_physics))
         .add_system(rendering::animate_sprites)
-        .add_system(hud::render_hud)
+        //.add_system(ui::hud::render_hud)
 
         .run();
 }
@@ -83,5 +83,36 @@ fn level_setup(
 
     for _ in 1 .. 20 {
         ai::spawn_monster(&mut commands, &map_data, &mut meshes, &mut render_res);
+    }
+}
+
+
+
+// This resource tracks the game's score
+#[derive(Resource)]
+pub struct GameInfo {
+//    hp: i32,
+//    hp_max: i32,
+    score: i32,
+    score_str: String,
+}
+
+impl GameInfo {
+    pub fn score_points(&mut self, score: i32) {
+        self.score += score;
+        self.score_str = format!("Score: {}", self.score);
+    }
+}
+
+impl Default for GameInfo {
+    fn default() -> Self {
+        let mut s = Self {
+//            hp: 10,
+//            hp_max: 10,
+            score: 0,
+            score_str: String::new(),
+        };
+        s.score_points(0);
+        s
     }
 }

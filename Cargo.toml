@@ -15,4 +15,3 @@ opt-level = 3
 bevy = { version = "0.10", features = ["dynamic_linking"] }
 derive_more = "0.99.17"
 fastrand = "1.9.0"
-bevy_egui = "0.20"
