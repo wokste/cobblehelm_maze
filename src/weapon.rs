@@ -13,7 +13,7 @@ impl ProjectileType {
     fn damage(&self) -> i16 {
         match self {
             ProjectileType::BlueBlob => 3,
-            ProjectileType::RedSpikes => 1,
+            ProjectileType::RedSpikes => 2,
             ProjectileType::Shock => 4,
         }
     }
@@ -113,6 +113,7 @@ pub fn check_projectile_creature_collisions(
     mut projectile_query: Query<(Entity, &Projectile, &Transform)>,
     mut target_query: Query<(Entity, &mut CreatureStats, &Transform)>,
     mut game: ResMut<crate::GameInfo>,
+    mut game_state: ResMut<NextState<crate::game::GameState>>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
         for (monster_entity, mut stats, target_transform) in target_query.iter_mut() {
@@ -129,9 +130,10 @@ pub fn check_projectile_creature_collisions(
             if stats.hp <= 0 {
                 if stats.team == Team::Players {
                     // TODO: Game over
+                    game_state.set(crate::game::GameState::GameOver);
                 } else {
                     commands.entity(monster_entity).despawn();
-                    game.score_points(10); // TODO: What kind of score to use?
+                    game.score += 10; // TODO: What kind of score to use?
                 }
             }
             

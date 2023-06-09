@@ -1,10 +1,11 @@
 mod ai;
 mod combat;
+mod game;
 mod map;
 mod modelgen;
 mod physics;
-mod procgen;
 mod player;
+mod procgen;
 mod rendering;
 mod ui;
 mod weapon;
@@ -86,33 +87,11 @@ fn level_setup(
     }
 }
 
-
-
 // This resource tracks the game's score
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct GameInfo {
 //    hp: i32,
 //    hp_max: i32,
-    score: i32,
-    score_str: String,
-}
-
-impl GameInfo {
-    pub fn score_points(&mut self, score: i32) {
-        self.score += score;
-        self.score_str = format!("Score: {}", self.score);
-    }
-}
-
-impl Default for GameInfo {
-    fn default() -> Self {
-        let mut s = Self {
-//            hp: 10,
-//            hp_max: 10,
-            score: 0,
-            score_str: String::new(),
-        };
-        s.score_points(0);
-        s
-    }
+    pub score: i32,
+    pub coins : i32,
 }
