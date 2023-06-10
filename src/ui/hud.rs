@@ -10,7 +10,7 @@ pub struct HudUpdated {
 
 
 enum HudField{
-    HP,
+    HpPerc,
     Score,
     Coins,
 //    Status,
@@ -19,7 +19,7 @@ enum HudField{
 impl HudUpdated {
     fn update(&mut self, game : &crate::GameInfo) -> bool {
         let new_value : i32 = match self.field {
-            HudField::HP => 10,
+            HudField::HpPerc => (game.hp_perc * 100.0) as i32,
             HudField::Score => game.score,
             HudField::Coins => game.coins,
         };
@@ -34,7 +34,7 @@ impl HudUpdated {
 
     fn make_text(&self) -> String {
         match self.field {
-            HudField::HP => format!("HP: {}", self.value),
+            HudField::HpPerc => format!("HP: {}%", self.value),
             HudField::Score => format!("Score: {}", self.value),
             HudField::Coins => format!("Coins: {}", self.value),
         }
@@ -54,7 +54,7 @@ pub fn spawn(
             flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            size: Size::new(Val::Percent(100.0), Val::Px(150.0)),
+            size: Size::new(Val::Percent(100.0), Val::Px(100.0)),
             gap: Size::new(Val::Px(16.0),Val::Px(16.0)),
             
             ..default()
@@ -62,7 +62,7 @@ pub fn spawn(
 		background_color: Color::MIDNIGHT_BLUE.into(),
 		..default()
 	})).with_children(|parent| {
-        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::HP, value: -1} ) );
+        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::HpPerc, value: -1} ) );
         parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Score, value: -1} ) );
         parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Coins, value: -1} ) );
     })

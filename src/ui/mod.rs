@@ -10,7 +10,6 @@ pub struct UIPlugin;
 impl Plugin for UIPlugin{
     fn build(&self, app: &mut bevy::prelude::App) {
         app
-            .add_state::<GameState>()
             .add_system(menus::spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
             .add_system(menus::spawn_gameover_menu.in_schedule(OnEnter(GameState::GameOver)))
             .add_system(menus::spawn_pause_menu.in_schedule(OnEnter(GameState::Paused)))
