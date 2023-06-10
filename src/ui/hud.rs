@@ -1,17 +1,53 @@
 use bevy::prelude::*;
 
+use super::styles::*;
+
 #[derive(Component)]
-pub enum HudUpdated{
+pub struct HudUpdated {
+    value: i32,
+    field: HudField,
+}
+
+
+enum HudField{
     HP,
     Score,
     Coins,
 //    Status,
 }
 
+impl HudUpdated {
+    fn update(&mut self, game : &crate::GameInfo) -> bool {
+        let new_value : i32 = match self.field {
+            HudField::HP => 10,
+            HudField::Score => game.score,
+            HudField::Coins => game.coins,
+        };
+
+        if self.value == new_value {
+            false
+        } else {
+            self.value = new_value;
+            true
+        }
+    }
+
+    fn make_text(&self) -> String {
+        match self.field {
+            HudField::HP => format!("HP: {}", self.value),
+            HudField::Score => format!("Score: {}", self.value),
+            HudField::Coins => format!("Coins: {}", self.value),
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct HUD;
 
-pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>)
+pub fn spawn(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>
+)
 {
 	let _hud = commands.spawn((HUD, NodeBundle{
         style: Style{
@@ -25,10 +61,28 @@ pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>)
         },
 		background_color: Color::MIDNIGHT_BLUE.into(),
 		..default()
-	})
-    ).id();
+	})).with_children(|parent| {
+        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::HP, value: -1} ) );
+        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Score, value: -1} ) );
+        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Coins, value: -1} ) );
+    })
+    .id();
 
     // TODO: Spawn HUD elements
+}
+
+pub fn update_hud(
+    mut query: Query<(&mut Text, &mut HudUpdated)>,
+    game: Res<crate::GameInfo>,
+)
+{
+    for (mut text, mut updated) in &mut query {
+        if !updated.update(&game) {
+            continue;
+        }
+
+        text.sections[0].value = updated.make_text();
+    }
 }
 
 pub fn despawn(mut commands: Commands, query : Query<Entity, With<HUD>>)
