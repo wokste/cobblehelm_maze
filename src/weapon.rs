@@ -86,6 +86,8 @@ pub fn fire_weapons(
     mut query: Query<(&mut Weapon, &CreatureStats, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res : ResMut<crate::rendering::SpriteResource>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     for (mut weapon, stats, transform) in query.iter_mut() {
         if weapon.cooldown.tick(time.delta()).finished() {
@@ -104,6 +106,9 @@ pub fn fire_weapons(
             proto_projectile.insert(crate::rendering::FaceCamera);
             proto_projectile.insert(weapon.make_projectile(stats.team));
             proto_projectile.insert(PhysicsBody::new(MapCollisionEvent::Destroy).set_velocity( velocity ));
+
+            let sound = asset_server.load("audio/player_shoot.ogg");
+            audio.play(sound);
         }
     }
 }
@@ -114,6 +119,8 @@ pub fn check_projectile_creature_collisions(
     mut target_query: Query<(Entity, &mut CreatureStats, &Transform)>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
         for (monster_entity, mut stats, target_transform) in target_query.iter_mut() {
@@ -126,6 +133,15 @@ pub fn check_projectile_creature_collisions(
             }
 
             stats.hp -= projectile.damage;
+            if stats.team == Team::Players {
+                game.hp_perc = f32::clamp((stats.hp as f32) / (stats.hp_max as f32), 0.0, 1.0);
+                let sound = asset_server.load("audio/player_hurt.ogg");
+                audio.play(sound);
+            } else {
+                let sound = asset_server.load("audio/monster_hurt.ogg");
+                audio.play(sound);
+            }
+
 
             if stats.hp <= 0 {
                 if stats.team == Team::Players {
