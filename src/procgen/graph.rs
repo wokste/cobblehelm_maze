@@ -22,6 +22,11 @@ impl Edge {
         let dist_sq = graph.nodes[from].coords.eucledian_dist_sq(graph.nodes[to].coords);
         Self {from, to, dist_sq}
     }
+
+    fn to_hash(&self) -> usize {
+        let (v1, v2)= if self.from < self.to {(self.from, self.to)} else {(self.to, self.from)};
+        (v1 << 32) + v2
+    }
 }
 
 impl Graph {
@@ -54,8 +59,32 @@ impl Graph {
         };
     }
 
-    pub fn add_more_edges(&mut self) {
-        // TODO: Implement
+    pub fn add_more_edges(&mut self, rng : &mut fastrand::Rng, max_dist_sq : i32) {
+        let mut map = bevy::utils::HashSet::<usize>::new();
+        let node_len = self.nodes.len();
+
+        for e in self.edges.iter() {
+            map.insert(e.to_hash());
+        }
+
+        for _ in 0 .. 1000 {
+            let n0 = rng.usize(0..node_len - 1);
+            let n1 = rng.usize((n0+1) ..node_len);
+            let new_edge = Edge::new(self, n0, n1);
+
+            if map.contains(&new_edge.to_hash()) {
+                continue;
+            }
+
+            if new_edge.dist_sq > max_dist_sq {
+                continue;
+            }
+
+            map.insert(new_edge.to_hash());
+            self.edges.push(new_edge);
+
+            // TODO: Exit
+        }
     }
 
     pub fn shuffle_edges(&mut self, rng : &mut fastrand::Rng) {
