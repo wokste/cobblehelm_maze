@@ -1,3 +1,5 @@
+use std::ops::{Index, IndexMut};
+
 use bevy::prelude::{Resource, Vec3};
 use derive_more::{Add, Sub};
 
@@ -48,17 +50,20 @@ impl Map {
             self.set_tile(x, z, tile)
         }
     }
+}
 
-    pub fn random_square(&self) -> Coords {
-        for _ in 0 .. 1048576 {
-            let x = fastrand::i32(1 .. self.x_max() - 1);
-            let z = fastrand::i32(1 .. self.z_max() - 1);
+impl Index<Coords> for Map {
+    type Output = Tile;
 
-            if !self.tile(x,z).is_solid() {
-                return Coords::new(x as i32, z as i32);
-            }
-        }
-        panic!("Could not find a solid tile");
+    fn index(&self, c: Coords) -> &Self::Output {
+        &self.tiles[self.to_index(c.x,c.z)]
+    }
+}
+
+impl IndexMut<Coords> for Map {
+    fn index_mut(&mut self, c: Coords) -> &mut Self::Output {
+        let id: usize = self.to_index(c.x, c.z);
+        &mut self.tiles[id]
     }
 }
 
@@ -79,13 +84,27 @@ impl Coords {
         Self {x : v.x.floor() as i32, z : v.z.floor() as i32}
     }
 
-    pub fn to_vec(&self) -> Vec3 {
+    pub fn to_vec(&self, height : f32) -> Vec3 {
         // TODO: Height
         Vec3 {
             x : self.x as f32 + 0.5,
-            y: 0.5,
+            y: height,
             z : self.z as f32 + 0.5
         }
+    }
+
+    pub fn rand_center(&self) -> Coords {
+        Coords::new(
+            (self.x + fastrand::bool() as i32) / 2,
+            (self.z + fastrand::bool() as i32) / 2
+        )
+    }
+
+    pub fn rand(&self) -> Coords {
+        Coords::new(
+            fastrand::i32(0..self.x),
+            fastrand::i32(0..self.z),
+        )
     }
 
     pub fn transpose(self) -> Self { Self {x : self.z, z : self.x } }

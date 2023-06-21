@@ -94,23 +94,46 @@ impl AI {
     }
 }
 
+fn choose_spawn_pos(map_data: &crate::map::MapData) -> Result<Coords, &'static str> {
+    
+    let map = &map_data.map;//.random_square();
+    for _ in 0 .. 4096 {
+        let x = fastrand::i32(1 .. map.x_max() - 1);
+        let z = fastrand::i32(1 .. map.z_max() - 1);
+
+        if map.tile(x,z).is_solid() {
+            continue;
+        }
+
+        let pos = crate::map::Coords::new(x as i32, z as i32);
+        if map_data.can_see_player(pos.to_vec(0.6), 10.0) {
+            continue;
+        }
+
+        // TODO: Monster check
+
+        return Ok(pos);
+    }
+    Err("Could not find a proper spawn pos")
+}
+
 pub fn spawn_monster(
     commands: &mut Commands,
     map_data: &ResMut<crate::map::MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res : &mut ResMut<SpriteResource>,
-) {
-    // TODO: LoS check
-    // TODO: Monster check
-    let pos = map_data.map.random_square();
+) -> Result<(),&'static str> {
+    let pos = choose_spawn_pos(&map_data)?;
     let monster_type = MonsterType::rand();
     let uv = monster_type.make_uv();
 
-    commands.spawn(uv.to_sprite_bundle(pos.to_vec(), 0.3, meshes, render_res))
+    commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.5), 0.3, meshes, render_res))
         .insert(crate::rendering::FaceCamera)
         .insert(monster_type.make_ai())
         .insert(monster_type.make_stats())
         .insert(monster_type.make_weapon());
+
+    Ok(())
 }
 
 pub fn ai_los(

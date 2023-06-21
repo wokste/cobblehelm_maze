@@ -10,6 +10,12 @@ use randitem::RandItem;
 
 use self::map_transform::MapTransform;
 
+pub struct MapGenResult {
+    pub map : Map,
+    pub player_pos : Coords,
+    // TODO: Stuff like locations for keys and end of level positions.
+}
+
 pub struct LevelStyle {
     corridors : Vec<Tile>,
     rooms: Vec<Tile>,
@@ -41,7 +47,7 @@ impl From<Tile> for RoomShape {
     }
 }
 
-pub fn make_map(level : u8) -> Map {
+pub fn make_map(level : u8) -> MapGenResult {
     let mut map = Map::new(64,64);
 
     let styles = match level{
@@ -82,7 +88,7 @@ pub fn make_map(level : u8) -> Map {
             let transform = MapTransform::make_rand(map.max(),room.max());
             
             if check_place_room(&mut map, &room, &transform).is_ok() {
-                centers.push(transform.map(room.random_square()));
+                centers.push(transform.map(room.max().rand_center()));
                 break;
             }
         }
@@ -92,9 +98,15 @@ pub fn make_map(level : u8) -> Map {
         corridors::connect_rooms(&mut map, &styles, edge);
     }
 
+    let (player_pos, _) = choose_start_and_end(&map);
+
     print_map(&map);
 
-    map
+    MapGenResult
+    {
+        map,
+        player_pos,
+    }
 }
 
 fn check_place_room(map : &mut Map, room : &Map, transform : &MapTransform) -> Result<(),()> {
@@ -134,4 +146,34 @@ fn print_map(map : &Map) {
         }
         println!();
     }
+}
+
+fn choose_start_and_end(map : &Map) -> (Coords,Coords){
+    let mut pair = (choose_pos(map), choose_pos(map));
+    let mut dist = pair.0.eucledian_dist_sq(pair.1);
+
+    for _ in 0 .. 4 {
+        let new_pair = (choose_pos(map), choose_pos(map));
+        let new_dist = new_pair.0.eucledian_dist_sq(new_pair.1);
+
+        if dist < new_dist {
+            pair = new_pair;
+            dist = new_dist;
+        }
+    }
+
+    pair
+}
+
+fn choose_pos(map : &Map) -> Coords {
+    for _ in 0 .. 1048576 {
+        let pos = map.max().rand();
+
+        if map[pos].is_solid() {
+            continue;
+        }
+
+        return pos;
+    }
+    panic!("WTF");
 }

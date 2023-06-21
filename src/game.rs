@@ -55,7 +55,9 @@ fn make_level(
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res: &mut ResMut<crate::rendering::SpriteResource>,
 ) {
-    map_data.map = crate::procgen::make_map(level);
+    let data = crate::procgen::make_map(level);
+    map_data.map = data.map;
+    let player_pos = data.player_pos;
 
     // The actual map
     commands.spawn(PbrBundle {
@@ -64,9 +66,7 @@ fn make_level(
         ..default()
     });
 
-    // Player
-    let player_pos = map_data.map.random_square();
-    let player_pos = Vec3::new(player_pos.x as f32 + 0.5, 0.7, player_pos.z as f32 + 0.5);
+    let player_pos = player_pos.to_vec(0.7);
     commands.spawn(Camera3dBundle {
         transform: Transform::from_translation(player_pos).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
@@ -74,6 +74,9 @@ fn make_level(
     map_data.player_pos = player_pos;
 
     for _ in 1 .. 20 {
-        crate::ai::spawn_monster(commands, map_data, meshes, render_res);
+        let err = crate::ai::spawn_monster(commands, map_data, meshes, render_res);
+        if let Err(err) = err {
+            println!("Failed top spawn monster: {}", err);
+        }
     }
 }
