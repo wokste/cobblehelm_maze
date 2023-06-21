@@ -23,7 +23,7 @@ impl Edge {
         Self {from, to, dist_sq}
     }
 
-    fn to_hash(&self) -> usize {
+    fn to_hash(self) -> usize {
         let (v1, v2)= if self.from < self.to {(self.from, self.to)} else {(self.to, self.from)};
         (v1 << 32) + v2
     }
@@ -39,19 +39,19 @@ impl Graph {
         let mut unfound_data: Vec<Edge> = vec![];
     
         for id in 1..self.nodes.len() {
-            unfound_data.push(Edge::new(&self, 0, id));
+            unfound_data.push(Edge::new(self, 0, id));
         }
     
         while let Some((id_to_remove, conn_edge)) = unfound_data.iter().enumerate().min_by_key(|(_, a)| a.dist_sq)
         {
             // Add edge outside update return value
-           self.edges.push(conn_edge.clone());
+           self.edges.push(*conn_edge);
             let connected = conn_edge.to;
     
             // Update unfound_data
             unfound_data.remove(id_to_remove);
             for test_edge in unfound_data.iter_mut() {
-                let replace_edge = Edge::new(&self, connected, test_edge.to);
+                let replace_edge = Edge::new(self, connected, test_edge.to);
                 if replace_edge.dist_sq < test_edge.dist_sq {
                     *test_edge = replace_edge;
                 }

@@ -40,19 +40,19 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, state
 	})).with_children(|parent| {
         match state {
             GameState::MainMenu => {
-                parent.spawn(make_simple_text(&asset_server, "Main Menu", FONT_H1, TextAlignment::Center));
-                make_button(parent, &asset_server, "Play", ButtonAction::Play);
-                make_button(parent, &asset_server, "Quit", ButtonAction::Quit);
+                parent.spawn(make_simple_text(asset_server, "Main Menu", FONT_H1, TextAlignment::Center));
+                make_button(parent, asset_server, "Play", ButtonAction::Play);
+                make_button(parent, asset_server, "Quit", ButtonAction::Quit);
             },
             GameState::InGame => panic!("No menu should call this"),
             GameState::GameOver => {
-                parent.spawn(make_simple_text(&asset_server, "Game Over", FONT_H1, TextAlignment::Center));
-                make_button(parent, &asset_server, "Quit Game", ButtonAction::ToMainMenu);
+                parent.spawn(make_simple_text(asset_server, "Game Over", FONT_H1, TextAlignment::Center));
+                make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
             },
             GameState::Paused => {
-                parent.spawn(make_simple_text(&asset_server, "Main Menu", FONT_H1, TextAlignment::Center));
-                make_button(parent, &asset_server, "Resume", ButtonAction::Resume);
-                make_button(parent, &asset_server, "Quit Game", ButtonAction::ToMainMenu);
+                parent.spawn(make_simple_text(asset_server, "Main Menu", FONT_H1, TextAlignment::Center));
+                make_button(parent, asset_server, "Resume", ButtonAction::Resume);
+                make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
             },
         };
     }).id();
@@ -67,7 +67,7 @@ fn make_button(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>, text:
         ..default()
     }, action))
     .with_children(|parent| {
-        parent.spawn(make_simple_text(&asset_server, text, FONT_P, TextAlignment::Center));
+        parent.spawn(make_simple_text(asset_server, text, FONT_P, TextAlignment::Center));
     });
 }
 

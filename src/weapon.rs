@@ -68,7 +68,7 @@ impl Weapon {
 
     fn make_projectile(&self, team : Team) -> Projectile {
         Projectile {
-            team: team,
+            team,
             damage: self.projectile.damage(),
         }
     }

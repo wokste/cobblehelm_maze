@@ -42,14 +42,14 @@ impl HudUpdated {
 }
 
 #[derive(Component)]
-pub struct HUD;
+pub struct Hud;
 
 pub fn spawn(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 )
 {
-	let _hud = commands.spawn((HUD, NodeBundle{
+	let _hud = commands.spawn((Hud, NodeBundle{
         style: Style{
             flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Center,
@@ -85,7 +85,7 @@ pub fn update_hud(
     }
 }
 
-pub fn despawn(mut commands: Commands, query : Query<Entity, With<HUD>>)
+pub fn despawn(mut commands: Commands, query : Query<Entity, With<Hud>>)
 {
     if let Ok(entity) = query.get_single() {
         commands.entity(entity).despawn_recursive();

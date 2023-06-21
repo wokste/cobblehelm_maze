@@ -105,7 +105,7 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) ->
             continue;
         }
 
-        let pos = crate::map::Coords::new(x as i32, z as i32);
+        let pos = crate::map::Coords::new(x, z);
         if map_data.can_see_player(pos.to_vec(0.6), 10.0) {
             continue;
         }
@@ -124,7 +124,7 @@ pub fn spawn_monster(
     render_res : &mut ResMut<SpriteResource>,
     rng : &mut fastrand::Rng,
 ) -> Result<(),&'static str> {
-    let pos = choose_spawn_pos(&map_data, rng)?;
+    let pos = choose_spawn_pos(map_data, rng)?;
     let monster_type = MonsterType::rand(rng);
     let uv = monster_type.make_uv();
 

@@ -5,7 +5,7 @@ use bevy::{
 use crate::{map::{Map, Tile}, rendering::TexCoords};
 
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct MeshBuilder {
     indices : Vec<u32>,
     positions : Vec<Vec3>,
@@ -14,7 +14,7 @@ struct MeshBuilder {
 }
 
 impl MeshBuilder {
-    fn to_mesh(self) -> Mesh {
+    fn build(self) -> Mesh {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_indices(Some(mesh::Indices::U32(self.indices)));
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, self.positions);
@@ -74,7 +74,7 @@ pub fn map_to_mesh(map : &Map, rng : &mut fastrand::Rng) -> Mesh {
         }
     }
 
-    builder.to_mesh()
+    builder.build()
 }
 
 

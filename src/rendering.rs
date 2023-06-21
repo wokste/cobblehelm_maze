@@ -86,7 +86,7 @@ impl TexCoords {
         SpriteBundle {
             face_camera : FaceCamera,
             sprite: Sprite3d {
-                index: index,
+                index,
             },
             animation : Animation {
                 frames,

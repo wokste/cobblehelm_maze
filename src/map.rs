@@ -84,7 +84,7 @@ impl Coords {
         Self {x : v.x.floor() as i32, z : v.z.floor() as i32}
     }
 
-    pub fn to_vec(&self, height : f32) -> Vec3 {
+    pub fn to_vec(self, height : f32) -> Vec3 {
         // TODO: Height
         Vec3 {
             x : self.x as f32 + 0.5,
@@ -122,8 +122,9 @@ impl Coords {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Tile {
+    #[default]
     _Void,
     _Wall,
     Door1,
@@ -151,10 +152,6 @@ impl Tile {
             _ => false
         }
     }
-}
-
-impl Default for Tile {
-    fn default() -> Self { Tile::_Void }
 }
 
 #[derive(Resource)]
