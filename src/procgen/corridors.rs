@@ -3,16 +3,16 @@ use crate::map::{Map, Coords, Tile};
 use super::{LevelStyle, randitem::RandItem};
 
 
-pub fn connect_rooms(map : &mut Map, level_style : &LevelStyle, p : (Coords, Coords)) {
-    let tile = *level_style.corridors.rand_front_loaded();
+pub fn connect_rooms(map : &mut Map, rng : &mut fastrand::Rng, level_style : &LevelStyle, p : (Coords, Coords)) {
+    let tile = *level_style.corridors.rand_front_loaded(rng);
     match super::RoomShape::from(tile) {
-        super::RoomShape::Organic => connect_rooms_organic(map, tile, p),
-        super::RoomShape::Constructed => connect_rooms_constructed(map, level_style, tile, p),
+        super::RoomShape::Organic => connect_rooms_organic(map, rng, tile, p),
+        super::RoomShape::Constructed => connect_rooms_constructed(map, rng, level_style, tile, p),
     }
 }
 
-fn connect_rooms_constructed(map: &mut Map, level_style: &LevelStyle, tile: Tile, p : (Coords, Coords)) {
-    let door_tile = if level_style.doors.is_empty() { tile } else {*level_style.doors.rand_front_loaded() };
+fn connect_rooms_constructed(map: &mut Map, rng : &mut fastrand::Rng, level_style: &LevelStyle, tile: Tile, p : (Coords, Coords)) {
+    let door_tile = if level_style.doors.is_empty() { tile } else {*level_style.doors.rand_front_loaded(rng) };
 
     let x0 = std::cmp::min(p.0.x, p.1.x);
     let x1 = std::cmp::max(p.0.x, p.1.x);
@@ -32,7 +32,7 @@ fn connect_rooms_constructed(map: &mut Map, level_style: &LevelStyle, tile: Tile
     }
 }
 
-pub fn connect_rooms_organic(map : &mut Map, tile: Tile, p : (Coords, Coords)) {
+pub fn connect_rooms_organic(map : &mut Map, rng : &mut fastrand::Rng, tile: Tile, p : (Coords, Coords)) {
     let (mut cur_pos,end_pos) = p;
 
     loop {
@@ -46,7 +46,7 @@ pub fn connect_rooms_organic(map : &mut Map, tile: Tile, p : (Coords, Coords)) {
         let delta = end_pos - cur_pos;
         if delta == Coords::ZERO { return; }
 
-        if fastrand::i32(0 .. delta.x.abs() + delta.z.abs()) < delta.x.abs() {
+        if rng.i32(0 .. delta.x.abs() + delta.z.abs()) < delta.x.abs() {
             cur_pos.x += delta.x.signum()
         } else {
             cur_pos.z += delta.z.signum()

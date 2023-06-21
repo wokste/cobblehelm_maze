@@ -63,8 +63,8 @@ impl TexCoords {
         Self{x,y}
     }
 
-    pub fn to_uv(&self) -> Vec2 {
-        let x = fastrand::u8(self.x.clone());
+    pub fn to_uv(&self, rng : &mut fastrand::Rng) -> Vec2 {
+        let x = rng.u8(self.x.clone());
         let y = self.y;
 
         Vec2::new(x as f32 / TILE_X as f32, y as f32 / TILE_Y as f32)

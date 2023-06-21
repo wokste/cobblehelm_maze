@@ -58,8 +58,8 @@ impl Graph {
         // TODO: Implement
     }
 
-    pub fn shuffle_edges(&mut self) {
-        fastrand::shuffle(self.edges.as_mut_slice());
+    pub fn shuffle_edges(&mut self, rng : &mut fastrand::Rng) {
+        rng.shuffle(self.edges.as_mut_slice());
     }
 
     pub fn to_edges(&self) -> Vec<(Coords,Coords)> {

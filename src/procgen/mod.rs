@@ -47,7 +47,7 @@ impl From<Tile> for RoomShape {
     }
 }
 
-pub fn make_map(level : u8) -> MapGenResult {
+pub fn make_map(level : u8, rng : &mut fastrand::Rng) -> MapGenResult {
     let mut map = Map::new(64,64);
 
     let styles = match level{
@@ -81,14 +81,14 @@ pub fn make_map(level : u8) -> MapGenResult {
     let mut graph = graph::Graph::default();
 
     for _ in 0 .. 50 {
-        let style = *styles.rooms.rand_front_loaded();
-        let room = rooms::make_room(style);
+        let style = *styles.rooms.rand_front_loaded(rng);
+        let room = rooms::make_room(style, rng);
 
         for _ in 0 .. 5 {
-            let transform = MapTransform::make_rand(map.max(),room.max());
+            let transform = MapTransform::make_rand(map.max(),room.max(), rng);
             
             if check_place_room(&mut map, &room, &transform).is_ok() {
-                graph.add_node(transform.map(room.max().rand_center()));
+                graph.add_node(transform.map(room.max().rand_center(rng)));
                 break;
             }
         }
@@ -98,10 +98,10 @@ pub fn make_map(level : u8) -> MapGenResult {
     graph.add_more_edges();
 
     for edge in graph.to_edges() {
-        corridors::connect_rooms(&mut map, &styles, edge);
+        corridors::connect_rooms(&mut map, rng, &styles, edge);
     }
 
-    let (player_pos, _) = choose_start_and_end(&map);
+    let (player_pos, _) = choose_start_and_end(&map, rng);
 
     print_map(&map);
 
@@ -151,12 +151,12 @@ fn print_map(map : &Map) {
     }
 }
 
-fn choose_start_and_end(map : &Map) -> (Coords,Coords){
-    let mut pair = (choose_pos(map), choose_pos(map));
+fn choose_start_and_end(map : &Map, rng : &mut fastrand::Rng) -> (Coords,Coords){
+    let mut pair = (choose_pos(map, rng), choose_pos(map, rng));
     let mut dist = pair.0.eucledian_dist_sq(pair.1);
 
     for _ in 0 .. 4 {
-        let new_pair = (choose_pos(map), choose_pos(map));
+        let new_pair = (choose_pos(map, rng), choose_pos(map, rng));
         let new_dist = new_pair.0.eucledian_dist_sq(new_pair.1);
 
         if dist < new_dist {
@@ -168,9 +168,9 @@ fn choose_start_and_end(map : &Map) -> (Coords,Coords){
     pair
 }
 
-fn choose_pos(map : &Map) -> Coords {
+fn choose_pos(map : &Map, rng : &mut fastrand::Rng) -> Coords {
     for _ in 0 .. 1048576 {
-        let pos = map.max().rand();
+        let pos = map.max().rand(rng);
 
         if map[pos].is_solid() {
             continue;

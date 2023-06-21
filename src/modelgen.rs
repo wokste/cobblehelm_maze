@@ -46,7 +46,7 @@ impl MeshBuilder {
     }
 }
 
-pub fn map_to_mesh(map : &Map) -> Mesh {
+pub fn map_to_mesh(map : &Map, rng : &mut fastrand::Rng) -> Mesh {
     let mut builder = MeshBuilder::default();
 
     for z in 0 .. map.z_max() {
@@ -55,20 +55,20 @@ pub fn map_to_mesh(map : &Map) -> Mesh {
             let p0 = Vec3::new(x as f32, 0.0, z as f32);
             if !tile.is_solid() {
                 // Floor tiles
-                builder.add_rect(p0, Vec3::X, Vec3::Z, floor_tex_id(tile).to_uv());
+                builder.add_rect(p0, Vec3::X, Vec3::Z, floor_tex_id(tile).to_uv(rng));
 
                 // Wall tiles
                 if map.is_solid(x, z - 1) {
-                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, wall_tex_id(tile).to_uv());
+                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, wall_tex_id(tile).to_uv(rng));
                 }
                 if map.is_solid(x + 1, z) {
-                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y, wall_tex_id(tile).to_uv());
+                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y, wall_tex_id(tile).to_uv(rng));
                 }
                 if map.is_solid(x, z + 1) {
-                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y, wall_tex_id(tile).to_uv());
+                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y, wall_tex_id(tile).to_uv(rng));
                 }
                 if map.is_solid(x- 1, z) {
-                    builder.add_rect(p0,  Vec3::Z, Vec3::Y, wall_tex_id(tile).to_uv());
+                    builder.add_rect(p0,  Vec3::Z, Vec3::Y, wall_tex_id(tile).to_uv(rng));
                 }
             }
         }

@@ -42,8 +42,9 @@ fn start_game(
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
 ) {
-
-    make_level(fastrand::u8(1..=5), &mut commands, &mut map_data, &mut meshes, &mut render_res);
+    let mut rng = fastrand::Rng::new();
+    println!("Seed: {}", rng.get_seed());
+    make_level(1, &mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
 }
 
 
@@ -54,14 +55,15 @@ fn make_level(
     map_data: &mut ResMut<crate::map::MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res: &mut ResMut<crate::rendering::SpriteResource>,
+    rng : &mut fastrand::Rng,
 ) {
-    let data = crate::procgen::make_map(level);
+    let data = crate::procgen::make_map(level, rng);
     map_data.map = data.map;
     let player_pos = data.player_pos;
 
     // The actual map
     commands.spawn(PbrBundle {
-        mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map)),
+        mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, rng)),
         material: render_res.material.clone(),
         ..default()
     });
@@ -74,7 +76,7 @@ fn make_level(
     map_data.player_pos = player_pos;
 
     for _ in 1 .. 20 {
-        let err = crate::ai::spawn_monster(commands, map_data, meshes, render_res);
+        let err = crate::ai::spawn_monster(commands, map_data, meshes, render_res, rng);
         if let Err(err) = err {
             println!("Failed top spawn monster: {}", err);
         }

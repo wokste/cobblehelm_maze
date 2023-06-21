@@ -93,17 +93,17 @@ impl Coords {
         }
     }
 
-    pub fn rand_center(&self) -> Coords {
+    pub fn rand_center(&self, rng : &mut fastrand::Rng) -> Coords {
         Coords::new(
-            (self.x + fastrand::bool() as i32) / 2,
-            (self.z + fastrand::bool() as i32) / 2
+            (self.x + rng.bool() as i32) / 2,
+            (self.z + rng.bool() as i32) / 2
         )
     }
 
-    pub fn rand(&self) -> Coords {
+    pub fn rand(&self, rng : &mut fastrand::Rng) -> Coords {
         Coords::new(
-            fastrand::i32(0..self.x),
-            fastrand::i32(0..self.z),
+            rng.i32(0..self.x),
+            rng.i32(0..self.z),
         )
     }
 

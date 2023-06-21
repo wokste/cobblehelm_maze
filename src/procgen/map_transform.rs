@@ -10,19 +10,19 @@ pub struct MapTransform{
 }
 
 impl MapTransform {
-    pub fn make_rand(map_size: Coords, room_size: Coords) -> MapTransform {
-        let swap_xz = fastrand::bool();
+    pub fn make_rand(map_size: Coords, room_size: Coords, rng : &mut fastrand::Rng) -> MapTransform {
+        let swap_xz = rng.bool();
 
         let room_size = if swap_xz {room_size.transpose() } else {room_size};
 
         let mut transform = MapTransform::new(
-            fastrand::i32(0 .. map_size.x - room_size.x),
-            fastrand::i32(0 .. map_size.z - room_size.z),
+            rng.i32(0 .. map_size.x - room_size.x),
+            rng.i32(0 .. map_size.z - room_size.z),
             swap_xz,
         );
 
-        if fastrand::bool() {transform.do_flip_x(room_size);}
-        if fastrand::bool() {transform.do_flip_z(room_size);}
+        if rng.bool() {transform.do_flip_x(room_size);}
+        if rng.bool() {transform.do_flip_z(room_size);}
 
         transform
     }

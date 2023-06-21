@@ -52,8 +52,8 @@ impl MonsterType {
         }
     }
 
-    pub fn rand() -> Self {
-        let r = fastrand::u32(1..=6);
+    pub fn rand(rng : &mut fastrand::Rng) -> Self {
+        let r = rng.u32(1..=6);
         if r < 3 {
             Self::Imp
         } else if r < 6 {
@@ -94,12 +94,12 @@ impl AI {
     }
 }
 
-fn choose_spawn_pos(map_data: &crate::map::MapData) -> Result<Coords, &'static str> {
+fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) -> Result<Coords, &'static str> {
     
     let map = &map_data.map;//.random_square();
     for _ in 0 .. 4096 {
-        let x = fastrand::i32(1 .. map.x_max() - 1);
-        let z = fastrand::i32(1 .. map.z_max() - 1);
+        let x = rng.i32(1 .. map.x_max() - 1);
+        let z = rng.i32(1 .. map.z_max() - 1);
 
         if map.tile(x,z).is_solid() {
             continue;
@@ -122,9 +122,10 @@ pub fn spawn_monster(
     map_data: &ResMut<crate::map::MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res : &mut ResMut<SpriteResource>,
+    rng : &mut fastrand::Rng,
 ) -> Result<(),&'static str> {
-    let pos = choose_spawn_pos(&map_data)?;
-    let monster_type = MonsterType::rand();
+    let pos = choose_spawn_pos(&map_data, rng)?;
+    let monster_type = MonsterType::rand(rng);
     let uv = monster_type.make_uv();
 
     commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.5), 0.3, meshes, render_res))
