@@ -78,7 +78,7 @@ pub fn make_map(level : u8) -> MapGenResult {
         },
     };
 
-    let mut centers = vec![];
+    let mut graph = graph::Graph::default();
 
     for _ in 0 .. 50 {
         let style = *styles.rooms.rand_front_loaded();
@@ -88,13 +88,16 @@ pub fn make_map(level : u8) -> MapGenResult {
             let transform = MapTransform::make_rand(map.max(),room.max());
             
             if check_place_room(&mut map, &room, &transform).is_ok() {
-                centers.push(transform.map(room.max().rand_center()));
+                graph.add_node(transform.map(room.max().rand_center()));
                 break;
             }
         }
     }
 
-    for edge in graph::make_tree(centers) {
+    graph.connect_tree();
+    graph.add_more_edges();
+
+    for edge in graph.to_edges() {
         corridors::connect_rooms(&mut map, &styles, edge);
     }
 

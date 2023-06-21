@@ -1,47 +1,68 @@
 use crate::map::Coords;
 
+struct Node {
+    coords : Coords,
+}
 
 #[derive(Copy,Clone)]
-struct PrimData{
-    inside : usize,
-    outside : usize,
-    cost : i32,
+struct Edge {
+    from : usize,
+    to : usize,
+    dist_sq : i32,
 }
 
-impl PrimData {
-    fn new(graph : &Vec<Coords>, inside : usize, outside : usize) -> Self {
-        Self {inside, outside, cost : graph[inside].eucledian_dist_sq(graph[outside])}
+#[derive(Default)]
+pub struct Graph{
+    nodes : Vec<Node>,
+    edges : Vec<Edge>,
+}
+
+impl Edge {
+    fn new(graph : &Graph, from : usize, to : usize) -> Self {
+        let dist_sq = graph.nodes[from].coords.eucledian_dist_sq(graph.nodes[to].coords);
+        Self {from, to, dist_sq}
     }
 }
 
-pub fn make_tree(graph : Vec<Coords>) -> Vec<(Coords,Coords)> {
-    make_minimum_spanning_tree(graph)
-}
-
-pub fn make_minimum_spanning_tree(graph : Vec<Coords>) -> Vec<(Coords,Coords)> {
-    // Using prims algorithm
-    let mut found_edges = vec![];
-    let mut unfound_data: Vec<PrimData> = vec![];
-
-    for id in 1..graph.len() {
-        unfound_data.push(PrimData::new(&graph, 0, id));
+impl Graph {
+    pub fn add_node(&mut self, coords : Coords) {
+        self.nodes.push(Node{coords})
     }
-
-    while let Some((id_to_remove, conn_edge)) = unfound_data.iter().enumerate().min_by_key(|(_, a)| a.cost)
-    {
-        // Add edge outside update return value
-        found_edges.push((graph[conn_edge.inside], graph[conn_edge.outside]));
-        let connected = conn_edge.outside;
-
-        // Update unfound_data
-        unfound_data.remove(id_to_remove);
-        for test_edge in unfound_data.iter_mut() {
-            let replace_edge = PrimData::new(&graph, connected, test_edge.outside);
-            if replace_edge.cost < test_edge.cost {
-                *test_edge = replace_edge;
-            }
+    
+    pub fn connect_tree(&mut self) {
+        // Using prims algorithm
+        let mut unfound_data: Vec<Edge> = vec![];
+    
+        for id in 1..self.nodes.len() {
+            unfound_data.push(Edge::new(&self, 0, id));
         }
+    
+        while let Some((id_to_remove, conn_edge)) = unfound_data.iter().enumerate().min_by_key(|(_, a)| a.dist_sq)
+        {
+            // Add edge outside update return value
+           self.edges.push(conn_edge.clone());
+            let connected = conn_edge.to;
+    
+            // Update unfound_data
+            unfound_data.remove(id_to_remove);
+            for test_edge in unfound_data.iter_mut() {
+                let replace_edge = Edge::new(&self, connected, test_edge.to);
+                if replace_edge.dist_sq < test_edge.dist_sq {
+                    *test_edge = replace_edge;
+                }
+            }
+        };
     }
 
-    found_edges
+    pub fn add_more_edges(&mut self) {
+        // TODO: Implement
+    }
+
+    pub fn shuffle_edges(&mut self) {
+        fastrand::shuffle(self.edges.as_mut_slice());
+    }
+
+    pub fn to_edges(&self) -> Vec<(Coords,Coords)> {
+        self.edges.iter().map(|e| (self.nodes[e.from].coords, self.nodes[e.to].coords)).collect()
+    }
 }
