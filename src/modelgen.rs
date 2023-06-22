@@ -2,7 +2,7 @@ use bevy::{
     prelude::{Mesh, Vec2, Vec3},
     render::{render_resource::PrimitiveTopology, mesh}
 };
-use crate::{map::{Map, Tile}, rendering::TexCoords};
+use crate::{map::{Map, Tile, WallTile, FloorTile, Coords}, rendering::TexCoords};
 
 
 #[derive(Default, Clone)]
@@ -49,26 +49,28 @@ impl MeshBuilder {
 pub fn map_to_mesh(map : &Map, rng : &mut fastrand::Rng) -> Mesh {
     let mut builder = MeshBuilder::default();
 
-    for z in 0 .. map.z_max() {
-        for x in 0 .. map.x_max() {
-            let tile = map.tile(x,z);
-            let p0 = Vec3::new(x as f32, 0.0, z as f32);
-            if !tile.is_solid() {
+    for z in 1 .. map.z_max() - 1 {
+        for x in 1 .. map.x_max() - 1 {
+            let pos = Coords::new(x,z);
+
+            if let Tile::Floor(floor) = map[pos] {
+                
+                let p0 = Vec3::new(x as f32, 0.0, z as f32);
                 // Floor tiles
-                builder.add_rect(p0, Vec3::X, Vec3::Z, floor_tex_id(tile).to_uv(rng));
+                builder.add_rect(p0, Vec3::X, Vec3::Z, floor_tex_id(floor).to_uv(rng));
 
                 // Wall tiles
-                if map.is_solid(x, z - 1) {
-                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, wall_tex_id(tile).to_uv(rng));
+                if let Tile::Wall(wall) = map[pos.top()] {
+                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, wall_tex_id(wall).to_uv(rng));
                 }
-                if map.is_solid(x + 1, z) {
-                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y, wall_tex_id(tile).to_uv(rng));
+                if let Tile::Wall(wall) = map[pos.right()] {
+                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y, wall_tex_id(wall).to_uv(rng));
                 }
-                if map.is_solid(x, z + 1) {
-                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y, wall_tex_id(tile).to_uv(rng));
+                if let Tile::Wall(wall) = map[pos.bottom()] {
+                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y, wall_tex_id(wall).to_uv(rng));
                 }
-                if map.is_solid(x- 1, z) {
-                    builder.add_rect(p0,  Vec3::Z, Vec3::Y, wall_tex_id(tile).to_uv(rng));
+                if let Tile::Wall(wall) = map[pos.left()] {
+                    builder.add_rect(p0,  Vec3::Z, Vec3::Y, wall_tex_id(wall).to_uv(rng));
                 }
             }
         }
@@ -79,45 +81,36 @@ pub fn map_to_mesh(map : &Map, rng : &mut fastrand::Rng) -> Mesh {
 
 
 
-pub fn floor_tex_id(tile : Tile) -> TexCoords {
+pub fn floor_tex_id(tile : FloorTile) -> TexCoords {
     match tile {
-        Tile::Door1 => TexCoords::new(29..32,1),
-        Tile::Castle => TexCoords::new(0..8,4),
-        Tile::TempleBrown => TexCoords::new(14..18,4),
-        Tile::TempleGray => TexCoords::new(22..26,4),
-        Tile::TempleGreen => TexCoords::new(0..8,4),
-        Tile::Cave => TexCoords::new(10..14,4),
-        Tile::Beehive => TexCoords::new(0..8,4),
-        Tile::Flesh => TexCoords::new(18..22,4),
-        Tile::Demonic => TexCoords::new(26..30,4),
-        Tile::DemonicCave => TexCoords::new(26..30,4),
-        Tile::MetalIron => TexCoords::new(8..10,4),
-        Tile::MetalBronze => TexCoords::new(8..10,4),
-        Tile::Chips => TexCoords::new(29..32,1),
-        Tile::Sewer => TexCoords::new(7..11,3),
-        Tile::SewerCave => TexCoords::new(7..11,3),
-        _ => TexCoords::new(0..8,4),
-        
+        FloorTile::Sand => TexCoords::new(0..8,4),
+        FloorTile::BrownFloor => TexCoords::new(14..18,4),
+        FloorTile::GrayFloor => TexCoords::new(22..26,4),
+        FloorTile::Cave => TexCoords::new(10..14,4),
+        FloorTile::Flesh => TexCoords::new(18..22,4),
+        FloorTile::Demonic => TexCoords::new(26..30,4),
+        FloorTile::BlueTiles => TexCoords::new(8..10,4),
+        FloorTile::Chips => TexCoords::new(29..32,1),
+        FloorTile::Sewer => TexCoords::new(7..11,3),
     }
 }
 
-pub fn wall_tex_id(tile : Tile) -> TexCoords {
+pub fn wall_tex_id(tile : WallTile) -> TexCoords {
     match tile {
-        Tile::Door1 => TexCoords::new(29..32,1), // TODO: Better door tile
-        Tile::Castle => TexCoords::new(0..12,0),
-        Tile::TempleBrown => TexCoords::new(12..20,0),
-        Tile::TempleGray => TexCoords::new(20..32,0),
-        Tile::TempleGreen => TexCoords::new(0..10,2),
-        Tile::Cave => TexCoords::new(0..12,1),
-        Tile::Beehive => TexCoords::new(12..22,1),
-        Tile::Flesh => TexCoords::new(22..29,1),
-        Tile::Demonic => TexCoords::new(14..25,2),
-        Tile::DemonicCave => TexCoords::new(25..29,2),
-        Tile::MetalIron => TexCoords::new(29..30,2),
-        Tile::MetalBronze => TexCoords::new(30..31,2),
-        Tile::Chips => TexCoords::new(29..32,1),
-        Tile::Sewer => TexCoords::new(0..7,3),
-        Tile::SewerCave => TexCoords::new(7..11,3),
-        _ => TexCoords::new(0..8,4),
+        //Tile::Door1 => TexCoords::new(29..32,1), // TODO: Better door tile
+        WallTile::Castle => TexCoords::new(0..12,0),
+        WallTile::TempleBrown => TexCoords::new(12..20,0),
+        WallTile::TempleGray => TexCoords::new(20..32,0),
+        WallTile::TempleGreen => TexCoords::new(0..10,2),
+        WallTile::Cave => TexCoords::new(0..12,1),
+        WallTile::Beehive => TexCoords::new(12..22,1),
+        WallTile::Flesh => TexCoords::new(22..29,1),
+        WallTile::Demonic => TexCoords::new(14..25,2),
+        WallTile::DemonicCave => TexCoords::new(25..29,2),
+        WallTile::MetalIron => TexCoords::new(29..30,2),
+        WallTile::MetalBronze => TexCoords::new(30..31,2),
+        WallTile::Chips => TexCoords::new(29..32,1),
+        WallTile::Sewer => TexCoords::new(0..7,3),
+        WallTile::SewerCave => TexCoords::new(7..11,3),
     }
 }

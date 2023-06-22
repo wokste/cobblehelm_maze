@@ -11,7 +11,7 @@ pub struct Map {
 impl Map {
     pub fn new(x_max : i32, z_max : i32) -> Self {
         Self {
-            tiles : vec![Tile::_Void; (x_max * z_max) as usize],
+            tiles : vec![Tile::Void; (x_max * z_max) as usize],
             size : Coords::new(x_max, z_max),
         }
     }
@@ -109,6 +109,12 @@ impl Coords {
 
     pub fn transpose(self) -> Self { Self {x : self.z, z : self.x } }
 
+    
+    pub fn left(self) -> Self { Self {x : self.x - 1, z : self.z } }
+    pub fn right(self) -> Self { Self {x : self.x + 1, z : self.z } }
+    pub fn top(self) -> Self { Self {x : self.x, z : self.z - 1} }
+    pub fn bottom(self) -> Self { Self {x : self.x, z : self.z + 1} }
+
     /*
     pub fn manhattan_dist(self, other : Self) -> i32 {
         let d = self - other;
@@ -125,9 +131,13 @@ impl Coords {
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Tile {
     #[default]
-    _Void,
-    _Wall,
-    Door1,
+    Void,
+    Wall(WallTile),
+    Floor(FloorTile),
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum WallTile {
     Castle,
     TempleBrown,
     TempleGray,
@@ -144,12 +154,30 @@ pub enum Tile {
     SewerCave,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum FloorTile {
+    Sand,
+    BlueTiles,
+    BrownFloor,
+    GrayFloor,
+    Cave,
+    Flesh,
+    Demonic,
+    Chips,
+    Sewer,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum DoorType {
+    Chips,
+}
+
 impl Tile {
     pub fn is_solid(&self) -> bool {
         match self {
-            Tile::_Wall => true,
-            Tile::_Void => true,
-            _ => false
+            Tile::Wall(_) => true,
+            Tile::Floor(_) => false,
+            Tile::Void => true,
         }
     }
 }

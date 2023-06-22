@@ -1,6 +1,6 @@
-use crate::map::{Map, Coords, Tile};
+use crate::map::{Map, Coords, Tile, WallTile};
 
-use super::{LevelStyle, randitem::RandItem};
+use super::{style::LevelStyle, randitem::RandItem};
 
 
 pub fn connect_rooms(map : &mut Map, rng : &mut fastrand::Rng, level_style : &LevelStyle, p : (Coords, Coords)) {
@@ -11,8 +11,10 @@ pub fn connect_rooms(map : &mut Map, rng : &mut fastrand::Rng, level_style : &Le
     }
 }
 
-fn connect_rooms_constructed(map: &mut Map, rng : &mut fastrand::Rng, level_style: &LevelStyle, tile: Tile, p : (Coords, Coords)) {
-    let door_tile = if level_style.doors.is_empty() { tile } else {*level_style.doors.rand_front_loaded(rng) };
+fn connect_rooms_constructed(map: &mut Map, rng : &mut fastrand::Rng, level_style: &LevelStyle, wall: WallTile, p : (Coords, Coords)) {
+
+    let floor_tile = Tile::Floor(super::style::wall_to_floor(wall));
+    let _door_tile = if level_style.doors.is_empty() { None } else {Some(*level_style.doors.rand_front_loaded(rng)) };
 
     let x0 = std::cmp::min(p.0.x, p.1.x);
     let x1 = std::cmp::max(p.0.x, p.1.x);
@@ -21,18 +23,23 @@ fn connect_rooms_constructed(map: &mut Map, rng : &mut fastrand::Rng, level_styl
 
     // X axis
     for x in x0 ..= x1 {
-        map.set_tile_if(x, p.1.z, tile, |t| t == Tile::_Void);
-        map.set_tile_if(x, p.1.z, door_tile, |t| t == Tile::_Wall);
+        map.set_tile_if(x, p.1.z, floor_tile, |t| t == Tile::Void);
+        map.set_tile_if(x, p.1.z, floor_tile, |t| matches!(t, Tile::Wall(_)));
+        // TODO: Add doors
+        // TODO: Add walls
     }
 
     // Y axis
     for z in z0 ..= z1 {
-        map.set_tile_if(p.0.x, z, tile, |t| t == Tile::_Void);
-        map.set_tile_if(p.0.x, z, door_tile, |t| t == Tile::_Wall);
+        map.set_tile_if(p.0.x, z, floor_tile, |t| t == Tile::Void);
+        map.set_tile_if(p.0.x, z, floor_tile, |t| matches!(t, Tile::Wall(_)));
+        // TODO: Add doors
+        // TODO: Add walls
     }
 }
 
-pub fn connect_rooms_organic(map : &mut Map, rng : &mut fastrand::Rng, tile: Tile, p : (Coords, Coords)) {
+pub fn connect_rooms_organic(map : &mut Map, rng : &mut fastrand::Rng, wall: WallTile, p : (Coords, Coords)) {
+    let floor_tile = Tile::Floor(super::style::wall_to_floor(wall));
     let (mut cur_pos,end_pos) = p;
 
     loop {
@@ -40,7 +47,7 @@ pub fn connect_rooms_organic(map : &mut Map, rng : &mut fastrand::Rng, tile: Til
         let z = cur_pos.z;
 
         if map.is_solid(x, z) {
-            map.set_tile(x, z, tile);
+            map.set_tile(x, z, floor_tile);
         }
 
         let delta = end_pos - cur_pos;

@@ -72,23 +72,17 @@ impl Graph {
             let n1 = rng.usize((n0+1) ..node_len);
             let new_edge = Edge::new(self, n0, n1);
 
-            if map.contains(&new_edge.to_hash()) {
-                continue;
-            }
+            if map.contains(&new_edge.to_hash())  { continue; }
+            if new_edge.dist_sq > max_dist_sq     { continue; }
 
-            if new_edge.dist_sq > max_dist_sq {
-                continue;
-            }
+            map.insert(new_edge.to_hash()); // Either it will be inserted or it is too expensive to calculate this over and over again.
 
-            map.insert(new_edge.to_hash());
+            // TODO: Do a distance check without the door.
+
             self.edges.push(new_edge);
 
-            // TODO: Exit
+            // TODO: Exit after X cycles
         }
-    }
-
-    pub fn shuffle_edges(&mut self, rng : &mut fastrand::Rng) {
-        rng.shuffle(self.edges.as_mut_slice());
     }
 
     pub fn to_edges(&self) -> Vec<(Coords,Coords)> {

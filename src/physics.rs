@@ -36,7 +36,7 @@ fn split_deltas(delta : Vec3) -> [Vec3;2] {
     if delta_abs.x > delta_abs.z {
         [Vec3::new(delta.x, 0., 0.), Vec3::new(0., 0., delta.z)]
     } else {
-        [Vec3::new(delta.z, 0., 0.), Vec3::new(0., 0., delta.x)]
+        [Vec3::new(0., 0., delta.z), Vec3::new(delta.x, 0., 0.)]
     }
 }
 
