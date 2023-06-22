@@ -1,6 +1,7 @@
 mod ai;
 mod combat;
 mod game;
+mod grid;
 mod map;
 mod modelgen;
 mod physics;

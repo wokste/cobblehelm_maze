@@ -1,6 +1,6 @@
 use bevy::{prelude::*};
 
-use crate::{map::{MapData, Coords}, combat::CreatureStats, combat::Team, rendering::{TexCoords, SpriteResource}};
+use crate::{grid::{Coords}, map::{MapData}, combat::CreatureStats, combat::Team, rendering::{TexCoords, SpriteResource}};
 
 #[derive(Copy,Clone)]
 pub enum MonsterType {
@@ -101,11 +101,11 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) ->
         let x = rng.i32(1 .. map.x_max() - 1);
         let z = rng.i32(1 .. map.z_max() - 1);
 
-        if map.tile(x,z).is_solid() {
+        if map[(x,z)].is_solid() {
             continue;
         }
 
-        let pos = crate::map::Coords::new(x, z);
+        let pos = Coords::new(x, z);
         if map_data.can_see_player(pos.to_vec(0.6), 10.0) {
             continue;
         }

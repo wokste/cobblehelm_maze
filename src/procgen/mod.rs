@@ -1,4 +1,5 @@
 use crate::map::*;
+use crate::grid::*;
 
 mod corridors;
 mod graph;
@@ -12,7 +13,7 @@ use randitem::RandItem;
 use self::map_transform::MapTransform;
 
 pub struct MapGenResult {
-    pub map : Map,
+    pub map : Grid<Tile>,
     pub player_pos : Coords,
     // TODO: Stuff like locations for keys and end of level positions.
 }
@@ -40,7 +41,7 @@ impl From<WallTile> for RoomShape {
 }
 
 pub fn make_map(level : u8, rng : &mut fastrand::Rng) -> MapGenResult {
-    let mut map = Map::new(64,64);
+    let mut map = Grid::<Tile>::new(64,64);
 
     let styles = style::make_by_level(level);
 
@@ -78,12 +79,12 @@ pub fn make_map(level : u8, rng : &mut fastrand::Rng) -> MapGenResult {
     }
 }
 
-fn check_place_room(map : &mut Map, room : &Map, transform : &MapTransform) -> Result<(),()> {
+fn check_place_room(map : &mut Grid<Tile>, room : &Grid<Tile>, transform : &MapTransform) -> Result<(),()> {
     for sz in 0 .. room.z_max() {
         for sx in 0 .. room.x_max() {
-            let src = room.tile(sx, sz);
+            let src = room[(sx, sz)];
             let dst = transform.map_xz(sx,sz);
-            let dst = map.tile(dst.x,dst.z);
+            let dst = map[dst];
 
             if src != Tile::Void && dst != Tile::Void && src != dst {
                 return Result::Err(());
@@ -93,10 +94,10 @@ fn check_place_room(map : &mut Map, room : &Map, transform : &MapTransform) -> R
 
     for sz in 0 .. room.z_max() {
         for sx in 0 .. room.x_max() {
-            let src = room.tile(sx, sz);
+            let src = room[(sx, sz)];
             let dst = transform.map_xz(sx,sz);
             if src != Tile::Void {
-                map.set_tile(dst.x, dst.z, src);
+                map[dst] = src;
             }
         }
     }
@@ -104,10 +105,10 @@ fn check_place_room(map : &mut Map, room : &Map, transform : &MapTransform) -> R
     Result::Ok(())
 }
 
-fn print_map(map : &Map) {
+fn print_map(map : &Grid<Tile>) {
     for z in 0 .. map.z_max() {
         for x in 0 .. map.x_max() {
-            match map.tile(x, z) {
+            match map[(x, z)] {
                 Tile::Void => print!("[]"),
                 Tile::Wall(_) => print!("<>"),
                 _ => print!(".."),
@@ -117,7 +118,7 @@ fn print_map(map : &Map) {
     }
 }
 
-fn choose_start_and_end(map : &Map, rng : &mut fastrand::Rng) -> (Coords,Coords){
+fn choose_start_and_end(map : &Grid<Tile>, rng : &mut fastrand::Rng) -> (Coords,Coords){
     let mut pair = (choose_pos(map, rng), choose_pos(map, rng));
     let mut dist = pair.0.eucledian_dist_sq(pair.1);
 
@@ -134,7 +135,7 @@ fn choose_start_and_end(map : &Map, rng : &mut fastrand::Rng) -> (Coords,Coords)
     pair
 }
 
-fn choose_pos(map : &Map, rng : &mut fastrand::Rng) -> Coords {
+fn choose_pos(map : &Grid<Tile>, rng : &mut fastrand::Rng) -> Coords {
     for _ in 0 .. 1048576 {
         let pos = map.max().rand(rng);
 

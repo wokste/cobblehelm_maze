@@ -2,7 +2,7 @@ use bevy::{
     prelude::{Mesh, Vec2, Vec3},
     render::{render_resource::PrimitiveTopology, mesh}
 };
-use crate::{map::{Map, Tile, WallTile, FloorTile, Coords}, rendering::TexCoords};
+use crate::{grid::{Grid, Coords}, map::{Tile, WallTile, FloorTile}, rendering::TexCoords};
 
 
 #[derive(Default, Clone)]
@@ -46,7 +46,7 @@ impl MeshBuilder {
     }
 }
 
-pub fn map_to_mesh(map : &Map, rng : &mut fastrand::Rng) -> Mesh {
+pub fn map_to_mesh(map : &Grid<Tile>, rng : &mut fastrand::Rng) -> Mesh {
     let mut builder = MeshBuilder::default();
 
     for z in 1 .. map.z_max() - 1 {

@@ -1,4 +1,4 @@
-use crate::map::Coords;
+use crate::grid::Coords;
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct MapTransform{

@@ -1,4 +1,4 @@
-use crate::map::Coords;
+use crate::grid::Coords;
 
 struct Node {
     coords : Coords,
