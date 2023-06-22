@@ -99,7 +99,6 @@ impl Coords {
     }
 
     pub fn transpose(self) -> Self { Self {x : self.z, z : self.x } }
-
     
     pub fn left(self) -> Self { Self {x : self.x - 1, z : self.z } }
     pub fn right(self) -> Self { Self {x : self.x + 1, z : self.z } }

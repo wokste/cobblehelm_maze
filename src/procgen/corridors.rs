@@ -77,8 +77,8 @@ fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, ad
         let l = floor_pos.left();
         let r = floor_pos.right();
         
-        let t = floor_pos.left();
-        let b = floor_pos.right();
+        let t = floor_pos.top();
+        let b = floor_pos.bottom();
 
         for wall_pos in [l, r, t, b] {
             if map[wall_pos] == Tile::Void {

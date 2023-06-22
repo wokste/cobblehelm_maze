@@ -2,6 +2,7 @@ use crate::grid::Coords;
 
 struct Node {
     coords : Coords,
+    edges : Vec<usize>,
 }
 
 #[derive(Copy,Clone)]
@@ -14,7 +15,6 @@ struct Edge {
 #[derive(Default)]
 pub struct Graph{
     nodes : Vec<Node>,
-    edges : Vec<Edge>,
 }
 
 impl Edge {
@@ -22,20 +22,15 @@ impl Edge {
         let dist_sq = graph.nodes[from].coords.eucledian_dist_sq(graph.nodes[to].coords);
         Self {from, to, dist_sq}
     }
-
-    fn to_hash(self) -> usize {
-        let (v1, v2)= if self.from < self.to {(self.from, self.to)} else {(self.to, self.from)};
-        (v1 << 32) + v2
-    }
 }
 
 impl Graph {
     pub fn add_node(&mut self, coords : Coords) {
-        self.nodes.push(Node{coords})
+        self.nodes.push(Node{coords, edges : vec![]})
     }
     
     pub fn connect_tree(&mut self) {
-        // Using prims algorithm
+        // Create minimum spanning tree using prims algorithm
         let mut unfound_data: Vec<Edge> = vec![];
     
         for id in 1..self.nodes.len() {
@@ -45,7 +40,7 @@ impl Graph {
         while let Some((id_to_remove, conn_edge)) = unfound_data.iter().enumerate().min_by_key(|(_, a)| a.dist_sq)
         {
             // Add edge outside update return value
-           self.edges.push(*conn_edge);
+            self.connect(conn_edge.from, conn_edge.to);
             let connected = conn_edge.to;
     
             // Update unfound_data
@@ -59,33 +54,48 @@ impl Graph {
         };
     }
 
-    pub fn add_more_edges(&mut self, rng : &mut fastrand::Rng, max_dist_sq : i32) {
-        let mut map = bevy::utils::HashSet::<usize>::new();
-        let node_len = self.nodes.len();
+    fn connect(&mut self, from : usize, to : usize) {
+        self.nodes[from].edges.push(to);
+        self.nodes[to].edges.push(from);
+    }
 
-        for e in self.edges.iter() {
-            map.insert(e.to_hash());
-        }
+    pub fn add_more_edges(&mut self, rng : &mut fastrand::Rng) {
+        let mut ids : Vec<usize> = self.nodes.iter().enumerate().map(|(i,_)| i).collect();
+        rng.shuffle(ids.as_mut_slice());
 
-        for _ in 0 .. 1000 {
-            let n0 = rng.usize(0..node_len - 1);
-            let n1 = rng.usize((n0+1) ..node_len);
-            let new_edge = Edge::new(self, n0, n1);
+        for id0 in ids {
+            let n0 = &self.nodes[id0];
 
-            if map.contains(&new_edge.to_hash())  { continue; }
-            if new_edge.dist_sq > max_dist_sq     { continue; }
+            if n0.edges.len() > 1 {
+                continue;
+            }
 
-            map.insert(new_edge.to_hash()); // Either it will be inserted or it is too expensive to calculate this over and over again.
+            let Some((id1, _)) = self.nodes.iter().enumerate()
+                .filter(
+                    |(id1, _)| id0 != *id1 && !n0.edges.contains(id1)
+                )
+                .min_by_key(|
+                    (_, n1)| n0.coords.eucledian_dist_sq(n1.coords)
+                )
+            else {continue;};
 
             // TODO: Do a distance check without the door.
 
-            self.edges.push(new_edge);
+            self.connect(id0, id1);
 
             // TODO: Exit after X cycles
         }
     }
 
     pub fn to_edges(&self) -> Vec<(Coords,Coords)> {
-        self.edges.iter().map(|e| (self.nodes[e.from].coords, self.nodes[e.to].coords)).collect()
+        let mut ret = vec![];
+        for (id0, n0) in self.nodes.iter().enumerate() {
+            for id1 in n0.edges.iter() {
+                if id0 < *id1 {continue;} // Don't need to print connections twice.
+
+                ret.push((n0.coords, self.nodes[*id1].coords));
+            }
+        }
+        ret
     }
 }
