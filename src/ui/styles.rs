@@ -27,7 +27,7 @@ pub const BUTTON_STYLE : Style = Style{
     ..Style::DEFAULT
 };
 
-pub const FONT_P : f32 = 40.0;
+pub const FONT_P : f32 = 30.0;
 pub const FONT_H1 : f32 = 60.0;
 
 pub fn make_simple_text(asset_server: &Res<AssetServer>, text : &str, font_size: f32, alignment: TextAlignment) -> TextBundle{

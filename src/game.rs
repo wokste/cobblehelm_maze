@@ -75,8 +75,12 @@ fn make_level(
     }).insert(crate::player::PlayerBundle::default());
     map_data.player_pos = player_pos;
 
-    for _ in 1 .. 20 {
-        let err = crate::ai::spawn_monster(commands, map_data, meshes, render_res, rng);
+    let level_style = crate::procgen::style::make_by_level(level);
+    let monster_count = level * 5 + 15;
+    for _ in 1 .. monster_count {
+        use crate::procgen::randitem::RandItem;
+        let monster_type = level_style.monsters.rand_front_loaded(rng);
+        let err = crate::ai::spawn_monster(commands, map_data, *monster_type, meshes, render_res, rng);
         if let Err(err) = err {
             println!("Failed top spawn monster: {}", err);
         }

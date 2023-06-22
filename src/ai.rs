@@ -7,6 +7,8 @@ pub enum MonsterType {
     Imp,
     EyeMonster,
     Goliath,
+    Laima,
+    IronGolem,
 }
 
 impl MonsterType {
@@ -15,7 +17,9 @@ impl MonsterType {
         match self {
             Imp => {AI::new(2.5)},
             EyeMonster => {AI::new(5.0)},
-            Goliath => { AI::new(9.0)}
+            Goliath => { AI::new(9.0)},
+            Laima => {AI::new(5.0)},
+            IronGolem => { AI::new(9.0)},
         }
     }
 
@@ -39,6 +43,18 @@ impl MonsterType {
                 hp: 4,
                 hp_max: 4,
                 team: Team::Monsters,
+            }},
+            Laima => {CreatureStats{
+                speed: 6.,
+                hp: 2,
+                hp_max: 2,
+                team: Team::Monsters,
+            }},
+            IronGolem => {CreatureStats{
+                speed: 8.,
+                hp: 4,
+                hp_max: 4,
+                team: Team::Monsters,
             }}
         }
     }
@@ -49,26 +65,19 @@ impl MonsterType {
             Imp => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Shock, 1.8)},
             EyeMonster => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.6)},
             Goliath => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.9)}
-        }
-    }
-
-    pub fn rand(rng : &mut fastrand::Rng) -> Self {
-        let r = rng.u32(1..=6);
-        if r < 3 {
-            Self::Imp
-        } else if r < 6 {
-            Self::EyeMonster
-        } else {
-            Self::Goliath
+            Laima => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Shock, 1.2)},
+            IronGolem => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.7)}
         }
     }
 
     fn make_uv(&self) -> TexCoords {
         use MonsterType::*;
         match self {
-            Imp => TexCoords::new(0..1, 7),
-            EyeMonster => TexCoords::new(4..7, 7),
-            Goliath => TexCoords::new(8..9, 7)
+            Imp => TexCoords::new(0..2, 7),
+            EyeMonster => TexCoords::new(4..6, 7),
+            Goliath => TexCoords::new(8..10, 7),
+            Laima => TexCoords::new(12..14, 7),
+            IronGolem => TexCoords::new(16..18, 7),
         }
     }
 }
@@ -120,12 +129,12 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) ->
 pub fn spawn_monster(
     commands: &mut Commands,
     map_data: &ResMut<crate::map::MapData>,
+    monster_type : MonsterType,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res : &mut ResMut<SpriteResource>,
     rng : &mut fastrand::Rng,
 ) -> Result<(),&'static str> {
     let pos = choose_spawn_pos(map_data, rng)?;
-    let monster_type = MonsterType::rand(rng);
     let uv = monster_type.make_uv();
 
     commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.5), 0.3, meshes, render_res))

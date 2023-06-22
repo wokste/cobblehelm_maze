@@ -4,9 +4,9 @@ use crate::grid::*;
 mod corridors;
 mod graph;
 mod map_transform;
-mod randitem;
+pub mod randitem;
 mod rooms;
-mod style;
+pub mod style;
 
 use randitem::RandItem;
 

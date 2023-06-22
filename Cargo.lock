@@ -1115,6 +1115,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cobblehelm_maze"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "derive_more",
+ "fastrand",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2559,15 +2568,6 @@ dependencies = [
  "base64",
  "bitflags",
  "serde",
-]
-
-[[package]]
-name = "rust_labyrinth"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "derive_more",
- "fastrand",
 ]
 
 [[package]]

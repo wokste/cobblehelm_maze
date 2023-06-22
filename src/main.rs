@@ -13,9 +13,18 @@ mod weapon;
 
 use bevy::prelude::*;
 
+
+
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Cobblehem Maze".into(),
+                mode: bevy::window::WindowMode::BorderlessFullscreen,
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))
         .add_state::<game::GameState>()
         .add_plugin(ui::UIPlugin)
         .add_plugin(game::GamePlugin)
