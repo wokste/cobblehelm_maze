@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::map::MapData;
+
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
 
 pub enum GameState {
@@ -8,6 +10,7 @@ pub enum GameState {
     InGame,
     GameOver,
     Paused,
+    NextLevel
 //    VendingMachine,
 }
 
@@ -16,7 +19,8 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin{
     fn build(&self, app: &mut bevy::prelude::App) {
         app
-            .add_startup_system(start_game.after(crate::app_setup))
+            .add_system(despawn_game.in_schedule(OnEnter(GameState::MainMenu)))
+            .add_system(start_level.in_schedule(OnEnter(GameState::InGame)))
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
@@ -34,25 +38,50 @@ impl Plugin for GamePlugin{
     }
 }
 
-
 /// set up the level
-fn start_game(
+fn despawn_game(
     mut commands: Commands,
-    mut map_data: ResMut<crate::map::MapData>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<crate::rendering::SpriteResource>,
+    mut map_data: ResMut<MapData>,
+    mut level_query: Query<Entity, With<crate::LevelObject>>,
+    mut player_query: Query<Entity, With<crate::player::PlayerKeys>>,
 ) {
-    let mut rng = fastrand::Rng::new();
-    println!("Seed: {}", rng.get_seed());
-    make_level(1, &mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+    *map_data = MapData::default();
+
+    for entity in level_query.iter_mut() {
+        commands.entity(entity).despawn();
+    }
+    for entity in player_query.iter_mut() {
+        commands.entity(entity).despawn();
+    }
 }
 
+/// set up the level
+fn start_level(
+    mut commands: Commands,
+    game_data: Res<crate::GameInfo>,
+    mut map_data: ResMut<MapData>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut render_res: ResMut<crate::rendering::SpriteResource>,
+    mut level_query: Query<Entity, With<crate::LevelObject>>,
+) {
+    if game_data.level_spawned {
+        return; // No need to spawn the level
+    }
+
+    for entity in level_query.iter_mut() {
+        commands.entity(entity).despawn();
+    }
+
+    let mut rng = fastrand::Rng::new();
+    println!("Seed: {}", rng.get_seed());
+    make_level(game_data.level, &mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+}
 
 /// set up the game
 fn make_level(
     level : u8,
     commands: &mut Commands,
-    map_data: &mut ResMut<crate::map::MapData>,
+    map_data: &mut ResMut<MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res: &mut ResMut<crate::rendering::SpriteResource>,
     rng : &mut fastrand::Rng,
@@ -66,13 +95,13 @@ fn make_level(
         mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, rng)),
         material: render_res.material.clone(),
         ..default()
-    });
+    }).insert(super::LevelObject);
 
     let player_pos = player_pos.to_vec(0.7);
-    commands.spawn(Camera3dBundle {
+    commands.spawn(crate::player::PlayerBundle::default()).insert(PbrBundle{
         transform: Transform::from_translation(player_pos).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
-    }).insert(crate::player::PlayerBundle::default());
+    });
     map_data.player_pos = player_pos;
 
     let level_style = crate::procgen::style::make_by_level(level);

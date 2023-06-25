@@ -123,7 +123,7 @@ pub fn check_projectile_creature_collisions(
     audio: Res<Audio>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
-        for (monster_entity, mut stats, target_transform) in target_query.iter_mut() {
+        for (target_entity, mut stats, target_transform) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
@@ -145,11 +145,14 @@ pub fn check_projectile_creature_collisions(
 
             if stats.hp <= 0 {
                 if stats.team == Team::Players {
-                    // TODO: Game over
                     game_state.set(crate::game::GameState::GameOver);
                 } else {
-                    commands.entity(monster_entity).despawn();
+                    commands.entity(target_entity).despawn();
                     game.score += 10; // TODO: What kind of score to use?
+
+                    if game.temp_go_next_level() {
+                        game_state.set(crate::game::GameState::NextLevel);
+                    }
                 }
             }
             

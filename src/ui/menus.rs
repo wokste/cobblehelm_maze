@@ -11,8 +11,9 @@ pub struct Menu;
 #[derive(Component)]
 pub enum ButtonAction{
     Play,
-    Resume, // TODO: Should play and resume be something different?
+    Resume,
     ToMainMenu,
+    NextLevel,
     Quit,
 }
 
@@ -29,6 +30,11 @@ pub fn spawn_gameover_menu(mut commands: Commands, asset_server: Res<AssetServer
 pub fn spawn_pause_menu(mut commands: Commands, asset_server: Res<AssetServer>)
 {
 	make_menu(&mut commands, &asset_server, GameState::Paused)
+}
+
+pub fn spawn_next_level_screen(mut commands: Commands, asset_server: Res<AssetServer>)
+{
+	make_menu(&mut commands, &asset_server, GameState::NextLevel)
 }
 
 pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, state: GameState)
@@ -54,10 +60,12 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, state
                 make_button(parent, asset_server, "Resume", ButtonAction::Resume);
                 make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
             },
+            GameState::NextLevel => {
+                parent.spawn(make_simple_text(asset_server, "Level Complete", FONT_H1, TextAlignment::Center));
+                make_button(parent, asset_server, "Play Next Level", ButtonAction::NextLevel);
+            },
         };
     }).id();
-
-    // TODO: Spawn buttons
 }
 
 fn make_button(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>, text: &str, action : ButtonAction){
@@ -81,7 +89,8 @@ pub fn despawn_menu(mut commands: Commands, query : Query<Entity, With<Menu>>)
 pub fn interact_with_button(
     mut button_query: Query<(&Interaction, &mut BackgroundColor, &ButtonAction), Changed<Interaction>>,
     mut game_state: ResMut<NextState<GameState>>,
-    mut exit: EventWriter<AppExit>
+    mut game_data: ResMut<crate::GameInfo>,
+    mut exit: EventWriter<AppExit>,
 ) {
     for (interaction, mut background_color, action) in &mut button_query {
         *background_color = match interaction {
@@ -96,6 +105,12 @@ pub fn interact_with_button(
                     game_state.set(GameState::InGame);
                 },
                 ButtonAction::Resume => {
+                    game_data.level_spawned = false;
+                    game_data.level += 1;
+
+                    game_state.set(GameState::InGame);
+                },
+                ButtonAction::NextLevel => {
                     game_state.set(GameState::InGame);
                 },
                 ButtonAction::ToMainMenu => {

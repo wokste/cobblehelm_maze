@@ -57,8 +57,8 @@ impl Tile {
 
 #[derive(Resource)]
 pub struct MapData {
-    pub map : Grid<Tile>,
-    pub player_pos : Vec3,
+    pub map: Grid<Tile>,
+    pub player_pos: Vec3,
 }
 
 impl Default for MapData {

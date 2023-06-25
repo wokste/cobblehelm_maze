@@ -84,6 +84,7 @@ impl TexCoords {
         let index = frames.start;
 
         SpriteBundle {
+            in_level : crate::LevelObject,
             face_camera : FaceCamera,
             sprite: Sprite3d {
                 index,
@@ -104,6 +105,7 @@ impl TexCoords {
 
 #[derive(Bundle)]
 pub struct SpriteBundle{
+    pub in_level: crate::LevelObject,
     pub face_camera : FaceCamera,
     pub animation : Animation,
     pub sprite : Sprite3d,

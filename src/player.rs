@@ -12,19 +12,19 @@ use crate::{
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
-    pub keys : PlayerKeys,
-    pub stats : CreatureStats,
-    pub physisc : PhysicsBody,
-    pub weapon : Weapon,
+    pub keys: PlayerKeys,
+    pub stats: CreatureStats,
+    pub physisc: PhysicsBody,
+    pub weapon: Weapon,
 }
 
 impl Default for PlayerBundle {
     fn default() -> Self {
         Self {
-            keys : Default::default(),
-            stats : CreatureStats::player(),
-            physisc : PhysicsBody::new(MapCollisionEvent::Stop),
-            weapon : Weapon::new(ProjectileType::BlueBlob, 0.3)
+            keys: Default::default(),
+            stats: CreatureStats::player(),
+            physisc: PhysicsBody::new(MapCollisionEvent::Stop),
+            weapon: Weapon::new(ProjectileType::BlueBlob, 0.3)
         }
     }
 }
@@ -97,9 +97,11 @@ pub fn player_input(
 
 pub fn update_map(
     mut map_data: ResMut<crate::map::MapData>,
-    query: Query<(&PlayerKeys, &Transform)>,
+    player_query: Query<&Transform, With<PlayerKeys>>,
+    mut camera_query: Query<&mut Transform, (With<Camera3d>, Without<PlayerKeys>)>,
 ) {
-    for (_,transform) in query.iter() {
-        map_data.player_pos = transform.translation
-    }
+    let player_transform = player_query.get_single().unwrap();
+    map_data.player_pos = player_transform.translation;
+    let mut camera_transform = camera_query.get_single_mut().unwrap();
+    *camera_transform = *player_transform;
 }

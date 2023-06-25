@@ -119,7 +119,7 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) ->
             continue;
         }
 
-        // TODO: Monster check
+        // TODO: Monster check (Multiple monsters at the same spot)
 
         return Ok(pos);
     }

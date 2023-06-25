@@ -82,8 +82,6 @@ impl Graph {
             // TODO: Do a distance check without the door.
 
             self.connect(id0, id1);
-
-            // TODO: Exit after X cycles
         }
     }
 

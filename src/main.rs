@@ -13,7 +13,8 @@ mod weapon;
 
 use bevy::prelude::*;
 
-
+#[derive(Component)]
+pub struct LevelObject;
 
 fn main() {
     App::new()
@@ -38,6 +39,7 @@ fn app_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ambient_light: ResMut<AmbientLight>,
     mut render_res: ResMut<rendering::SpriteResource>,
+    mut commands: Commands,
 ) {
     ambient_light.color = Color::WHITE;
     ambient_light.brightness = 0.5;
@@ -51,6 +53,10 @@ fn app_setup(
         ..default()
         //Color::WHITE.into()
     });
+
+    commands.spawn(Camera3dBundle {
+        ..default()
+    });
 }
 
 // This resource tracks the game's score
@@ -58,7 +64,9 @@ fn app_setup(
 pub struct GameInfo {
     pub hp_perc: f32,
     pub score: i32,
-    pub coins : i32,
+    pub coins: i32,
+    pub level: u8,
+    pub level_spawned: bool,
 }
 
 impl Default for GameInfo {
@@ -66,7 +74,20 @@ impl Default for GameInfo {
         Self {
             hp_perc: 1.0,
             score: 0,
-            coins: 0
+            coins: 0,
+            level: 1,
+            level_spawned: false,
         }
     }
+}
+
+impl GameInfo {
+    pub fn temp_go_next_level(&self) -> bool {
+        (self.level == 1 && self.score >= 175) ||
+        (self.level == 2 && self.score >= 400) ||
+        (self.level == 3 && self.score >= 675) ||
+        (self.level == 4 && self.score >= 1000)
+
+    }
+
 }

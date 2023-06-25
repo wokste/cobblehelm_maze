@@ -13,6 +13,8 @@ enum HudField{
     HpPerc,
     Score,
     Coins,
+    Level,
+    Time,
 //    Status,
 }
 
@@ -22,6 +24,8 @@ impl HudUpdated {
             HudField::HpPerc => (game.hp_perc * 100.0) as i32,
             HudField::Score => game.score,
             HudField::Coins => game.coins,
+            HudField::Level => game.level as i32,
+            HudField::Time => self.value + 1, // TODO: Actually measure time
         };
 
         if self.value == new_value {
@@ -37,6 +41,8 @@ impl HudUpdated {
             HudField::HpPerc => format!("HP: {}%", self.value),
             HudField::Score => format!("Score: {}", self.value),
             HudField::Coins => format!("Coins: {}", self.value),
+            HudField::Level => format!("Level: {}", self.value),
+            HudField::Time => format!("Time: {}", self.value),
         }
     }
 }
@@ -65,6 +71,8 @@ pub fn spawn(
         parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::HpPerc, value: -1} ) );
         parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Score, value: -1} ) );
         parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Coins, value: -1} ) );
+        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Level, value: -1} ) );
+        parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Time, value: -1} ) );
     })
     .id();
 
