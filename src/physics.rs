@@ -16,11 +16,11 @@ pub struct PhysicsBody {
 }
 
 impl PhysicsBody {
-    pub fn new(on_hit_wall : MapCollisionEvent) -> Self {
+    pub fn new(radius : f32, on_hit_wall : MapCollisionEvent) -> Self {
         Self {
             on_hit_wall,
             velocity : Vec3::ZERO,
-            radius : 0.125,
+            radius,
         }
     }
 

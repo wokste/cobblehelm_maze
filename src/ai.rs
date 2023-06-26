@@ -1,6 +1,6 @@
 use bevy::{prelude::*};
 
-use crate::{grid::{Coords}, map::{MapData}, combat::CreatureStats, combat::Team, rendering::{TexCoords, SpriteResource}};
+use crate::{grid::{Coords}, map::{MapData}, combat::CreatureStats, combat::Team, rendering::{TexCoords, SpriteResource}, physics::MapCollisionEvent};
 
 #[derive(Copy,Clone)]
 pub enum MonsterType {
@@ -141,7 +141,8 @@ pub fn spawn_monster(
         .insert(crate::rendering::FaceCamera)
         .insert(monster_type.make_ai())
         .insert(monster_type.make_stats())
-        .insert(monster_type.make_weapon());
+        .insert(monster_type.make_weapon())
+        .insert(crate::physics::PhysicsBody::new(0.5, MapCollisionEvent::Stop));
 
     Ok(())
 }

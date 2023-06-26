@@ -105,7 +105,7 @@ pub fn fire_weapons(
             let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.1, &mut meshes, &mut render_res));
             proto_projectile.insert(crate::rendering::FaceCamera);
             proto_projectile.insert(weapon.make_projectile(stats.team));
-            proto_projectile.insert(PhysicsBody::new(MapCollisionEvent::Destroy).set_velocity( velocity ));
+            proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy).set_velocity( velocity ));
 
             let sound = asset_server.load("audio/player_shoot.ogg");
             audio.play(sound);
@@ -116,19 +116,20 @@ pub fn fire_weapons(
 pub fn check_projectile_creature_collisions(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Projectile, &Transform)>,
-    mut target_query: Query<(Entity, &mut CreatureStats, &Transform)>,
+    mut target_query: Query<(Entity, &PhysicsBody, &mut CreatureStats, &Transform)>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
     for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
-        for (target_entity, mut stats, target_transform) in target_query.iter_mut() {
+        for (target_entity, target_body, mut stats, target_transform) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
             
-            if projectile_transform.translation.distance_squared(target_transform.translation) > 1.0 { // TODO: Projectile and monster radius
+            let distance = target_body.radius;  // TODO: Projectile and monster radius
+            if projectile_transform.translation.distance_squared(target_transform.translation) > distance * distance {
                 continue;
             }
 
@@ -149,6 +150,7 @@ pub fn check_projectile_creature_collisions(
                 } else {
                     commands.entity(target_entity).despawn();
                     game.score += 10; // TODO: What kind of score to use?
+                    game.coins += 1; // TODO: This should be a pickup
 
                     if game.temp_go_next_level() {
                         game_state.set(crate::game::GameState::NextLevel);
