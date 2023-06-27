@@ -11,25 +11,25 @@ pub struct LevelStyle {
 pub fn make_by_level(level: u8) -> LevelStyle {
     match level{
         1 => LevelStyle{ // The castle
-            corridors: vec![WallTile::Castle],
+            corridors: vec![WallTile::Castle, WallTile::TempleBrown, WallTile::TempleGray],
             rooms: vec![WallTile::Castle, WallTile::TempleBrown, WallTile::TempleGray, WallTile::TempleGreen, WallTile::Cave],
             doors: vec![DoorType::Chips],
             monsters: vec![MonsterType::Imp, MonsterType::EyeMonster, MonsterType::Laima],
         },
         2 => LevelStyle{ // Caves below the castle
-            corridors: vec![WallTile::Cave],
+            corridors: vec![WallTile::Cave, WallTile::TempleBrown, WallTile::Castle],
             rooms: vec![WallTile::Castle, WallTile::Cave, WallTile::TempleBrown, WallTile::TempleGray, WallTile::Beehive, WallTile::TempleGreen],
             doors: vec![],
             monsters: vec![MonsterType::EyeMonster, MonsterType::Laima, MonsterType::Goliath],
         },
         3 => LevelStyle{ // The sewers
-            corridors: vec![WallTile::Sewer],
+            corridors: vec![WallTile::Sewer, WallTile::TempleGreen],
             rooms: vec![WallTile::SewerCave, WallTile::TempleGreen, WallTile::Sewer, WallTile::TempleGray],
             doors: vec![DoorType::Chips],
             monsters: vec![MonsterType::Laima, MonsterType::EyeMonster, MonsterType::Imp],
         },
         4 => LevelStyle{ // In hell
-            corridors: vec![WallTile::TempleGray],
+            corridors: vec![WallTile::TempleGray, WallTile::Demonic],
             rooms: vec![WallTile::DemonicCave, WallTile::Demonic, WallTile::TempleGray, WallTile::Flesh],
             doors: vec![DoorType::Chips],
             monsters: vec![MonsterType::Imp, MonsterType::EyeMonster, MonsterType::Goliath],

@@ -59,7 +59,7 @@ impl Graph {
         self.nodes[to].edges.push(from);
     }
 
-    pub fn add_more_edges(&mut self, rng: &mut fastrand::Rng) {
+    pub fn add_more_edges(&mut self, rng: &mut fastrand::Rng, p_connect: f32) {
         let mut ids: Vec<usize> = self.nodes.iter().enumerate().map(|(i,_)| i).collect();
         rng.shuffle(ids.as_mut_slice());
 
@@ -67,6 +67,10 @@ impl Graph {
             let n0 = &self.nodes[id0];
 
             if n0.edges.len() > 1 {
+                continue;
+            }
+
+            if rng.f32() > p_connect {
                 continue;
             }
 

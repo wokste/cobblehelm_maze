@@ -62,7 +62,7 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
     }
 
     graph.connect_tree();
-    graph.add_more_edges(rng);
+    graph.add_more_edges(rng, 0.5);
 
     for edge in graph.to_edges() {
         corridors::connect_rooms(&mut map, rng, &styles, edge);
