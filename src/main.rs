@@ -80,14 +80,3 @@ impl Default for GameInfo {
         }
     }
 }
-
-impl GameInfo {
-    pub fn temp_go_next_level(&self) -> bool {
-        (self.level == 1 && self.score >= 175) ||
-        (self.level == 2 && self.score >= 400) ||
-        (self.level == 3 && self.score >= 675) ||
-        (self.level == 4 && self.score >= 1000)
-
-    }
-
-}

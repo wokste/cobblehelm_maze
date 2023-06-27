@@ -151,10 +151,6 @@ pub fn check_projectile_creature_collisions(
                     commands.entity(target_entity).despawn();
                     game.score += 10; // TODO: What kind of score to use?
                     game.coins += 1; // TODO: This should be a pickup
-
-                    if game.temp_go_next_level() {
-                        game_state.set(crate::game::GameState::NextLevel);
-                    }
                 }
             }
             

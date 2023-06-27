@@ -97,12 +97,18 @@ fn make_level(
         ..default()
     }).insert(super::LevelObject);
 
-    let player_pos = player_pos.to_vec(0.7);
-    commands.spawn(crate::player::PlayerBundle::default()).insert(PbrBundle{
-        transform: Transform::from_translation(player_pos).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
-    map_data.player_pos = player_pos;
+    map_data.player_pos = player_pos.to_vec(0.7);
+
+    // TODO: Don't spawn this again
+    if level == 1 {
+        commands.spawn(crate::player::PlayerBundle::default()).insert(PbrBundle{
+            transform: Transform::from_translation(map_data.player_pos).looking_at(Vec3::ZERO, Vec3::Y),
+            ..default()
+        });
+    } else {
+        // TODO:
+    }
+    
 
     let level_style = crate::procgen::style::make_by_level(level);
     let monster_count = level * 5 + 15;
