@@ -1,32 +1,32 @@
 use crate::grid::Coords;
 
 struct Node {
-    coords : Coords,
-    edges : Vec<usize>,
+    coords: Coords,
+    edges: Vec<usize>,
 }
 
 #[derive(Copy,Clone)]
 struct Edge {
-    from : usize,
-    to : usize,
-    dist_sq : i32,
+    from: usize,
+    to: usize,
+    dist_sq: i32,
 }
 
 #[derive(Default)]
 pub struct Graph{
-    nodes : Vec<Node>,
+    nodes: Vec<Node>,
 }
 
 impl Edge {
-    fn new(graph : &Graph, from : usize, to : usize) -> Self {
+    fn new(graph: &Graph, from: usize, to: usize) -> Self {
         let dist_sq = graph.nodes[from].coords.eucledian_dist_sq(graph.nodes[to].coords);
         Self {from, to, dist_sq}
     }
 }
 
 impl Graph {
-    pub fn add_node(&mut self, coords : Coords) {
-        self.nodes.push(Node{coords, edges : vec![]})
+    pub fn add_node(&mut self, coords: Coords) {
+        self.nodes.push(Node{coords, edges: vec![]})
     }
     
     pub fn connect_tree(&mut self) {
@@ -54,13 +54,13 @@ impl Graph {
         };
     }
 
-    fn connect(&mut self, from : usize, to : usize) {
+    fn connect(&mut self, from: usize, to: usize) {
         self.nodes[from].edges.push(to);
         self.nodes[to].edges.push(from);
     }
 
-    pub fn add_more_edges(&mut self, rng : &mut fastrand::Rng) {
-        let mut ids : Vec<usize> = self.nodes.iter().enumerate().map(|(i,_)| i).collect();
+    pub fn add_more_edges(&mut self, rng: &mut fastrand::Rng) {
+        let mut ids: Vec<usize> = self.nodes.iter().enumerate().map(|(i,_)| i).collect();
         rng.shuffle(ids.as_mut_slice());
 
         for id0 in ids {
@@ -79,7 +79,7 @@ impl Graph {
                 )
             else {continue;};
 
-            // TODO: Do a distance check without the door.
+            // TODO: Do a distance check without the edge.
 
             self.connect(id0, id1);
         }

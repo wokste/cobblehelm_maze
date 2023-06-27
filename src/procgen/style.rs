@@ -2,13 +2,13 @@ use crate::{map::{WallTile, FloorTile, DoorType}, ai::MonsterType};
 
 
 pub struct LevelStyle {
-    pub corridors : Vec<WallTile>,
+    pub corridors: Vec<WallTile>,
     pub rooms: Vec<WallTile>,
-    pub doors : Vec<DoorType>,
-    pub monsters : Vec<MonsterType>
+    pub doors: Vec<DoorType>,
+    pub monsters: Vec<MonsterType>
 }
 
-pub fn make_by_level(level : u8) -> LevelStyle {
+pub fn make_by_level(level: u8) -> LevelStyle {
     match level{
         1 => LevelStyle{ // The castle
             corridors: vec![WallTile::Castle],
@@ -44,7 +44,7 @@ pub fn make_by_level(level : u8) -> LevelStyle {
 }
 
 
-pub fn wall_to_floor(tile : WallTile) -> FloorTile {
+pub fn wall_to_floor(tile: WallTile) -> FloorTile {
     match tile {
         WallTile::Castle => FloorTile::Sand,
         WallTile::TempleBrown => FloorTile::BrownFloor,

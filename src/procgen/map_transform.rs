@@ -10,7 +10,7 @@ pub struct MapTransform{
 }
 
 impl MapTransform {
-    pub fn make_rand(map_size: Coords, room_size: Coords, rng : &mut fastrand::Rng) -> MapTransform {
+    pub fn make_rand(map_size: Coords, room_size: Coords, rng: &mut fastrand::Rng) -> MapTransform {
         let swap_xz = rng.bool();
 
         let room_size = if swap_xz {room_size.transpose() } else {room_size};
@@ -27,23 +27,23 @@ impl MapTransform {
         transform
     }
 
-    pub fn new(dx: i32, dz:i32, swap_xz : bool) -> MapTransform {
-        MapTransform{ dx, dz, flip_x : false, flip_z : false, swap_xz, }
+    pub fn new(dx: i32, dz:i32, swap_xz: bool) -> MapTransform {
+        MapTransform{ dx, dz, flip_x: false, flip_z: false, swap_xz, }
     }
 
-    fn do_flip_x(&mut self, roomsize : Coords) {
+    fn do_flip_x(&mut self, roomsize: Coords) {
         let delta = roomsize.x - 1;
         self.flip_x = !self.flip_x;
         if self.flip_x {self.dx += delta;} else {self.dx -= delta;}
     }
     
-    fn do_flip_z(&mut self, roomsize : Coords) {
+    fn do_flip_z(&mut self, roomsize: Coords) {
         let delta = roomsize.z - 1;
         self.flip_z = !self.flip_z;
         if self.flip_z {self.dz += delta;} else {self.dz -= delta;}
     }
 
-    pub fn map_xz(&self, x : i32, z : i32) -> Coords {
+    pub fn map_xz(&self, x: i32, z: i32) -> Coords {
         self.map(Coords::new(x,z))
     }
 

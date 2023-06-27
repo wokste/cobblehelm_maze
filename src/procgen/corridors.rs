@@ -4,7 +4,7 @@ use crate::map::{Tile, WallTile};
 use super::{style::LevelStyle, randitem::RandItem};
 
 
-pub fn connect_rooms(map : &mut Grid<Tile>, rng : &mut fastrand::Rng, level_style : &LevelStyle, p : (Coords, Coords)) {
+pub fn connect_rooms(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, level_style: &LevelStyle, p: (Coords, Coords)) {
     let tile = *level_style.corridors.rand_front_loaded(rng);
     match super::RoomShape::from(tile) {
         super::RoomShape::Organic => connect_rooms_organic(map, rng, tile, p),
@@ -12,7 +12,7 @@ pub fn connect_rooms(map : &mut Grid<Tile>, rng : &mut fastrand::Rng, level_styl
     }
 }
 
-fn connect_rooms_constructed(map: &mut Grid<Tile>, rng : &mut fastrand::Rng, level_style: &LevelStyle, wall: WallTile, p : (Coords, Coords)) {
+fn connect_rooms_constructed(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, level_style: &LevelStyle, wall: WallTile, p: (Coords, Coords)) {
 
     let floor_tile = Tile::Floor(super::style::wall_to_floor(wall));
     let _door_tile = if level_style.doors.is_empty() { None } else {Some(*level_style.doors.rand_front_loaded(rng)) };
@@ -45,7 +45,7 @@ fn connect_rooms_constructed(map: &mut Grid<Tile>, rng : &mut fastrand::Rng, lev
     add_walls(map, added_floors, wall, true);
 }
 
-pub fn connect_rooms_organic(map : &mut Grid<Tile>, rng : &mut fastrand::Rng, wall: WallTile, p : (Coords, Coords)) {
+pub fn connect_rooms_organic(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, wall: WallTile, p: (Coords, Coords)) {
     let floor_tile = Tile::Floor(super::style::wall_to_floor(wall));
     let (mut cur_pos,end_pos) = p;
 
@@ -68,7 +68,7 @@ pub fn connect_rooms_organic(map : &mut Grid<Tile>, rng : &mut fastrand::Rng, wa
     add_walls(map, added_floors, wall, false);
 }
 
-fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, add_doors : bool)
+fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, add_doors: bool)
 {
     for floor_pos in added_floors {
         // Add walls

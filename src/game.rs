@@ -79,12 +79,12 @@ fn start_level(
 
 /// set up the game
 fn make_level(
-    level : u8,
+    level: u8,
     commands: &mut Commands,
     map_data: &mut ResMut<MapData>,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res: &mut ResMut<crate::rendering::SpriteResource>,
-    rng : &mut fastrand::Rng,
+    rng: &mut fastrand::Rng,
 ) {
     let data = crate::procgen::make_map(level, rng);
     map_data.map = data.map;

@@ -68,7 +68,7 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, state
     }).id();
 }
 
-fn make_button(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>, text: &str, action : ButtonAction){
+fn make_button(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>, text: &str, action: ButtonAction){
     parent.spawn((ButtonBundle{
         style: BUTTON_STYLE,
         background_color: Color::rgb(0.15, 0.15, 0.15).into(),
@@ -79,7 +79,7 @@ fn make_button(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>, text:
     });
 }
 
-pub fn despawn_menu(mut commands: Commands, query : Query<Entity, With<Menu>>)
+pub fn despawn_menu(mut commands: Commands, query: Query<Entity, With<Menu>>)
 {
     if let Ok(entity) = query.get_single() {
         commands.entity(entity).despawn_recursive();

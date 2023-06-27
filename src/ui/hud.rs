@@ -19,8 +19,8 @@ enum HudField{
 }
 
 impl HudUpdated {
-    fn update(&mut self, game : &crate::GameInfo) -> bool {
-        let new_value : i32 = match self.field {
+    fn update(&mut self, game: &crate::GameInfo) -> bool {
+        let new_value: i32 = match self.field {
             HudField::HpPerc => (game.hp_perc * 100.0) as i32,
             HudField::Score => game.score,
             HudField::Coins => game.coins,
@@ -75,8 +75,6 @@ pub fn spawn(
         parent.spawn((make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center), HudUpdated{field: HudField::Time, value: -1} ) );
     })
     .id();
-
-    // TODO: Spawn HUD elements
 }
 
 pub fn update_hud(
@@ -93,7 +91,7 @@ pub fn update_hud(
     }
 }
 
-pub fn despawn(mut commands: Commands, query : Query<Entity, With<Hud>>)
+pub fn despawn(mut commands: Commands, query: Query<Entity, With<Hud>>)
 {
     if let Ok(entity) = query.get_single() {
         commands.entity(entity).despawn_recursive();

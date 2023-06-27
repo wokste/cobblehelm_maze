@@ -7,10 +7,10 @@ use crate::{grid::{Grid, Coords}, map::{Tile, WallTile, FloorTile}, rendering::T
 
 #[derive(Default, Clone)]
 struct MeshBuilder {
-    indices : Vec<u32>,
-    positions : Vec<Vec3>,
-    normals : Vec<Vec3>,
-    uvs : Vec<Vec2>,
+    indices: Vec<u32>,
+    positions: Vec<Vec3>,
+    normals: Vec<Vec3>,
+    uvs: Vec<Vec2>,
 }
 
 impl MeshBuilder {
@@ -23,7 +23,7 @@ impl MeshBuilder {
         mesh
     }
 
-    fn add_vertex(&mut self, pos : Vec3, normal : Vec3, uv : Vec2) -> u32 {
+    fn add_vertex(&mut self, pos: Vec3, normal: Vec3, uv: Vec2) -> u32 {
         let id = self.positions.len() as u32;
         self.positions.push(pos);
         self.normals.push(normal);
@@ -31,7 +31,7 @@ impl MeshBuilder {
         id
     }
 
-    fn add_rect(&mut self, p : Vec3, dir0 : Vec3, dir1 : Vec3, uv : Vec2) {
+    fn add_rect(&mut self, p: Vec3, dir0: Vec3, dir1: Vec3, uv: Vec2) {
         let normal = dir0.cross(dir1);
 
         let uv0 = Vec2::new(1.0 / 32.0,0.0);
@@ -46,7 +46,7 @@ impl MeshBuilder {
     }
 }
 
-pub fn map_to_mesh(map : &Grid<Tile>, rng : &mut fastrand::Rng) -> Mesh {
+pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
     let mut builder = MeshBuilder::default();
 
     for z in 1 .. map.z_max() - 1 {
@@ -81,7 +81,7 @@ pub fn map_to_mesh(map : &Grid<Tile>, rng : &mut fastrand::Rng) -> Mesh {
 
 
 
-pub fn floor_tex_id(tile : FloorTile) -> TexCoords {
+pub fn floor_tex_id(tile: FloorTile) -> TexCoords {
     match tile {
         FloorTile::Sand => TexCoords::new(0..8,4),
         FloorTile::BrownFloor => TexCoords::new(14..18,4),
@@ -95,7 +95,7 @@ pub fn floor_tex_id(tile : FloorTile) -> TexCoords {
     }
 }
 
-pub fn wall_tex_id(tile : WallTile) -> TexCoords {
+pub fn wall_tex_id(tile: WallTile) -> TexCoords {
     match tile {
         //Tile::Door1 => TexCoords::new(29..32,1), // TODO: Better door tile
         WallTile::Castle => TexCoords::new(0..12,0),

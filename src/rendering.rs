@@ -7,8 +7,8 @@ use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::time::{Time, Timer, TimerMode};
 
-const TILE_X : usize = 32;
-const TILE_Y : usize = 8;
+const TILE_X: usize = 32;
+const TILE_Y: usize = 8;
 
 #[derive(Resource, Default)]
 pub struct SpriteResource {
@@ -17,7 +17,7 @@ pub struct SpriteResource {
 }
 
 impl SpriteResource {
-    pub fn get_mesh(&mut self, index : usize, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
+    pub fn get_mesh(&mut self, index: usize, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
         if let Some(handle) = self.sprite_cache.get(&index) {
             return handle.clone();
         }
@@ -29,7 +29,7 @@ impl SpriteResource {
         mesh
     }
 
-    fn make_mesh(index : usize) -> Mesh {
+    fn make_mesh(index: usize) -> Mesh {
         let x = index % TILE_X;
         let y = index / TILE_X;
 
@@ -54,16 +54,16 @@ impl SpriteResource {
 
 #[derive(Clone)]
 pub struct TexCoords {
-    pub x : std::ops::Range<u8>,
-    pub y : u8,
+    pub x: std::ops::Range<u8>,
+    pub y: u8,
 }
 
 impl TexCoords {
-    pub fn new(x : std::ops::Range<u8>, y : u8) -> Self {
+    pub fn new(x: std::ops::Range<u8>, y: u8) -> Self {
         Self{x,y}
     }
 
-    pub fn to_uv(&self, rng : &mut fastrand::Rng) -> Vec2 {
+    pub fn to_uv(&self, rng: &mut fastrand::Rng) -> Vec2 {
         let x = rng.u8(self.x.clone());
         let y = self.y;
 
@@ -72,10 +72,10 @@ impl TexCoords {
 
     pub fn to_sprite_bundle(
         &self,
-        pos : Vec3,
-        anim_speed : f32,
+        pos: Vec3,
+        anim_speed: f32,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res : &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<SpriteResource>,
     ) -> SpriteBundle {
         let frames = Range::<usize> {
             start: self.x.start as usize + self.y as usize * TILE_X,
@@ -84,16 +84,16 @@ impl TexCoords {
         let index = frames.start;
 
         SpriteBundle {
-            in_level : crate::LevelObject,
-            face_camera : FaceCamera,
+            in_level: crate::LevelObject,
+            face_camera: FaceCamera,
             sprite: Sprite3d {
                 index,
             },
-            animation : Animation {
+            animation: Animation {
                 frames,
                 timer: Timer::from_seconds(anim_speed, TimerMode::Repeating),
             },
-            pbr : PbrBundle {
+            pbr: PbrBundle {
                 mesh: render_res.get_mesh(index, meshes),
                 material: render_res.material.clone(),
                 transform: Transform::from_translation(pos).looking_at(Vec3::ZERO, Vec3::Y),
@@ -106,10 +106,10 @@ impl TexCoords {
 #[derive(Bundle)]
 pub struct SpriteBundle{
     pub in_level: crate::LevelObject,
-    pub face_camera : FaceCamera,
-    pub animation : Animation,
-    pub sprite : Sprite3d,
-    pub pbr : PbrBundle,
+    pub face_camera: FaceCamera,
+    pub animation: Animation,
+    pub sprite: Sprite3d,
+    pub pbr: PbrBundle,
 }
 
 
@@ -137,7 +137,7 @@ pub struct Animation {
 
 #[derive(Component)]
 pub struct Sprite3d {
-    index : usize,
+    index: usize,
 }
 
 pub fn animate_sprites(

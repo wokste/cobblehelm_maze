@@ -5,7 +5,7 @@ use bevy::prelude::Vec2;
 use crate::map::{Tile, WallTile, FloorTile};
 use crate::grid::{Grid};
 
-pub fn make_room(wall : WallTile, rng : &mut fastrand::Rng) -> Grid<Tile> {
+pub fn make_room(wall: WallTile, rng: &mut fastrand::Rng) -> Grid<Tile> {
     let shape = super::RoomShape::from(wall);
     let floor = super::style::wall_to_floor(wall);
     
@@ -19,7 +19,7 @@ pub fn make_room(wall : WallTile, rng : &mut fastrand::Rng) -> Grid<Tile> {
     map
 }
 
-fn make_organic_floor(floor : FloorTile, rng : &mut fastrand::Rng, x_max : i32, z_max : i32) -> Grid<Tile> {
+fn make_organic_floor(floor: FloorTile, rng: &mut fastrand::Rng, x_max: i32, z_max: i32) -> Grid<Tile> {
     let mut map = Grid::<Tile>::new(x_max + 2,z_max + 2);
 
     let center = Vec2::new(x_max as f32 + 1.0, z_max as f32 + 1.0) / 2.0;
@@ -46,7 +46,7 @@ fn make_organic_floor(floor : FloorTile, rng : &mut fastrand::Rng, x_max : i32, 
     map
 }
 
-fn make_constructed_floor(floor : FloorTile, rng : &mut fastrand::Rng, x_max : i32, z_max : i32) -> Grid<Tile> {
+fn make_constructed_floor(floor: FloorTile, rng: &mut fastrand::Rng, x_max: i32, z_max: i32) -> Grid<Tile> {
     let mut map = Grid::<Tile>::new(x_max + 2,z_max + 2);
     for z in 1 .. z_max + 1 {
         for x in 1 .. x_max + 1 {
@@ -65,7 +65,7 @@ fn make_constructed_floor(floor : FloorTile, rng : &mut fastrand::Rng, x_max : i
     map
 }
 
-fn add_walls(map : &mut Grid<Tile>, wall : WallTile) {
+fn add_walls(map: &mut Grid<Tile>, wall: WallTile) {
     // Add walls
     let wall = Tile::Wall(wall);
     for z in 0 .. map.z_max() {

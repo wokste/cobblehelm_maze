@@ -12,15 +12,15 @@ pub struct CreatureStats {
     pub speed: f32,
     pub hp: i16,
     pub hp_max: i16,
-    pub team : Team,
+    pub team: Team,
 }
 
 impl CreatureStats {
     pub fn player() -> Self {
         Self {
             speed: 6.0,
-            hp: 20,
-            hp_max: 20,
+            hp: 100,
+            hp_max: 100,
             team: Team::Players,
         }
     }

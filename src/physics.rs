@@ -15,12 +15,12 @@ pub struct PhysicsMovable {
 
 #[derive(Component)]
 pub struct PhysicsBody {
-    pub radius : f32,
-    pub on_hit_wall : MapCollisionEvent,
+    pub radius: f32,
+    pub on_hit_wall: MapCollisionEvent,
 }
 
 impl PhysicsBody {
-    pub fn new(radius : f32, on_hit_wall : MapCollisionEvent) -> Self {
+    pub fn new(radius: f32, on_hit_wall: MapCollisionEvent) -> Self {
         Self {
             radius,
             on_hit_wall,
@@ -34,7 +34,7 @@ impl PhysicsMovable {
     }
 }
 
-fn split_deltas(delta : Vec3) -> [Vec3;2] {
+fn split_deltas(delta: Vec3) -> [Vec3;2] {
     let delta_abs = delta.abs();
 
     if delta_abs.x > delta_abs.z {
@@ -45,7 +45,7 @@ fn split_deltas(delta : Vec3) -> [Vec3;2] {
 }
 
 // TODO: crate::grid::Grid<bool>
-fn check_map_collision(map : &crate::grid::Grid<crate::map::Tile>, pos : Vec3, radius : f32) -> bool {
+fn check_map_collision(map: &crate::grid::Grid<crate::map::Tile>, pos: Vec3, radius: f32) -> bool {
     // TODO: Better return type
     let x0 = f32::floor(pos.x - radius) as i32;
     let x1 = f32::floor(pos.x + radius) as i32;

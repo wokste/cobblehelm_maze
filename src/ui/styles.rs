@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub const MENU_STYLE : Style = Style{
+pub const MENU_STYLE: Style = Style{
     flex_direction: FlexDirection::Column,
     justify_content: JustifyContent::Center,
     align_items: AlignItems::Center,
@@ -20,17 +20,17 @@ pub const MENU_STYLE : Style = Style{
     ..Style::DEFAULT
 };
 
-pub const BUTTON_STYLE : Style = Style{
+pub const BUTTON_STYLE: Style = Style{
     justify_content: JustifyContent::Center,
-    align_items : AlignItems::Center,
+    align_items: AlignItems::Center,
     size: Size::new(Val::Px(250.0), Val::Px(100.0)),
     ..Style::DEFAULT
 };
 
-pub const FONT_P : f32 = 30.0;
-pub const FONT_H1 : f32 = 60.0;
+pub const FONT_P: f32 = 30.0;
+pub const FONT_H1: f32 = 60.0;
 
-pub fn make_simple_text(asset_server: &Res<AssetServer>, text : &str, font_size: f32, alignment: TextAlignment) -> TextBundle{
+pub fn make_simple_text(asset_server: &Res<AssetServer>, text: &str, font_size: f32, alignment: TextAlignment) -> TextBundle{
     TextBundle {
         text: Text {
             sections: vec![ TextSection::new(text, TextStyle{

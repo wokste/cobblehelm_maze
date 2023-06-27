@@ -25,37 +25,18 @@ impl MonsterType {
 
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType::*;
-        match self {
-            Imp => {CreatureStats{
-                speed: 6.,
-                hp: 1,
-                hp_max: 1,
-                team: Team::Monsters,
-            }},
-            EyeMonster => {CreatureStats{
-                speed: 6.,
-                hp: 2,
-                hp_max: 2,
-                team: Team::Monsters,
-            }},
-            Goliath => {CreatureStats{
-                speed: 8.,
-                hp: 4,
-                hp_max: 4,
-                team: Team::Monsters,
-            }},
-            Laima => {CreatureStats{
-                speed: 6.,
-                hp: 2,
-                hp_max: 2,
-                team: Team::Monsters,
-            }},
-            IronGolem => {CreatureStats{
-                speed: 8.,
-                hp: 4,
-                hp_max: 4,
-                team: Team::Monsters,
-            }}
+        let (speed, hp) = match self {
+            Imp        => (6.0, 5),
+            EyeMonster => (6.0, 10),
+            Goliath    => (8.0, 20),
+            Laima      => (6.0, 10),
+            IronGolem  => (8.0, 25),
+        };
+        CreatureStats{
+            speed,
+            hp,
+            hp_max: hp,
+            team: Team::Monsters,
         }
     }
 
@@ -90,20 +71,20 @@ pub enum AIState {
 
 #[derive(Component)]
 pub struct AI{
-    sight_radius : f32,
-    state : AIState,
+    sight_radius: f32,
+    state: AIState,
 }
 
 impl AI {
-    fn new(sight_radius : f32) -> Self{
+    fn new(sight_radius: f32) -> Self{
         Self {
             sight_radius,
-            state : AIState::PlayerUnknown,
+            state: AIState::PlayerUnknown,
         }
     }
 }
 
-fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) -> Result<Coords, &'static str> {
+fn choose_spawn_pos(map_data: &crate::map::MapData, rng: &mut fastrand::Rng) -> Result<Coords, &'static str> {
     
     let map = &map_data.map;//.random_square();
     for _ in 0 .. 4096 {
@@ -129,10 +110,10 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng : &mut fastrand::Rng) ->
 pub fn spawn_monster(
     commands: &mut Commands,
     map_data: &ResMut<crate::map::MapData>,
-    monster_type : MonsterType,
+    monster_type: MonsterType,
     meshes: &mut ResMut<Assets<Mesh>>,
-    render_res : &mut ResMut<SpriteResource>,
-    rng : &mut fastrand::Rng,
+    render_res: &mut ResMut<SpriteResource>,
+    rng: &mut fastrand::Rng,
 ) -> Result<(),&'static str> {
     let pos = choose_spawn_pos(map_data, rng)?;
     let uv = monster_type.make_uv();

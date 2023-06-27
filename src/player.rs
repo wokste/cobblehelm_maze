@@ -15,7 +15,7 @@ pub struct PlayerBundle {
     pub keys: PlayerKeys,
     pub stats: CreatureStats,
     pub physisc: PhysicsBody,
-    pub velocity : PhysicsMovable,
+    pub velocity: PhysicsMovable,
     pub weapon: Weapon,
 }
 
@@ -41,7 +41,7 @@ pub struct PlayerKeys {
     pub rot_right: KeyCode,
     pub fire: KeyCode,
 
-    pub rot_rate : f32,
+    pub rot_rate: f32,
 }
 
 impl Default for PlayerKeys {
@@ -55,7 +55,7 @@ impl Default for PlayerKeys {
             rot_right: KeyCode::Right,
             fire: KeyCode::Space,
             
-            rot_rate : 3.5,
+            rot_rate: 3.5,
         }
     }
 }

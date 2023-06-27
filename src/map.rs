@@ -64,8 +64,8 @@ pub struct MapData {
 impl Default for MapData {
     fn default() -> Self {
         Self {
-            map : Grid::<Tile>::new(1, 1),
-            player_pos : Vec3::ZERO,
+            map: Grid::<Tile>::new(1, 1),
+            player_pos: Vec3::ZERO,
         }
     }
 
@@ -73,7 +73,7 @@ impl Default for MapData {
 
 impl MapData {
     // TODO: Reenable for the 0.2 version
-    pub fn can_see_player(&self, pos : Vec3, sight_radius : f32) -> bool {
+    pub fn can_see_player(&self, pos: Vec3, sight_radius: f32) -> bool {
         // TODO: Better algorithm with LoS
         (pos).distance_squared(self.player_pos) < sight_radius * sight_radius
     }

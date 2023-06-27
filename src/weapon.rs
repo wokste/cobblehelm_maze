@@ -12,9 +12,9 @@ pub enum ProjectileType {
 impl ProjectileType {
     fn damage(&self) -> i16 {
         match self {
-            ProjectileType::BlueBlob => 3,
-            ProjectileType::RedSpikes => 2,
-            ProjectileType::Shock => 4,
+            ProjectileType::BlueBlob => 15,
+            ProjectileType::RedSpikes => 10,
+            ProjectileType::Shock => 20,
         }
     }
 
@@ -44,13 +44,13 @@ pub enum FireMode {
 
 #[derive(Component)]
 pub struct Weapon {
-    firing : FireMode,
-    projectile : ProjectileType,
-    cooldown : Timer,
+    firing: FireMode,
+    projectile: ProjectileType,
+    cooldown: Timer,
 }
 
 impl Weapon {
-    pub fn set_fire_state(&mut self, firing : FireMode) {
+    pub fn set_fire_state(&mut self, firing: FireMode) {
         self.firing = firing;
 
         if self.cooldown.paused() && firing != FireMode::NoFire {
@@ -58,15 +58,15 @@ impl Weapon {
         }
     }
 
-    pub fn new(projectile : ProjectileType, fire_speed: f32) -> Self {
+    pub fn new(projectile: ProjectileType, fire_speed: f32) -> Self {
         Self {
             projectile,
-            cooldown : Timer::from_seconds(fire_speed, TimerMode::Once),
-            firing : FireMode::NoFire,
+            cooldown: Timer::from_seconds(fire_speed, TimerMode::Once),
+            firing: FireMode::NoFire,
         }
     }
 
-    fn make_projectile(&self, team : Team) -> Projectile {
+    fn make_projectile(&self, team: Team) -> Projectile {
         Projectile {
             team,
             damage: self.projectile.damage(),
@@ -76,8 +76,8 @@ impl Weapon {
 
 #[derive(Component)]
 pub struct Projectile {
-    team : Team,
-    damage : i16,
+    team: Team,
+    damage: i16,
 }
 
 pub fn fire_weapons(
@@ -85,7 +85,7 @@ pub fn fire_weapons(
     time: Res<Time>,
     mut query: Query<(&mut Weapon, &CreatureStats, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res : ResMut<crate::rendering::SpriteResource>,
+    mut render_res: ResMut<crate::rendering::SpriteResource>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
@@ -116,20 +116,20 @@ pub fn fire_weapons(
 
 pub fn check_projectile_creature_collisions(
     mut commands: Commands,
-    mut projectile_query: Query<(Entity, &Projectile, &Transform)>,
+    mut projectile_query: Query<(Entity, &Projectile, &PhysicsBody, &Transform)>,
     mut target_query: Query<(Entity, &PhysicsBody, &mut CreatureStats, &Transform)>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
-    for (projectile_entity, projectile, projectile_transform) in projectile_query.iter_mut() {
+    for (projectile_entity, projectile, projectile_body, projectile_transform) in projectile_query.iter_mut() {
         for (target_entity, target_body, mut stats, target_transform) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
             
-            let distance = target_body.radius;  // TODO: Projectile and monster radius
+            let distance = projectile_body.radius + target_body.radius;
             if projectile_transform.translation.distance_squared(target_transform.translation) > distance * distance {
                 continue;
             }
