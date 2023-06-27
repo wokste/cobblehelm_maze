@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEvent}, rendering::TexCoords};
+use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable}, rendering::TexCoords};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
@@ -105,7 +105,8 @@ pub fn fire_weapons(
             let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.1, &mut meshes, &mut render_res));
             proto_projectile.insert(crate::rendering::FaceCamera);
             proto_projectile.insert(weapon.make_projectile(stats.team));
-            proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy).set_velocity( velocity ));
+            proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy));
+            proto_projectile.insert(PhysicsMovable::new(velocity, false));
 
             let sound = asset_server.load("audio/player_shoot.ogg");
             audio.play(sound);

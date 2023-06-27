@@ -7,26 +7,30 @@ pub enum MapCollisionEvent {
     Destroy,
 }
 
+#[derive(Component, Default)]
+pub struct PhysicsMovable {
+    pub velocity: Vec3,
+    pub gravity: bool, // TODO: Gravity
+}
+
 #[derive(Component)]
 pub struct PhysicsBody {
-    pub velocity : Vec3,
-    pub on_hit_wall : MapCollisionEvent,
     pub radius : f32,
-    // TODO: Gravity
+    pub on_hit_wall : MapCollisionEvent,
 }
 
 impl PhysicsBody {
     pub fn new(radius : f32, on_hit_wall : MapCollisionEvent) -> Self {
         Self {
-            on_hit_wall,
-            velocity : Vec3::ZERO,
             radius,
+            on_hit_wall,
         }
     }
+}
 
-    pub fn set_velocity(mut self, velocity : Vec3) -> Self {
-        self.velocity = velocity;
-        self
+impl PhysicsMovable {
+    pub fn new(velocity: Vec3, gravity: bool) -> Self {
+        Self { velocity, gravity, }
     }
 }
 
@@ -60,15 +64,15 @@ pub fn do_physics(
     mut commands: Commands,
     time: Res<Time>,
     map: Res<MapData>,
-    mut query: Query<(Entity, &mut Transform, &PhysicsBody)>,
+    mut query: Query<(Entity, &mut Transform, &PhysicsMovable, &PhysicsBody)>,
 ) {
     let delta_time = time.delta_seconds();
-    for (entity, mut transform, pb) in query.iter_mut() {
-        if pb.velocity.is_nan() {
+    for (entity, mut transform, velocity, pb) in query.iter_mut() {
+        if velocity.velocity.is_nan() {
             continue;
         }
 
-        let delta = pb.velocity * delta_time;
+        let delta = velocity.velocity * delta_time;
 
         let new_pos = transform.translation + delta;
         if !check_map_collision(&map.map, new_pos, pb.radius) {

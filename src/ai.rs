@@ -143,7 +143,7 @@ pub fn spawn_monster(
         .insert(monster_type.make_stats())
         .insert(monster_type.make_weapon())
         .insert(crate::physics::PhysicsBody::new(0.5, MapCollisionEvent::Stop));
-
+    
     Ok(())
 }
 

@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::{
     combat::CreatureStats,
-    physics::{PhysicsBody, MapCollisionEvent},
+    physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable},
     weapon::{Weapon, ProjectileType}
 };
 
@@ -15,6 +15,7 @@ pub struct PlayerBundle {
     pub keys: PlayerKeys,
     pub stats: CreatureStats,
     pub physisc: PhysicsBody,
+    pub velocity : PhysicsMovable,
     pub weapon: Weapon,
 }
 
@@ -24,7 +25,8 @@ impl Default for PlayerBundle {
             keys: Default::default(),
             stats: CreatureStats::player(),
             physisc: PhysicsBody::new(0.125, MapCollisionEvent::Stop),
-            weapon: Weapon::new(ProjectileType::BlueBlob, 0.3)
+            weapon: Weapon::new(ProjectileType::BlueBlob, 0.3),
+            velocity: PhysicsMovable::default(),
         }
     }
 }
@@ -61,10 +63,10 @@ impl Default for PlayerKeys {
 pub fn player_input(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsBody, &mut crate::weapon::Weapon)>,
+    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsMovable, &mut crate::weapon::Weapon)>,
 ) {
     let delta_time = time.delta_seconds();
-    for (key_map, stats, mut transform, mut pb, mut weapon) in query.iter_mut() {
+    for (key_map, stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
         let (_, mut rotation) = transform.rotation.to_axis_angle();
 
         let mut firing = crate::weapon::FireMode::NoFire ;
@@ -90,7 +92,7 @@ pub fn player_input(
         }
         transform.rotation = Quat::from_rotation_y(rotation);
 
-        pb.velocity = velocity.normalize() * stats.speed;
+        movable.velocity = velocity.normalize() * stats.speed;
         weapon.set_fire_state(firing);
     }
 }
