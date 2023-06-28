@@ -108,8 +108,12 @@ pub fn fire_weapons(
             proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy));
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
 
-            let sound = asset_server.load("audio/player_shoot.ogg");
-            audio.play(sound);
+            let sound = match weapon.projectile {
+                ProjectileType::RedSpikes => "audio/shoot_redspikes.ogg",
+                ProjectileType::BlueBlob => "audio/shoot_blueblob.ogg",
+                ProjectileType::Shock => "audio/shoot_shock.ogg",
+            };
+            audio.play(asset_server.load(sound));
         }
     }
 }
