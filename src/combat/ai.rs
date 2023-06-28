@@ -1,15 +1,7 @@
 use bevy::{prelude::*};
 
-use crate::{grid::{Coords}, map::{MapData}, combat::CreatureStats, combat::Team, rendering::{TexCoords, SpriteResource}, physics::MapCollisionEvent};
-
-#[derive(Copy,Clone)]
-pub enum MonsterType {
-    Imp,
-    EyeMonster,
-    Goliath,
-    Laima,
-    IronGolem,
-}
+use crate::{grid::{Coords}, map::{MapData}, rendering::{TexCoords, SpriteResource}, physics::MapCollisionEvent};
+use super::{*, weapon::*};
 
 impl MonsterType {
     pub fn make_ai(&self) -> AI {
@@ -40,14 +32,14 @@ impl MonsterType {
         }
     }
 
-    pub fn make_weapon(&self) -> crate::weapon::Weapon {
+    pub fn make_weapon(&self) -> Weapon {
         use MonsterType::*;
         match self {
-            Imp => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Shock, 1.8)},
-            EyeMonster => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.6)},
-            Goliath => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.9)}
-            Laima => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::Shock, 1.2)},
-            IronGolem => {crate::weapon::Weapon::new(crate::weapon::ProjectileType::RedSpikes, 0.7)}
+            Imp => {Weapon::new(ProjectileType::Shock, 1.8)},
+            EyeMonster => {Weapon::new(ProjectileType::RedSpikes, 0.6)},
+            Goliath => {Weapon::new(ProjectileType::RedSpikes, 0.9)}
+            Laima => {Weapon::new(ProjectileType::Shock, 1.2)},
+            IronGolem => {Weapon::new(ProjectileType::RedSpikes, 0.7)}
         }
     }
 
@@ -143,10 +135,10 @@ pub fn ai_los(
 }
 
 pub fn ai_fire(
-    mut monster_query: Query<(&AI, &mut crate::weapon::Weapon)>,
+    mut monster_query: Query<(&AI, &mut Weapon)>,
 ) {
     for (ai, mut weapon) in monster_query.iter_mut() {
-        use crate::weapon::FireMode::*;
+        use FireMode::*;
         let firing = match ai.state {
             AIState::SeePlayer(pos) => FireAt(pos),
             _ => NoFire,

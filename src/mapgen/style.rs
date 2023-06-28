@@ -1,4 +1,4 @@
-use crate::{map::{WallTile, FloorTile, DoorType}, ai::MonsterType};
+use crate::{map::{WallTile, FloorTile, DoorType}, combat::MonsterType};
 
 use super::randitem::RandItem;
 

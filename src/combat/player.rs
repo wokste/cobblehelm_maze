@@ -1,13 +1,14 @@
 use bevy::{
-    //input::mouse::{MouseMotion},
     prelude::*,
-    //Windows,
 };
 
 use crate::{
-    combat::CreatureStats,
     physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable},
-    weapon::{Weapon, ProjectileType}
+};
+
+use super::{
+    CreatureStats,
+    weapon::{Weapon, ProjectileType, FireMode},
 };
 
 #[derive(Bundle)]
@@ -63,13 +64,13 @@ impl Default for PlayerKeys {
 pub fn player_input(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsMovable, &mut crate::weapon::Weapon)>,
+    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsMovable, &mut Weapon)>,
 ) {
     let delta_time = time.delta_seconds();
     for (key_map, stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
         let (_, mut rotation) = transform.rotation.to_axis_angle();
 
-        let mut firing = crate::weapon::FireMode::NoFire ;
+        let mut firing = FireMode::NoFire ;
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -88,7 +89,7 @@ pub fn player_input(
                 rotation -= key_map.rot_rate * delta_time;
                 if rotation < 0.0 { rotation += std::f32::consts::TAU }
             }
-            if *key == key_map.fire      { firing = crate::weapon::FireMode::Fire }
+            if *key == key_map.fire      { firing = FireMode::Fire }
         }
         transform.rotation = Quat::from_rotation_y(rotation);
 

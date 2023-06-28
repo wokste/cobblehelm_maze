@@ -1,5 +1,20 @@
 use bevy::prelude::Component;
 
+pub mod ai;
+pub mod player;
+//pub mod stats;
+pub mod weapon;
+
+
+#[derive(Copy,Clone)]
+pub enum MonsterType {
+    Imp,
+    EyeMonster,
+    Goliath,
+    Laima,
+    IronGolem,
+}
+
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum Team {
     Players,

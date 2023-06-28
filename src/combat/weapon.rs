@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::{combat::{CreatureStats, Team}, physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable}, rendering::TexCoords};
+use crate::{physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable}, rendering::TexCoords};
+
+use super::{CreatureStats, Team};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
