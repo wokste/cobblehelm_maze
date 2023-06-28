@@ -17,6 +17,13 @@ use bevy::prelude::*;
 pub struct LevelObject;
 
 fn main() {
+    println!("Cobblehelm Maze  Copyright (C) 2023  Steven Wokke");
+    println!("This program comes with ABSOLUTELY NO WARRANTY.");
+    println!("This is free software, and you are welcome to redistribute it under certain conditions; type `show c' for details.");
+    println!("");
+    println!("Build: {}", env!("VERGEN_BUILD_DATE"));
+    println!("git commit: {} ({})", env!("VERGEN_GIT_SHA"), env!("VERGEN_GIT_COMMIT_DATE"));
+
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
             primary_window: Some(Window {

@@ -2,6 +2,7 @@
 name = "cobblehelm_maze"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,4 +15,8 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.10", features = ["dynamic_linking"] }
 derive_more = "0.99.17"
-fastrand = "1.9.0"
+fastrand = "1.9"
+vergen = { version = "8.0.0", features = [ "build", "git", "gitcl" ]}
+
+[build-dependencies]
+vergen = { version = "8.0.0", features = [ "build", "git", "gitcl" ]}
