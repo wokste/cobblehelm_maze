@@ -38,6 +38,7 @@ pub enum FloorTile {
     Demonic,
     Chips,
     Sewer,
+    Exit,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

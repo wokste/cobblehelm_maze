@@ -92,6 +92,7 @@ pub fn floor_tex_id(tile: FloorTile) -> TexCoords {
         FloorTile::BlueTiles => TexCoords::new(8..10,4),
         FloorTile::Chips => TexCoords::new(29..32,1),
         FloorTile::Sewer => TexCoords::new(7..11,3),
+        FloorTile::Exit => TexCoords::new(31..32,2),
     }
 }
 
