@@ -54,10 +54,10 @@ impl MonsterType {
     fn make_uv(&self) -> TexCoords {
         use MonsterType::*;
         match self {
-            Imp => TexCoords::new(0..2, 7),
+            Imp => TexCoords::new(0..4, 7),
             EyeMonster => TexCoords::new(4..6, 7),
             Goliath => TexCoords::new(8..10, 7),
-            Laima => TexCoords::new(12..14, 7),
+            Laima => TexCoords::new(12..15, 7),
             IronGolem => TexCoords::new(16..18, 7),
         }
     }
@@ -118,7 +118,8 @@ pub fn spawn_monster(
     let pos = choose_spawn_pos(map_data, rng)?;
     let uv = monster_type.make_uv();
 
-    commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.5), 0.3, meshes, render_res))
+    let anim_speed = rng.f32() * 0.04 + 0.16;
+    commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.5), anim_speed, meshes, render_res))
         .insert(crate::rendering::FaceCamera)
         .insert(monster_type.make_ai())
         .insert(monster_type.make_stats())

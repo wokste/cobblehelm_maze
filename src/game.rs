@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::map::MapData;
+use crate::{map::MapData, player::PlayerKeys};
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
 
@@ -63,6 +63,7 @@ fn start_level(
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
     mut level_query: Query<Entity, With<crate::LevelObject>>,
+    mut player_query: Query<&mut Transform, With<PlayerKeys>>,
 ) {
     if game_data.level_spawned {
         return; // No need to spawn the level
@@ -74,7 +75,7 @@ fn start_level(
 
     let mut rng = fastrand::Rng::new();
     println!("Seed: {}", rng.get_seed());
-    make_level(game_data.level, &mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+    make_level(game_data.level, &mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng, &mut player_query);
 }
 
 /// set up the game
@@ -85,31 +86,32 @@ fn make_level(
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res: &mut ResMut<crate::rendering::SpriteResource>,
     rng: &mut fastrand::Rng,
+    player_query: &mut Query<&mut Transform, With<PlayerKeys>>,
 ) {
+    // Get initial data
     let data = crate::procgen::make_map(level, rng);
+    let player_pos = Transform::from_translation(data.player_pos.to_vec(0.7)).looking_at(data.stair_pos.to_vec(0.7), Vec3::Y);
     map_data.map = data.map;
-    let player_pos = data.player_pos;
+    map_data.player_pos = player_pos.translation;
 
-    // The actual map
+    // Spawn the map mesh
     commands.spawn(PbrBundle {
         mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, rng)),
         material: render_res.material.clone(),
         ..default()
     }).insert(super::LevelObject);
 
-    map_data.player_pos = player_pos.to_vec(0.7);
-
-    // TODO: Don't spawn this again
-    if level == 1 {
+    // Place the player in the map
+    if let Ok(mut player_transform) = player_query.get_single_mut() {
+        *player_transform = player_pos.clone();
+    } else {
         commands.spawn(crate::player::PlayerBundle::default()).insert(PbrBundle{
-            transform: Transform::from_translation(map_data.player_pos).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: player_pos.clone(),
             ..default()
         });
-    } else {
-        // TODO:
     }
-    
 
+    // Add the monsters
     let level_style = crate::procgen::style::make_by_level(level);
     let monster_count = level * 5 + 15;
     for _ in 1 .. monster_count {

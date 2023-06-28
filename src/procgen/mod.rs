@@ -15,6 +15,7 @@ use self::map_transform::MapTransform;
 pub struct MapGenResult {
     pub map: Grid<Tile>,
     pub player_pos: Coords,
+    pub stair_pos: Coords,
     // TODO: Stuff like locations for keys and end of level positions.
 }
 pub enum RoomShape {
@@ -68,7 +69,7 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
         corridors::connect_rooms(&mut map, rng, &styles, edge);
     }
 
-    let (player_pos, _) = choose_start_and_end(&map, rng);
+    let (player_pos, stair_pos) = choose_start_and_end(&map, rng);
 
     print_map(&map);
 
@@ -76,6 +77,7 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
     {
         map,
         player_pos,
+        stair_pos,
     }
 }
 

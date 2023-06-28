@@ -150,7 +150,7 @@ pub fn check_projectile_creature_collisions(
                     game_state.set(crate::game::GameState::GameOver);
                 } else {
                     commands.entity(target_entity).despawn();
-                    game.score += 10; // TODO: What kind of score to use?
+                    game.score += 50; // TODO: What kind of score to use?
                     game.coins += 1; // TODO: This should be a pickup
                 }
             }

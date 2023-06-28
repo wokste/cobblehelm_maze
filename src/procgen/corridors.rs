@@ -14,7 +14,7 @@ pub fn connect_rooms(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, level_style:
 
 fn connect_rooms_constructed(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, level_style: &LevelStyle, wall: WallTile, p: (Coords, Coords)) {
 
-    let floor_tile = Tile::Floor(super::style::wall_to_floor(wall));
+    let floor_tile = Tile::Floor(super::style::choose_floor(wall, rng));
     let _door_tile = if level_style.doors.is_empty() { None } else {Some(*level_style.doors.rand_front_loaded(rng)) };
 
     let x0 = std::cmp::min(p.0.x, p.1.x);
@@ -46,7 +46,7 @@ fn connect_rooms_constructed(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, leve
 }
 
 pub fn connect_rooms_organic(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, wall: WallTile, p: (Coords, Coords)) {
-    let floor_tile = Tile::Floor(super::style::wall_to_floor(wall));
+    let floor_tile = Tile::Floor(super::style::choose_floor(wall, rng));
     let (mut cur_pos,end_pos) = p;
 
     let mut added_floors = vec![];

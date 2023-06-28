@@ -97,7 +97,6 @@ pub fn floor_tex_id(tile: FloorTile) -> TexCoords {
 
 pub fn wall_tex_id(tile: WallTile) -> TexCoords {
     match tile {
-        //Tile::Door1 => TexCoords::new(29..32,1), // TODO: Better door tile
         WallTile::Castle => TexCoords::new(0..12,0),
         WallTile::TempleBrown => TexCoords::new(12..20,0),
         WallTile::TempleGray => TexCoords::new(20..32,0),
