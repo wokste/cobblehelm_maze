@@ -16,8 +16,29 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct LevelObject;
 
+use clap::Parser;
+
+#[derive(Parser, Resource, Debug)]
+#[command(author, version, about, long_about = None)]
+struct CommandLineArgs {
+    /// Adds cheats to the game pause menu.
+    #[arg(long, default_value_t = false)]
+    cheat: bool,
+
+    /// Prints the map
+    #[arg(long, default_value_t = false)]
+    verbose: bool,
+
+    /// Select a specific seed
+    #[arg(long)]
+    map_seed: Option<u64>,
+}
+
 fn main() {
-    println!("Cobblehelm Maze  Copyright (C) 2023  Steven Wokke");
+    println!("Cobblehelm Maze - Copyright (C) 2023 - Steven Wokke");
+
+    let args = CommandLineArgs::parse();
+
     println!("This program comes with ABSOLUTELY NO WARRANTY.");
     println!("This is free software, and you are welcome to redistribute it under certain conditions; type `show c' for details.");
     println!("");
@@ -33,11 +54,11 @@ fn main() {
             }),
             ..Default::default()
         }))
+        .insert_resource(args)
         .add_state::<game::GameState>()
         .add_plugin(ui::UIPlugin)
         .add_plugin(game::GamePlugin)
         .add_startup_system(app_setup)
-
         .run();
 }
 

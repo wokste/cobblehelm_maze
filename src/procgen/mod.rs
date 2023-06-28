@@ -71,8 +71,6 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
 
     let (player_pos, stair_pos) = choose_start_and_end(&map, rng);
 
-    print_map(&map);
-
     MapGenResult
     {
         map,
@@ -107,7 +105,7 @@ fn check_place_room(map: &mut Grid<Tile>, room: &Grid<Tile>, transform: &MapTran
     Result::Ok(())
 }
 
-fn print_map(map: &Grid<Tile>) {
+pub fn print_map(map: &Grid<Tile>) {
     for z in 0 .. map.z_max() {
         for x in 0 .. map.x_max() {
             match map[(x, z)] {

@@ -64,9 +64,10 @@ fn start_level(
     mut render_res: ResMut<crate::rendering::SpriteResource>,
     mut level_query: Query<Entity, With<crate::LevelObject>>,
     mut player_query: Query<&mut Transform, With<PlayerKeys>>,
+    cl_args: Res<crate::CommandLineArgs>,
 ) {
     if game_data.level_spawned {
-        return; // No need to spawn the level
+        return; // No need to spawn the level again
     }
 
     for entity in level_query.iter_mut() {
@@ -74,29 +75,24 @@ fn start_level(
     }
 
     let mut rng = fastrand::Rng::new();
-    println!("Seed: {}", rng.get_seed());
-    make_level(game_data.level, &mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng, &mut player_query);
-}
+    if let Some(seed) = cl_args.map_seed { rng.seed(seed); }
 
-/// set up the game
-fn make_level(
-    level: u8,
-    commands: &mut Commands,
-    map_data: &mut ResMut<MapData>,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    render_res: &mut ResMut<crate::rendering::SpriteResource>,
-    rng: &mut fastrand::Rng,
-    player_query: &mut Query<&mut Transform, With<PlayerKeys>>,
-) {
+    let level = game_data.level;
+    println!("Seed: {}", rng.get_seed());
+
     // Get initial data
-    let data = crate::procgen::make_map(level, rng);
+    let data = crate::procgen::make_map(level, &mut rng);
+    if cl_args.verbose {
+        crate::procgen::print_map(&data.map);
+    }
+
     let player_pos = Transform::from_translation(data.player_pos.to_vec(0.7)).looking_at(data.stair_pos.to_vec(0.7), Vec3::Y);
     map_data.map = data.map;
     map_data.player_pos = player_pos.translation;
 
     // Spawn the map mesh
     commands.spawn(PbrBundle {
-        mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, rng)),
+        mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, &mut rng)),
         material: render_res.material.clone(),
         ..default()
     }).insert(super::LevelObject);
@@ -116,8 +112,8 @@ fn make_level(
     let monster_count = level * 5 + 15;
     for _ in 1 .. monster_count {
         use crate::procgen::randitem::RandItem;
-        let monster_type = level_style.monsters.rand_front_loaded(rng);
-        let err = crate::ai::spawn_monster(commands, map_data, *monster_type, meshes, render_res, rng);
+        let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
+        let err = crate::ai::spawn_monster(&mut commands, &mut map_data, *monster_type, &mut meshes, &mut render_res, &mut rng);
         if let Err(err) = err {
             println!("Failed top spawn monster: {}", err);
         }

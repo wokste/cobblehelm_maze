@@ -14,6 +14,7 @@ opt-level = 3
 
 [dependencies]
 bevy = { version = "0.10", features = ["dynamic_linking"] }
+clap = { version = "4.3.9", features = ["derive"] }
 derive_more = "0.99.17"
 fastrand = "1.9"
 vergen = { version = "8.0.0", features = [ "build", "git", "gitcl" ]}
