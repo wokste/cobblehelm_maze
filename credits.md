@@ -1,6 +1,6 @@
 # Inspiration
 
-Kens Labyrinth.
+Main inspirations include: Kens Labyrinth and roguelikes.
 
 # Art
 
