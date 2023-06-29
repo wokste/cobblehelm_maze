@@ -13,7 +13,7 @@ use super::{
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
-    pub keys: PlayerKeys,
+    pub player: Player,
     pub stats: CreatureStats,
     pub physisc: PhysicsBody,
     pub velocity: PhysicsMovable,
@@ -23,7 +23,7 @@ pub struct PlayerBundle {
 impl Default for PlayerBundle {
     fn default() -> Self {
         Self {
-            keys: Default::default(),
+            player: Player{},
             stats: CreatureStats::player(),
             physisc: PhysicsBody::new(0.125, MapCollisionEvent::Stop),
             weapon: Weapon::new(ProjectileType::BlueBlob, 0.3),
@@ -33,7 +33,10 @@ impl Default for PlayerBundle {
 }
 
 #[derive(Component)]
-pub struct PlayerKeys {
+pub struct Player;
+
+#[derive(Resource)]
+pub struct InputMap {
     pub forward: KeyCode,
     pub backward: KeyCode,
     pub left: KeyCode,
@@ -45,7 +48,7 @@ pub struct PlayerKeys {
     pub rot_rate: f32,
 }
 
-impl Default for PlayerKeys {
+impl Default for InputMap {
     fn default() -> Self {
         Self {
             forward: KeyCode::W,
@@ -64,10 +67,11 @@ impl Default for PlayerKeys {
 pub fn player_input(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&PlayerKeys, &CreatureStats, &mut Transform, &mut PhysicsMovable, &mut Weapon)>,
+    mut query: Query<(&CreatureStats, &mut Transform, &mut PhysicsMovable, &mut Weapon), With<Player>>,
+    key_map: Res<InputMap>,
 ) {
     let delta_time = time.delta_seconds();
-    for (key_map, stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
+    for (stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
         let (_, mut rotation) = transform.rotation.to_axis_angle();
 
         let mut firing = FireMode::NoFire ;
@@ -100,8 +104,8 @@ pub fn player_input(
 
 pub fn update_map(
     mut map_data: ResMut<crate::map::MapData>,
-    player_query: Query<&Transform, With<PlayerKeys>>,
-    mut camera_query: Query<&mut Transform, (With<Camera3d>, Without<PlayerKeys>)>,
+    player_query: Query<&Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (With<Camera3d>, Without<Player>)>,
 ) {
     let player_transform = player_query.get_single().unwrap();
     map_data.player_pos = player_transform.translation;

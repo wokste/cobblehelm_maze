@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{map::MapData, combat::player::PlayerKeys};
+use crate::{map::MapData, combat::player::Player};
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
 
@@ -24,6 +24,7 @@ impl Plugin for GamePlugin{
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
+            .insert_resource(crate::combat::player::InputMap::default())
             .add_system(crate::combat::player::player_input.in_set(OnUpdate(GameState::InGame)))
             .add_system(crate::combat::player::update_map.in_set(OnUpdate(GameState::InGame)))
             .add_system(crate::combat::ai::ai_los.in_set(OnUpdate(GameState::InGame)).after(crate::combat::player::update_map))
@@ -43,7 +44,7 @@ fn despawn_game(
     mut commands: Commands,
     mut map_data: ResMut<MapData>,
     mut level_query: Query<Entity, With<crate::LevelObject>>,
-    mut player_query: Query<Entity, With<crate::combat::player::PlayerKeys>>,
+    mut player_query: Query<Entity, With<crate::combat::player::Player>>,
 ) {
     *map_data = MapData::default();
 
@@ -63,7 +64,7 @@ fn start_level(
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
     mut level_query: Query<Entity, With<crate::LevelObject>>,
-    mut player_query: Query<&mut Transform, With<PlayerKeys>>,
+    mut player_query: Query<&mut Transform, With<Player>>,
     cl_args: Res<crate::CommandLineArgs>,
 ) {
     if game_data.level_spawned {
