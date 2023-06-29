@@ -3,15 +3,17 @@ use bevy::{prelude::*};
 use crate::{grid::{Coords}, map::{MapData}, rendering::{TexCoords, SpriteResource}, physics::MapCollisionEvent};
 use super::{*, weapon::*};
 
+const SIGHT_RADIUS : f32 = 16.0;
+
 impl MonsterType {
     pub fn make_ai(&self) -> AI {
         use MonsterType::*;
         match self {
-            Imp => {AI::new(2.5)},
-            EyeMonster => {AI::new(5.0)},
-            Goliath => { AI::new(9.0)},
-            Laima => {AI::new(5.0)},
-            IronGolem => { AI::new(9.0)},
+            Imp => {AI::new()},
+            EyeMonster => {AI::new()},
+            Goliath => { AI::new()},
+            Laima => {AI::new()},
+            IronGolem => { AI::new()},
         }
     }
 
@@ -63,14 +65,12 @@ pub enum AIState {
 
 #[derive(Component)]
 pub struct AI{
-    sight_radius: f32,
     state: AIState,
 }
 
 impl AI {
-    fn new(sight_radius: f32) -> Self{
+    fn new() -> Self{
         Self {
-            sight_radius,
             state: AIState::PlayerUnknown,
         }
     }
@@ -126,7 +126,7 @@ pub fn ai_los(
     mut monster_query: Query<(&mut AI, &Transform)>,
 ) {
     for (mut ai, transform) in monster_query.iter_mut() {
-        if map_data.can_see_player(transform.translation, ai.sight_radius) {
+        if map_data.can_see_player(transform.translation, SIGHT_RADIUS) {
             ai.state = AIState::SeePlayer(map_data.player_pos)
         } else if let AIState::SeePlayer(pos) = ai.state {
             ai.state = AIState::FollowPlayer(Coords::from_vec(pos))
