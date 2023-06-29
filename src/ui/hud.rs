@@ -42,7 +42,7 @@ impl HudUpdated {
             HudField::Score => format!("Score: {}", self.value),
             HudField::Coins => format!("Coins: {}", self.value),
             HudField::Level => format!("Level: {}", self.value),
-            HudField::Time => format!("Time: {}", self.value),
+            HudField::Time => format!("Ticks: {}", self.value),
         }
     }
 }

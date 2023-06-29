@@ -24,17 +24,11 @@ impl Plugin for GamePlugin{
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
-            .insert_resource(crate::combat::player::InputMap::default())
-            .add_system(crate::combat::player::player_input.in_set(OnUpdate(GameState::InGame)))
-            .add_system(crate::combat::player::update_map.in_set(OnUpdate(GameState::InGame)))
-            .add_system(crate::combat::ai::ai_los.in_set(OnUpdate(GameState::InGame)).after(crate::combat::player::update_map))
-            .add_system(crate::combat::ai::ai_fire.in_set(OnUpdate(GameState::InGame)).after(crate::combat::ai::ai_los))
-            .add_system(crate::physics::do_physics.in_set(OnUpdate(GameState::InGame)).after(crate::combat::player::player_input))
-            .add_system(crate::combat::weapon::check_projectile_creature_collisions.in_set(OnUpdate(GameState::InGame)))
-            .add_system(crate::combat::weapon::fire_weapons.in_set(OnUpdate(GameState::InGame)).after(crate::combat::player::player_input).after(crate::combat::ai::ai_fire))
-    
-            .add_system(crate::rendering::face_camera.in_set(OnUpdate(GameState::InGame)).after(crate::physics::do_physics))
-            .add_system(crate::rendering::animate_sprites.in_set(OnUpdate(GameState::InGame)))
+            .add_systems((
+                crate::physics::do_physics.after(crate::combat::player::player_input),
+                crate::rendering::face_camera.after(crate::physics::do_physics),
+                crate::rendering::animate_sprites
+            ).in_set(OnUpdate(GameState::InGame)))
             ;
     }
 }

@@ -1,10 +1,27 @@
-use bevy::prelude::Component;
+use bevy::prelude::*;
+
+use crate::game::GameState;
 
 pub mod ai;
 pub mod player;
-//pub mod stats;
 pub mod weapon;
 
+pub struct CombatPlugin;
+
+impl Plugin for CombatPlugin{
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app
+            .insert_resource(player::InputMap::default())
+            .add_systems((
+                player::player_input,
+                player::update_map,
+                ai::ai_los.after(player::update_map),
+                ai::ai_fire.after(ai::ai_los),
+                weapon::check_projectile_creature_collisions,
+                weapon::fire_weapons.after(player::player_input).after(ai::ai_fire)
+            ).in_set(OnUpdate(GameState::InGame)));
+    }
+}
 
 #[derive(Copy,Clone)]
 pub enum MonsterType {

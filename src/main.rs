@@ -55,6 +55,7 @@ fn main() {
         .add_state::<game::GameState>()
         .add_plugin(ui::UIPlugin)
         .add_plugin(game::GamePlugin)
+        .add_plugin(combat::CombatPlugin)
         .add_startup_system(app_setup)
         .run();
 }

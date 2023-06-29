@@ -78,7 +78,7 @@ impl AI {
 
 fn choose_spawn_pos(map_data: &crate::map::MapData, rng: &mut fastrand::Rng) -> Result<Coords, &'static str> {
     
-    let map = &map_data.map;//.random_square();
+    let map = &map_data.map;
     for _ in 0 .. 4096 {
         let x = rng.i32(1 .. map.x_max() - 1);
         let z = rng.i32(1 .. map.z_max() - 1);
