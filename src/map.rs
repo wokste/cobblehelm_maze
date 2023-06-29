@@ -1,5 +1,5 @@
 use bevy::prelude::{Resource, Vec3};
-use crate::grid::{Grid, Coords};
+use crate::grid::{Grid};
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Tile {

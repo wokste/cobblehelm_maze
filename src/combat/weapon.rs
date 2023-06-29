@@ -101,7 +101,7 @@ pub fn fire_weapons(
             weapon.cooldown.reset();
 
             let velocity = direction * weapon.projectile.speed();
-
+            
             let uv = weapon.projectile.make_uv();
 
             let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.1, &mut meshes, &mut render_res));

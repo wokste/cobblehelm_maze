@@ -105,15 +105,16 @@ pub fn interact_with_button(
                     game_state.set(GameState::InGame);
                 },
                 ButtonAction::Resume => {
+                    game_state.set(GameState::InGame);
+                },
+                ButtonAction::NextLevel => {
                     game_data.level_spawned = false;
                     game_data.level += 1;
 
                     game_state.set(GameState::InGame);
                 },
-                ButtonAction::NextLevel => {
-                    game_state.set(GameState::InGame);
-                },
                 ButtonAction::ToMainMenu => {
+                    *game_data = Default::default();
                     game_state.set(GameState::MainMenu);
                 },
                 ButtonAction::Quit => {
