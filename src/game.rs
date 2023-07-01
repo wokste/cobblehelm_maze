@@ -105,7 +105,7 @@ fn start_level(
     // Add the monsters
     let level_style = crate::mapgen::style::make_by_level(level);
     let monster_count = level * 5 + 15;
-    for _ in 1 .. monster_count {
+    for _ in 0 .. monster_count {
         use crate::mapgen::randitem::RandItem;
         let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
         let err = crate::combat::ai::spawn_monster(&mut commands, &mut map_data, *monster_type, &mut meshes, &mut render_res, &mut rng);

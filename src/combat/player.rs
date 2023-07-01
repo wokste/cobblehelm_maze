@@ -59,7 +59,7 @@ impl Default for InputMap {
             rot_right: KeyCode::Right,
             fire: KeyCode::Space,
             
-            rot_rate: 3.5,
+            rot_rate: 2.5,
         }
     }
 }
