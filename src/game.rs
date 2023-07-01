@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::CursorGrabMode};
 
 use crate::{map::MapData, combat::player::Player};
 
@@ -21,6 +21,11 @@ impl Plugin for GamePlugin{
         app
             .add_system(despawn_game.in_schedule(OnEnter(GameState::MainMenu)))
             .add_system(start_level.in_schedule(OnEnter(GameState::InGame)))
+
+            
+            .add_system(capture_mouse.in_schedule(OnEnter(GameState::InGame)))
+            .add_system(release_mouse.in_schedule(OnExit(GameState::InGame)))
+
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
@@ -30,6 +35,20 @@ impl Plugin for GamePlugin{
                 crate::rendering::animate_sprites
             ).in_set(OnUpdate(GameState::InGame)))
             ;
+    }
+}
+
+fn capture_mouse(mut windows: Query<&mut Window>) {
+    for mut window in &mut windows {
+        window.cursor.grab_mode = CursorGrabMode::Locked;
+        window.cursor.visible = false;
+    }
+}
+
+fn release_mouse(mut windows: Query<&mut Window>) {
+    for mut window in &mut windows {
+        window.cursor.grab_mode = CursorGrabMode::None;
+        window.cursor.visible = true;
     }
 }
 

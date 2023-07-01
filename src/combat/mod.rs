@@ -12,6 +12,7 @@ impl Plugin for CombatPlugin{
     fn build(&self, app: &mut bevy::prelude::App) {
         app
             .insert_resource(player::InputMap::default())
+            .insert_resource(player::InputState::default())
             .add_systems((
                 player::player_input,
                 player::update_map,
