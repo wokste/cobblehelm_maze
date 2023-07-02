@@ -104,10 +104,10 @@ pub fn fire_weapons(
             
             let uv = weapon.projectile.make_uv();
 
-            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, 0.1, &mut meshes, &mut render_res));
-            proto_projectile.insert(crate::rendering::FaceCamera);
+            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, &mut meshes, &mut render_res));
+            proto_projectile.insert(crate::rendering::Animation::new(uv.x, 0.1));
             proto_projectile.insert(weapon.make_projectile(stats.team));
-            proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy));
+            proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
 
             let sound = match weapon.projectile {
@@ -157,7 +157,6 @@ pub fn check_projectile_creature_collisions(
                 } else {
                     commands.entity(target_entity).despawn();
                     game.score += 50; // TODO: What kind of score to use?
-                    game.coins += 1; // TODO: This should be a pickup
                 }
             }
             

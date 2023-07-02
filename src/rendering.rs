@@ -83,7 +83,6 @@ impl TexCoords {
     pub fn to_sprite_bundle(
         &self,
         pos: Vec3,
-        anim_speed: f32,
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
     ) -> SpriteBundle {
@@ -93,10 +92,6 @@ impl TexCoords {
             in_level: crate::LevelObject,
             face_camera: FaceCamera,
             sprite,
-            animation: Animation {
-                frames: self.x.clone(),
-                timer: Timer::from_seconds(anim_speed, TimerMode::Repeating),
-            },
             pbr: PbrBundle {
                 mesh: render_res.get_mesh(sprite, meshes),
                 material: render_res.material.clone(),
@@ -111,7 +106,6 @@ impl TexCoords {
 pub struct SpriteBundle{
     pub in_level: crate::LevelObject,
     pub face_camera: FaceCamera,
-    pub animation: Animation,
     pub sprite: Sprite3d,
     pub pbr: PbrBundle,
 }
@@ -140,6 +134,13 @@ pub struct Animation {
 }
 
 impl Animation {
+    pub fn new(frames: Range<u8>, anim_speed: f32) -> Self {
+        Self {
+            frames,
+            timer: Timer::from_seconds(anim_speed, TimerMode::Repeating),
+        }
+    }
+
     pub fn next_sprite(&mut self, sprite: Sprite3d) -> Sprite3d {
         let mut x = match sprite {
             Sprite3d::Basic{x, ..} => x,
@@ -165,6 +166,30 @@ pub enum Sprite3d {
     Basic{x: u8, y:u8, flipped:bool},
     Half{x: u8, y:u8, flipped:bool},
     Quarter{x: u8, y:u8, flipped:bool},
+}
+
+impl Sprite3d{
+    pub fn basic(x:u8, y:u8) -> Self {Self::Basic { x, y, flipped: false }}
+    pub fn half(x:u8, y:u8) -> Self {Self::Half { x, y, flipped: false }}
+
+    pub fn to_sprite_bundle(
+        &self,
+        pos: Vec3,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        render_res: &mut ResMut<SpriteResource>,
+    ) -> SpriteBundle {
+        SpriteBundle {
+            in_level: crate::LevelObject,
+            face_camera: FaceCamera,
+            sprite: *self,
+            pbr: PbrBundle {
+                mesh: render_res.get_mesh(*self, meshes),
+                material: render_res.material.clone(),
+                transform: Transform::from_translation(pos).looking_at(Vec3::ZERO, Vec3::Y),
+                ..Default::default()
+            },
+        }
+    }
 }
 
 pub fn animate_sprites(

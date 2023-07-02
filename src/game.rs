@@ -128,9 +128,26 @@ fn start_level(
     for _ in 0 .. monster_count {
         use crate::mapgen::randitem::RandItem;
         let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
-        let err = crate::combat::ai::spawn_monster(&mut commands, &mut map_data, *monster_type, &mut meshes, &mut render_res, &mut rng);
+        let err = monster_type.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
         if let Err(err) = err {
             println!("Failed top spawn monster: {}", err);
+        }
+    }
+
+    // Add stairs
+    crate::pickup::Pickup::NextLevel.spawn_at_pos(data.stair_pos, &mut commands, &mut meshes, &mut render_res);
+
+    // Add pickups
+    {
+        let level = level as u32;
+        use crate::pickup::Pickup::*;
+        for (item_type, count) in [(Apple, 5), (MedPack, 1), (Coin, level * (level + 2))] {
+            for _ in 0 .. count {
+                let err = item_type.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+                if let Err(err) = err {
+                    println!("Failed top spawn item: {}", err);
+                }
+            }
         }
     }
 }
