@@ -3,6 +3,7 @@ mod game;
 mod grid;
 mod map;
 mod modelgen;
+mod pickup;
 mod physics;
 mod mapgen;
 mod rendering;

@@ -31,6 +31,7 @@ impl Plugin for GamePlugin{
             .insert_resource(crate::GameInfo::default())
             .add_systems((
                 crate::physics::do_physics.after(crate::combat::player::player_input),
+                crate::pickup::check_pickups.after(crate::physics::do_physics),
                 crate::rendering::face_camera.after(crate::physics::do_physics),
                 crate::rendering::animate_sprites
             ).in_set(OnUpdate(GameState::InGame)))
