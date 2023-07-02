@@ -45,17 +45,29 @@ fn split_deltas(delta: Vec3) -> [Vec3;2] {
 }
 
 // TODO: crate::grid::Grid<bool>
+// TODO: Better return type
 fn check_map_collision(map: &crate::grid::Grid<crate::map::Tile>, pos: Vec3, radius: f32) -> bool {
-    // TODO: Better return type
+    let floor_height = 0.0;
+    let ceil_height = 1.0;
+
+    if pos.y - radius < floor_height {
+        return true;
+    }
+
+    if pos.y + radius > ceil_height {
+        return true;
+    }
+
     let x0 = f32::floor(pos.x - radius) as i32;
     let x1 = f32::floor(pos.x + radius) as i32;
     let z0 = f32::floor(pos.z - radius) as i32;
     let z1 = f32::floor(pos.z + radius) as i32;
 
-    if map[(x0, z0)].is_solid() { return true }
-    if map[(x0, z1)].is_solid() { return true }
-    if map[(x1, z0)].is_solid() { return true }
-    if map[(x1, z1)].is_solid() { return true }
+    for z in z0..=z1 {
+        for x in x0..=x1 {
+            if map[(x, z)].is_solid() { return true }
+        }
+    }
 
     false
 }
