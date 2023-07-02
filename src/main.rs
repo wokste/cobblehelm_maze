@@ -8,12 +8,19 @@ mod mapgen;
 mod rendering;
 mod ui;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, time::Stopwatch};
 
 #[derive(Component)]
 pub struct LevelObject;
 
 use clap::Parser;
+
+#[derive(Debug, Clone)]
+pub enum Difficulty {
+    Easy,
+    Medium,
+    Hard,
+}
 
 #[derive(Parser, Resource, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -93,6 +100,8 @@ pub struct GameInfo {
     pub coins: i32,
     pub level: u8,
     pub level_spawned: bool,
+    pub difficulty: Difficulty,
+    pub time: Stopwatch,
 }
 
 impl Default for GameInfo {
@@ -103,6 +112,8 @@ impl Default for GameInfo {
             coins: 0,
             level: 1,
             level_spawned: false,
+            difficulty: Difficulty::Medium,
+            time: Stopwatch::default(),
         }
     }
 }

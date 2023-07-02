@@ -25,7 +25,7 @@ impl HudUpdated {
             HudField::Score => game.score,
             HudField::Coins => game.coins,
             HudField::Level => game.level as i32,
-            HudField::Time => self.value + 1, // TODO: Actually measure time
+            HudField::Time => game.time.elapsed_secs() as i32,
         };
 
         if self.value == new_value {
@@ -42,7 +42,7 @@ impl HudUpdated {
             HudField::Score => format!("Score: {}", self.value),
             HudField::Coins => format!("Coins: {}", self.value),
             HudField::Level => format!("Level: {}", self.value),
-            HudField::Time => format!("Ticks: {}", self.value),
+            HudField::Time => format!("Time: {}s", self.value),
         }
     }
 }
@@ -79,9 +79,12 @@ pub fn spawn(
 
 pub fn update_hud(
     mut query: Query<(&mut Text, &mut HudUpdated)>,
-    game: Res<crate::GameInfo>,
+    mut game: ResMut<crate::GameInfo>,
+    time: Res<Time>,
 )
 {
+    game.time.tick(time.delta());
+
     for (mut text, mut updated) in &mut query {
         if !updated.update(&game) {
             continue;
