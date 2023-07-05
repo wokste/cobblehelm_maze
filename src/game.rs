@@ -139,14 +139,28 @@ fn start_level(
 
     // Add pickups
     {
-        let level = level as u32;
+        let level = level as i32;
         use crate::pickup::Pickup::*;
-        for (item_type, count) in [(Apple, 5), (MedPack, 1), (Coin, level * (level + 2))] {
+        for (item_type, count) in [(Apple, 5), (MedPack, 1), (Coin, level + 5), (CoinPile, level * (level-1) / 2)] {
             for _ in 0 .. count {
                 let err = item_type.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
                 if let Err(err) = err {
                     println!("Failed top spawn item: {}", err);
                 }
+            }
+        }
+    }
+
+    // Add key pickups
+    {
+        use crate::pickup::Pickup as K;
+        let mut keys = [K::SilverKey, K::GoldKey, K::RedKey, K::GreenKey];
+        rng.shuffle(&mut keys);
+
+        for key in keys.iter().take(2) {
+            let err = key.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+            if let Err(err) = err {
+                println!("Failed top spawn item: {}", err);
             }
         }
     }

@@ -8,13 +8,18 @@ pub enum Pickup {
     MedPack,
     NextLevel,
     Coin,
+    CoinPile,
+    SilverKey,
+    GoldKey,
+    RedKey,
+    GreenKey,
 }
 
 enum StatGain {
     Health(i16),
     NextLevel,
     Coins(i32),
-    //Key(u8),
+    Key(u8),
     //Ammo(u8,i16),
 }
 
@@ -25,6 +30,11 @@ impl Pickup {
             Pickup::MedPack => StatGain::Health(45),
             Pickup::NextLevel => StatGain::NextLevel,
             Pickup::Coin => StatGain::Coins(1),
+            Pickup::CoinPile => StatGain::Coins(5),
+            Pickup::SilverKey => StatGain::Key(0x1),
+            Pickup::GoldKey => StatGain::Key(0x2),
+            Pickup::RedKey => StatGain::Key(0x4),
+            Pickup::GreenKey => StatGain::Key(0x8),
         }
     }
 
@@ -46,15 +56,34 @@ impl Pickup {
             StatGain::Coins(gain) => {
                 game_info.coins += gain;
             },
+            StatGain::Key(mask) => {
+                game_info.key_flags |= mask;
+            },
+        }
+    }
+
+    fn to_sound(&self) -> Option<&'static str> {
+        match self.to_stat_gain() {
+            StatGain::Health(_) => Some("pickup_heal.ogg"),
+            StatGain::NextLevel => None,
+            StatGain::Coins(_) => Some("pickup_coins.ogg"),
+            StatGain::Key(_) => Some("pickup_key.ogg"),
         }
     }
 
     fn make_sprite(&self) -> Sprite3d {
         match self {
-            Pickup::Apple => Sprite3d::half(6, 11),
-            Pickup::MedPack => Sprite3d::half(7, 10),
             Pickup::NextLevel => Sprite3d::basic(1, 5),
+
             Pickup::Coin => Sprite3d::half(6, 10),
+            Pickup::CoinPile => Sprite3d::half(7, 10),
+            Pickup::MedPack => Sprite3d::half(8, 10),
+            Pickup::Apple => Sprite3d::half(9, 10),
+            
+            Pickup::SilverKey => Sprite3d::half(6, 11),
+            Pickup::GoldKey => Sprite3d::half(7, 11),
+            Pickup::RedKey => Sprite3d::half(8, 11),
+            Pickup::GreenKey => Sprite3d::half(9, 11),
         }
     }
 
@@ -112,6 +141,8 @@ pub fn check_pickups(
     mut pickup_query: Query<(Entity, &Pickup, &PhysicsBody, &Transform)>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
 ) {
     for (player_body, mut stats, player_transform) in player_query.iter_mut() {
         for (pickup_entity, pickup, pickup_body, pickup_transform) in pickup_query.iter_mut() {
@@ -122,6 +153,11 @@ pub fn check_pickups(
 
             if pickup.can_take(&stats) {
                 pickup.take(&mut game, &mut stats, &mut game_state);
+
+                if let Some(filename) = pickup.to_sound() {
+                    audio.play(asset_server.load(filename));
+                }
+
                 commands.entity(pickup_entity).despawn();
             }
         }

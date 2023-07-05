@@ -103,6 +103,7 @@ pub struct GameInfo {
     pub level_spawned: bool,
     pub difficulty: Difficulty,
     pub time: Stopwatch,
+    pub key_flags: u8
 }
 
 impl Default for GameInfo {
@@ -115,6 +116,15 @@ impl Default for GameInfo {
             level_spawned: false,
             difficulty: Difficulty::Medium,
             time: Stopwatch::default(),
+            key_flags: 0,
         }
+    }
+}
+
+impl GameInfo {
+    fn next_level(&mut self) {
+        self.level += 1;
+        self.key_flags = 0;
+        self.level_spawned = false;
     }
 }
