@@ -64,10 +64,10 @@ impl Pickup {
 
     fn to_sound(&self) -> Option<&'static str> {
         match self.to_stat_gain() {
-            StatGain::Health(_) => Some("pickup_heal.ogg"),
+            StatGain::Health(_) => Some("audio/pickup_heal.ogg"),
             StatGain::NextLevel => None,
-            StatGain::Coins(_) => Some("pickup_coins.ogg"),
-            StatGain::Key(_) => Some("pickup_key.ogg"),
+            StatGain::Coins(_) => Some("audio/pickup_coins.ogg"),
+            StatGain::Key(_) => Some("audio/pickup_key.ogg"),
         }
     }
 
