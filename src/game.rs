@@ -33,7 +33,8 @@ impl Plugin for GamePlugin{
                 crate::physics::do_physics.after(crate::combat::player::player_input),
                 crate::pickup::check_pickups.after(crate::physics::do_physics),
                 crate::rendering::face_camera.after(crate::physics::do_physics),
-                crate::rendering::animate_sprites
+                crate::rendering::animate_sprites,
+                check_ttl,
             ).in_set(OnUpdate(GameState::InGame)))
             ;
     }
@@ -57,7 +58,7 @@ fn release_mouse(mut windows: Query<&mut Window>) {
 fn despawn_game(
     mut commands: Commands,
     mut map_data: ResMut<MapData>,
-    mut level_query: Query<Entity, With<crate::LevelObject>>,
+    mut level_query: Query<Entity, With<LevelObject>>,
     mut player_query: Query<Entity, With<crate::combat::player::Player>>,
 ) {
     *map_data = MapData::default();
@@ -77,7 +78,7 @@ fn start_level(
     mut map_data: ResMut<MapData>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
-    mut level_query: Query<Entity, With<crate::LevelObject>>,
+    mut level_query: Query<Entity, With<LevelObject>>,
     mut player_query: Query<&mut Transform, With<Player>>,
     cl_args: Res<crate::CommandLineArgs>,
 ) {
@@ -110,7 +111,7 @@ fn start_level(
         mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, &mut rng)),
         material: render_res.material.clone(),
         ..default()
-    }).insert(super::LevelObject);
+    }).insert(LevelObject);
 
     // Place the player in the map
     if let Ok(mut player_transform) = player_query.get_single_mut() {
@@ -162,6 +163,34 @@ fn start_level(
             if let Err(err) = err {
                 println!("Failed top spawn item: {}", err);
             }
+        }
+    }
+}
+
+
+#[derive(Component)]
+pub struct LevelObject;
+
+#[derive(Component)]
+pub struct TTL{
+    timer: Timer,
+}
+
+impl TTL{
+    pub fn new(duration: f32) -> Self{
+        TTL { timer: Timer::from_seconds(duration, TimerMode::Once) }
+    }
+}
+
+
+pub fn check_ttl(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut TTL)>,
+) {
+    for (entity, mut ttl) in query.iter_mut() {
+        if ttl.timer.tick(time.delta()).finished() {
+            commands.entity(entity).despawn();
         }
     }
 }

@@ -11,9 +11,6 @@ mod ui;
 
 use bevy::{prelude::*, time::Stopwatch};
 
-#[derive(Component)]
-pub struct LevelObject;
-
 use clap::Parser;
 
 #[derive(Debug, Clone)]

@@ -37,11 +37,11 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => {Weapon::new(ProjectileType::Shock, 1.8)},
-            MT::EyeMonster => {Weapon::new(ProjectileType::RedSpikes, 0.6)},
-            MT::Goliath => {Weapon::new(ProjectileType::RedSpikes, 0.9)}
-            MT::Laima => {Weapon::new(ProjectileType::Shock, 1.2)},
-            MT::IronGolem => {Weapon::new(ProjectileType::RedSpikes, 0.7)}
+            MT::Imp => {Weapon::new(ProjectileType::Shock, 1.8, 3.0)},
+            MT::EyeMonster => {Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY)},
+            MT::Goliath => {Weapon::new(ProjectileType::RedSpikes, 0.9, f32::INFINITY)}
+            MT::Laima => {Weapon::new(ProjectileType::Shock, 1.2, 4.0)},
+            MT::IronGolem => {Weapon::new(ProjectileType::RedSpikes, 0.7, f32::INFINITY)}
         }
     }
 

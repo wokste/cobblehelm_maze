@@ -7,12 +7,6 @@ pub enum MapCollisionEvent {
     Destroy,
 }
 
-#[derive(Component, Default)]
-pub struct PhysicsMovable {
-    pub velocity: Vec3,
-    pub gravity: bool, // TODO: Gravity
-}
-
 #[derive(Component)]
 pub struct PhysicsBody {
     pub radius: f32,
@@ -26,6 +20,12 @@ impl PhysicsBody {
             on_hit_wall,
         }
     }
+}
+
+#[derive(Component, Default)]
+pub struct PhysicsMovable {
+    pub velocity: Vec3,
+    pub gravity: bool, // TODO: Gravity
 }
 
 impl PhysicsMovable {

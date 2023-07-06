@@ -49,6 +49,7 @@ pub struct Weapon {
     firing: FireMode,
     projectile: ProjectileType,
     cooldown: Timer,
+    max_distance: f32,
 }
 
 impl Weapon {
@@ -60,11 +61,12 @@ impl Weapon {
         }
     }
 
-    pub fn new(projectile: ProjectileType, fire_speed: f32) -> Self {
+    pub fn new(projectile: ProjectileType, fire_speed: f32, max_distance: f32) -> Self {
         Self {
             projectile,
             cooldown: Timer::from_seconds(fire_speed, TimerMode::Once),
             firing: FireMode::NoFire,
+            max_distance,
         }
     }
 
@@ -109,6 +111,10 @@ pub fn fire_weapons(
             proto_projectile.insert(weapon.make_projectile(stats.team));
             proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
+
+            if weapon.max_distance.is_finite() {
+                proto_projectile.insert(crate::game::TTL::new(weapon.max_distance / weapon.projectile.speed()));
+            }
 
             let sound = match weapon.projectile {
                 ProjectileType::RedSpikes => "audio/shoot_redspikes.ogg",
