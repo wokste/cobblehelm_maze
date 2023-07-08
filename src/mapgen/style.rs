@@ -45,6 +45,27 @@ pub fn make_by_level(level: u8) -> LevelStyle {
     }
 }
 
+pub fn choose_shape(tile: WallTile, rng: &mut fastrand::Rng) -> super::RoomShape {
+
+    use super::RoomShape::*;
+    let slice: &[super::RoomShape] = match tile {
+        WallTile::Castle => &[Constructed, DoubleRect, Mirror],
+        WallTile::TempleBrown => &[DoubleRect, Constructed],
+        WallTile::TempleGray => &[Mirror, Constructed],
+        WallTile::TempleGreen => &[Constructed, DoubleRect, Mirror],
+        WallTile::Demonic => &[DoubleRect, Constructed, Mirror],
+        WallTile::Sewer => &[Constructed],
+        WallTile::MetalIron => &[Mirror, Constructed],
+        WallTile::MetalBronze => &[Mirror, Constructed],
+        WallTile::Cave => &[Organic],
+        WallTile::Beehive => &[Organic],
+        WallTile::Flesh => &[Organic],
+        WallTile::DemonicCave => &[Organic],
+        WallTile::Chips => &[Organic, Mirror],
+        WallTile::SewerCave => &[Organic],
+    };        
+    *slice.rand_front_loaded(rng)
+}
 
 pub fn choose_floor(tile: WallTile, rng: &mut fastrand::Rng) -> FloorTile {
     let slice: &[FloorTile] = match tile {

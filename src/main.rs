@@ -31,6 +31,10 @@ struct CommandLineArgs {
     #[arg(long, default_value_t = false)]
     verbose: bool,
 
+    /// Prints the backtrace on an error
+    #[arg(long, default_value_t = false)]
+    trace: bool,
+
     /// Select a specific seed
     #[arg(long)]
     map_seed: Option<u64>,
@@ -42,10 +46,14 @@ fn main() {
     let args = CommandLineArgs::parse();
 
     println!("This program comes with ABSOLUTELY NO WARRANTY.");
-    println!("This is free software, and you are welcome to redistribute it under certain conditions; type `show c' for details.");
+    println!("This is free software, and you are welcome to redistribute it under certain conditions.");
     println!("");
     println!("Build: {}", env!("VERGEN_BUILD_DATE"));
     println!("git commit: {} ({})", env!("VERGEN_GIT_SHA"), env!("VERGEN_GIT_COMMIT_DATE"));
+
+    if args.trace {
+        std::env::set_var("RUST_BACKTRACE", "full");
+    }
 
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {

@@ -6,9 +6,9 @@ use super::{style::LevelStyle, randitem::RandItem};
 
 pub fn connect_rooms(map: &mut Grid<Tile>, rng: &mut fastrand::Rng, level_style: &LevelStyle, p: (Coords, Coords)) {
     let tile = *level_style.corridors.rand_front_loaded(rng);
-    match super::RoomShape::from(tile) {
+    match super::style::choose_shape(tile, rng) {
         super::RoomShape::Organic => connect_rooms_organic(map, rng, tile, p),
-        super::RoomShape::Constructed => connect_rooms_constructed(map, rng, level_style, tile, p),
+        _ => connect_rooms_constructed(map, rng, level_style, tile, p),
     }
 }
 

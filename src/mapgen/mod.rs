@@ -3,14 +3,13 @@ use crate::grid::*;
 
 mod corridors;
 mod graph;
-mod map_transform;
 pub mod randitem;
 mod rooms;
 pub mod style;
 
 use randitem::RandItem;
 
-use self::map_transform::MapTransform;
+use crate::grid::GridTransform;
 
 pub struct MapGenResult {
     pub map: Grid<Tile>,
@@ -18,27 +17,12 @@ pub struct MapGenResult {
     pub stair_pos: Coords,
     // TODO: Stuff like locations for keys and end of level positions.
 }
+#[derive(Copy,Clone)]
 pub enum RoomShape {
     Organic,
     Constructed,
-}
-
-impl From<WallTile> for RoomShape {
-    fn from(tile: WallTile) -> Self {
-
-        use RoomShape::*;
-        match tile {
-            WallTile::Castle => Constructed,
-            WallTile::TempleBrown => Constructed,
-            WallTile::TempleGray => Constructed,
-            WallTile::TempleGreen => Constructed,
-            WallTile::Demonic => Constructed,
-            WallTile::Sewer => Constructed,
-            WallTile::MetalIron => Constructed,
-            WallTile::MetalBronze => Constructed,
-            _ => Organic,
-        }
-    }
+    Mirror,
+    DoubleRect
 }
 
 pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
@@ -53,10 +37,10 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
         let room = rooms::make_room(style, rng);
 
         for _ in 0 .. 5 {
-            let transform = MapTransform::make_rand(map.max(),room.max(), rng);
+            let transform = GridTransform::make_rand(map.size(),room.size(), rng);
             
             if check_place_room(&mut map, &room, &transform).is_ok() {
-                graph.add_node(transform.map(room.max().rand_center(rng)));
+                graph.add_node(transform.map(room.size().rand_center(rng)));
                 break;
             }
         }
@@ -81,11 +65,16 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
     }
 }
 
-fn check_place_room(map: &mut Grid<Tile>, room: &Grid<Tile>, transform: &MapTransform) -> Result<(),()> {
+fn check_place_room(map: &mut Grid<Tile>, room: &Grid<Tile>, transform: &GridTransform) -> Result<(),()> {
+    println!("Placing room with room size: {:?}, x_max: {}, z_max: {}", room.size(), room.x_max(), room.z_max());
+
     for sz in 0 .. room.z_max() {
         for sx in 0 .. room.x_max() {
             let src = room[(sx, sz)];
             let dst = transform.map_xz(sx,sz);
+            if !map.contains_coord(dst.x, dst.z) {
+                println!("-> ({}x{}) => {:?}", sx, sz, dst);
+            }
             let dst = map[dst];
 
             if src != Tile::Void && dst != Tile::Void && src != dst {
@@ -139,7 +128,7 @@ fn choose_start_and_end(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> (Coords,Co
 
 fn choose_pos(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Coords {
     for _ in 0 .. 1048576 {
-        let pos = map.max().rand(rng);
+        let pos = map.size().rand(rng);
 
         if map[pos].is_solid() {
             continue;
