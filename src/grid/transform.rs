@@ -50,10 +50,6 @@ impl GridTransform {
         self.map(Coords::new(x,z))
     }
 
-    pub fn map_rect(&self, r: Rect) -> Rect {
-        Rect::from_pairs(self.map(r.p0), self.map(r.p1))
-    }
-
     pub fn map(&self, coords: Coords) -> Coords {
         let mut coords = coords;
 

@@ -16,7 +16,7 @@ impl std::fmt::Debug for Rect {
 }
 
 impl Rect {
-    pub fn from_pairs(p0: Coords, p1: Coords) -> Self { Self { p0,p1 } }
+    pub fn from_xz(x: i32, z: i32) -> Self { Self { p0: Coords::ZERO, p1: Coords::new(x, z) } }
 
     pub fn rand_center(&self, rng: &mut fastrand::Rng) -> Coords {
         Coords::new(
