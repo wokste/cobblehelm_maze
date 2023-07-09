@@ -163,7 +163,7 @@ pub fn check_projectile_creature_collisions(
 
             stats.hp -= projectile.damage;
             if stats.team == Team::Players {
-                game.hp_perc = f32::clamp((stats.hp as f32) / (stats.hp_max as f32), 0.0, 1.0);
+                game.update_hp(&stats);
                 let sound = asset_server.load("audio/player_hurt.ogg");
                 audio.play(sound);
             } else {

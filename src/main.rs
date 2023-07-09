@@ -118,6 +118,12 @@ pub struct GameInfo {
     pub key_flags: u8,
 }
 
+impl GameInfo {
+    fn update_hp(&mut self, stats: &combat::CreatureStats) {
+        self.hp_perc = f32::clamp((stats.hp as f32) / (stats.hp_max as f32), 0.0, 1.0);
+    }
+}
+
 impl Default for GameInfo {
     fn default() -> Self {
         Self {
