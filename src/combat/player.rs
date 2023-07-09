@@ -1,4 +1,5 @@
-use bevy::{ecs::event::ManualEventReader, input::mouse::MouseMotion, prelude::*};
+use bevy::{ecs::event::ManualEventReader, input::mouse::MouseMotion, prelude::*, utils::HashMap};
+use serde::{Deserialize, Serialize};
 
 use crate::physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable};
 
@@ -31,15 +32,22 @@ impl Default for PlayerBundle {
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Resource)]
+#[derive(Serialize, Deserialize)]
+pub enum InputAction {
+    Forward,
+    Backward,
+    Left,
+    Right,
+    RotLeft,
+    RotRight,
+    Fire,
+    Interact,
+}
+
+#[derive(Resource, Serialize, Deserialize)]
 pub struct InputMap {
-    pub forward: KeyCode,
-    pub backward: KeyCode,
-    pub left: KeyCode,
-    pub right: KeyCode,
-    pub rot_left: KeyCode,
-    pub rot_right: KeyCode,
-    pub fire: KeyCode,
+    pub keys: HashMap<KeyCode, InputAction>,
+    pub mouse_buttons: HashMap<MouseButton, InputAction>,
 
     pub rot_rate_key: f32,
     pub rot_rate_mouse: f32,
@@ -48,14 +56,21 @@ pub struct InputMap {
 impl Default for InputMap {
     fn default() -> Self {
         Self {
-            forward: KeyCode::W,
-            backward: KeyCode::S,
-            left: KeyCode::A,
-            right: KeyCode::D,
-            rot_left: KeyCode::Left,
-            rot_right: KeyCode::Right,
-            fire: KeyCode::Space,
-
+            keys: HashMap::from([
+                (KeyCode::W, InputAction::Forward),
+                (KeyCode::S, InputAction::Backward),
+                (KeyCode::A, InputAction::Left),
+                (KeyCode::D, InputAction::Right),
+                (KeyCode::Left, InputAction::RotLeft),
+                (KeyCode::Right, InputAction::RotRight),
+                (KeyCode::LControl, InputAction::Fire),
+                (KeyCode::RControl, InputAction::Fire),
+                (KeyCode::Space, InputAction::Interact),
+            ]),
+            mouse_buttons: HashMap::from([
+                (MouseButton::Left, InputAction::Fire),
+                (MouseButton::Right, InputAction::Interact),
+            ]),
             rot_rate_key: 2.5,
             rot_rate_mouse: 0.1,
         }
@@ -70,8 +85,26 @@ pub struct InputState {
     yaw: f32,
 }
 
+impl InputState {
+    fn clamp_mouse(&mut self) {
+        if self.yaw > std::f32::consts::TAU {
+            self.yaw -= std::f32::consts::TAU
+        }
+        if self.yaw < 0.0 {
+            self.yaw += std::f32::consts::TAU
+        }
+
+        self.pitch = self.pitch.clamp(-1.5, 1.5);
+    }
+
+    fn to_quat(&self) -> Quat {
+        Quat::from_axis_angle(Vec3::Y, self.yaw) * Quat::from_axis_angle(Vec3::X, self.pitch)
+    }
+}
+
 pub fn player_input(
     keys: Res<Input<KeyCode>>,
+    mouse: Res<Input<MouseButton>>,
     mouse_motion: Res<Events<MouseMotion>>,
     mut state: ResMut<InputState>,
     time: Res<Time>,
@@ -100,42 +133,36 @@ pub fn player_input(
             state_delta.yaw -= (key_map.rot_rate_mouse * ev.delta.x).to_radians();
         }
 
+        let mut acts = vec![]; // TODO: Maybe use the smallvec crate
         for key in keys.get_pressed() {
-            if *key == key_map.forward {
-                velocity += forward
-            }
-            if *key == key_map.backward {
-                velocity -= forward
-            }
-            if *key == key_map.left {
-                velocity -= right
-            }
-            if *key == key_map.right {
-                velocity += right
-            }
-            if *key == key_map.rot_left {
-                state_delta.yaw += key_map.rot_rate_key * delta_time;
-            }
-            if *key == key_map.rot_right {
-                state_delta.yaw -= key_map.rot_rate_key * delta_time;
-            }
-            if *key == key_map.fire {
-                firing = FireMode::Fire
+            if let Some(act) = key_map.keys.get(key) {
+                acts.push(act);
             }
         }
 
-        if state_delta.yaw > std::f32::consts::TAU {
-            state_delta.yaw -= std::f32::consts::TAU
+        for button in mouse.get_pressed() {
+            if let Some(act) = key_map.mouse_buttons.get(button) {
+                acts.push(act);
+            }
         }
-        if state_delta.yaw < 0.0 {
-            state_delta.yaw += std::f32::consts::TAU
+
+        for act in acts {
+            match act {
+                InputAction::Forward => velocity += forward,
+                InputAction::Backward => velocity -= forward,
+                InputAction::Left => velocity -= right,
+                InputAction::Right => velocity += right,
+                InputAction::RotLeft => state_delta.yaw += key_map.rot_rate_key * delta_time,
+                InputAction::RotRight => state_delta.yaw -= key_map.rot_rate_key * delta_time,
+                InputAction::Fire => firing = FireMode::Fire,
+                InputAction::Interact => {
+                    // TODO: Do interaction
+                }
+            };
         }
 
-        state_delta.pitch = state_delta.pitch.clamp(-1.5, 1.5);
-
-        transform.rotation = Quat::from_axis_angle(Vec3::Y, state_delta.yaw)
-            * Quat::from_axis_angle(Vec3::X, state_delta.pitch);
-
+        state_delta.clamp_mouse();
+        transform.rotation = state_delta.to_quat();
         movable.velocity = velocity.normalize() * stats.speed;
         weapon.set_fire_state(firing);
     }
