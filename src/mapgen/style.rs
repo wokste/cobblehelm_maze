@@ -1,52 +1,111 @@
-use crate::{map::{WallTile, FloorTile, DoorType}, combat::MonsterType};
+use crate::{
+    combat::MonsterType,
+    map::{DoorType, FloorTile, WallTile},
+};
 
 use super::randitem::RandItem;
-
 
 pub struct LevelStyle {
     pub corridors: &'static [WallTile],
     pub rooms: &'static [WallTile],
     pub doors: &'static [DoorType],
-    pub monsters: &'static [MonsterType]
+    pub monsters: &'static [MonsterType],
 }
 
 pub fn make_by_level(level: u8) -> LevelStyle {
-    match level{
-        1 => LevelStyle{ // The castle
-            corridors: &[WallTile::Castle, WallTile::TempleBrown, WallTile::TempleGray],
-            rooms: &[WallTile::Castle, WallTile::TempleBrown, WallTile::TempleGray, WallTile::TempleGreen, WallTile::Cave],
+    match level {
+        1 => LevelStyle {
+            // The castle
+            corridors: &[
+                WallTile::Castle,
+                WallTile::TempleBrown,
+                WallTile::TempleGray,
+            ],
+            rooms: &[
+                WallTile::Castle,
+                WallTile::TempleBrown,
+                WallTile::TempleGray,
+                WallTile::TempleGreen,
+                WallTile::Cave,
+            ],
             doors: &[DoorType::Chips],
-            monsters: &[MonsterType::Imp, MonsterType::EyeMonster, MonsterType::Laima],
+            monsters: &[
+                MonsterType::Imp,
+                MonsterType::EyeMonster,
+                MonsterType::Laima,
+            ],
         },
-        2 => LevelStyle{ // Caves below the castle
+        2 => LevelStyle {
+            // Caves below the castle
             corridors: &[WallTile::Cave, WallTile::TempleBrown, WallTile::Castle],
-            rooms: &[WallTile::Castle, WallTile::Cave, WallTile::TempleBrown, WallTile::TempleGray, WallTile::Beehive, WallTile::TempleGreen],
+            rooms: &[
+                WallTile::Castle,
+                WallTile::Cave,
+                WallTile::TempleBrown,
+                WallTile::TempleGray,
+                WallTile::Beehive,
+                WallTile::TempleGreen,
+            ],
             doors: &[],
-            monsters: &[MonsterType::EyeMonster, MonsterType::Laima, MonsterType::Goliath],
+            monsters: &[
+                MonsterType::EyeMonster,
+                MonsterType::Laima,
+                MonsterType::Goliath,
+            ],
         },
-        3 => LevelStyle{ // The sewers
+        3 => LevelStyle {
+            // The sewers
             corridors: &[WallTile::Sewer, WallTile::TempleGreen],
-            rooms: &[WallTile::SewerCave, WallTile::TempleGreen, WallTile::Sewer, WallTile::TempleGray],
+            rooms: &[
+                WallTile::SewerCave,
+                WallTile::TempleGreen,
+                WallTile::Sewer,
+                WallTile::TempleGray,
+            ],
             doors: &[DoorType::Chips],
-            monsters: &[MonsterType::Laima, MonsterType::EyeMonster, MonsterType::Imp],
+            monsters: &[
+                MonsterType::Laima,
+                MonsterType::EyeMonster,
+                MonsterType::Imp,
+            ],
         },
-        4 => LevelStyle{ // In hell
+        4 => LevelStyle {
+            // In hell
             corridors: &[WallTile::TempleGray, WallTile::Demonic],
-            rooms: &[WallTile::DemonicCave, WallTile::Demonic, WallTile::TempleGray, WallTile::Flesh],
+            rooms: &[
+                WallTile::DemonicCave,
+                WallTile::Demonic,
+                WallTile::TempleGray,
+                WallTile::Flesh,
+            ],
             doors: &[DoorType::Chips],
-            monsters: &[MonsterType::Imp, MonsterType::EyeMonster, MonsterType::Goliath],
+            monsters: &[
+                MonsterType::Imp,
+                MonsterType::EyeMonster,
+                MonsterType::Goliath,
+            ],
         },
-        _ => LevelStyle{ // Welcome to the machine
+        _ => LevelStyle {
+            // Welcome to the machine
             corridors: &[WallTile::MetalBronze, WallTile::MetalIron],
-            rooms: &[WallTile::MetalIron, WallTile::MetalBronze, WallTile::Chips, WallTile::Beehive, WallTile::Castle],
+            rooms: &[
+                WallTile::MetalIron,
+                WallTile::MetalBronze,
+                WallTile::Chips,
+                WallTile::Beehive,
+                WallTile::Castle,
+            ],
             doors: &[],
-            monsters: &[MonsterType::IronGolem, MonsterType::EyeMonster, MonsterType::Goliath],
+            monsters: &[
+                MonsterType::IronGolem,
+                MonsterType::EyeMonster,
+                MonsterType::Goliath,
+            ],
         },
     }
 }
 
 pub fn choose_shape(tile: WallTile, rng: &mut fastrand::Rng) -> super::RoomShape {
-
     use super::RoomShape::*;
     let slice: &[super::RoomShape] = match tile {
         WallTile::Castle => &[Constructed, DoubleRect, Mirror],
@@ -63,7 +122,7 @@ pub fn choose_shape(tile: WallTile, rng: &mut fastrand::Rng) -> super::RoomShape
         WallTile::DemonicCave => &[Organic],
         WallTile::Chips => &[Organic, Mirror],
         WallTile::SewerCave => &[Organic],
-    };        
+    };
     *slice.rand_front_loaded(rng)
 }
 

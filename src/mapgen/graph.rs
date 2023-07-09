@@ -5,7 +5,7 @@ struct Node {
     edges: Vec<usize>,
 }
 
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 struct Edge {
     from: usize,
     to: usize,
@@ -13,36 +13,44 @@ struct Edge {
 }
 
 #[derive(Default)]
-pub struct Graph{
+pub struct Graph {
     nodes: Vec<Node>,
 }
 
 impl Edge {
     fn new(graph: &Graph, from: usize, to: usize) -> Self {
-        let dist_sq = graph.nodes[from].coords.eucledian_dist_sq(graph.nodes[to].coords);
-        Self {from, to, dist_sq}
+        let dist_sq = graph.nodes[from]
+            .coords
+            .eucledian_dist_sq(graph.nodes[to].coords);
+        Self { from, to, dist_sq }
     }
 }
 
 impl Graph {
     pub fn add_node(&mut self, coords: Coords) {
-        self.nodes.push(Node{coords, edges: vec![]})
+        self.nodes.push(Node {
+            coords,
+            edges: vec![],
+        })
     }
-    
+
     pub fn connect_tree(&mut self) {
         // Create minimum spanning tree using prims algorithm
         let mut unfound_data: Vec<Edge> = vec![];
-    
+
         for id in 1..self.nodes.len() {
             unfound_data.push(Edge::new(self, 0, id));
         }
-    
-        while let Some((id_to_remove, conn_edge)) = unfound_data.iter().enumerate().min_by_key(|(_, a)| a.dist_sq)
+
+        while let Some((id_to_remove, conn_edge)) = unfound_data
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, a)| a.dist_sq)
         {
             // Add edge outside update return value
             self.connect(conn_edge.from, conn_edge.to);
             let connected = conn_edge.to;
-    
+
             // Update unfound_data
             unfound_data.remove(id_to_remove);
             for test_edge in unfound_data.iter_mut() {
@@ -51,7 +59,7 @@ impl Graph {
                     *test_edge = replace_edge;
                 }
             }
-        };
+        }
     }
 
     fn connect(&mut self, from: usize, to: usize) {
@@ -60,7 +68,7 @@ impl Graph {
     }
 
     pub fn add_more_edges(&mut self, rng: &mut fastrand::Rng, p_connect: f32) {
-        let mut ids: Vec<usize> = self.nodes.iter().enumerate().map(|(i,_)| i).collect();
+        let mut ids: Vec<usize> = self.nodes.iter().enumerate().map(|(i, _)| i).collect();
         rng.shuffle(ids.as_mut_slice());
 
         for id0 in ids {
@@ -89,11 +97,13 @@ impl Graph {
         }
     }
 
-    pub fn to_edges(&self) -> Vec<(Coords,Coords)> {
+    pub fn to_edges(&self) -> Vec<(Coords, Coords)> {
         let mut ret = vec![];
         for (id0, n0) in self.nodes.iter().enumerate() {
             for id1 in n0.edges.iter() {
-                if id0 < *id1 {continue;} // Don't need to print connections twice.
+                if id0 < *id1 {
+                    continue;
+                } // Don't need to print connections twice.
 
                 ret.push((n0.coords, self.nodes[*id1].coords));
             }

@@ -18,7 +18,6 @@ pub struct SpriteResource {
 
 impl SpriteResource {
     pub fn get_mesh(&mut self, key: Sprite3d, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
-
         if let Some(handle) = self.sprite_cache.get(&key) {
             return handle.clone();
         }
@@ -31,7 +30,7 @@ impl SpriteResource {
     }
 
     fn make_mesh(key: Sprite3d) -> Mesh {
-        let (x,y,flipped,size) = match key {
+        let (x, y, flipped, size) = match key {
             Sprite3d::Basic { x, y, flipped } => (x, y, flipped, 1.0),
             Sprite3d::Half { x, y, flipped } => (x, y, flipped, 0.5),
             Sprite3d::Quarter { x, y, flipped } => (x, y, flipped, 0.25),
@@ -45,21 +44,39 @@ impl SpriteResource {
         let w2 = size / 2.0;
         let h2 = size / 2.0;
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        let vertices = vec![[-w2, -h2, 0.0], [w2, -h2, 0.0], [w2, h2, 0.0], [-w2, h2, 0.0]];
+        let vertices = vec![
+            [-w2, -h2, 0.0],
+            [w2, -h2, 0.0],
+            [w2, h2, 0.0],
+            [-w2, h2, 0.0],
+        ];
 
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]]);
+        mesh.insert_attribute(
+            Mesh::ATTRIBUTE_NORMAL,
+            vec![
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0],
+            ],
+        );
 
         if flipped {
-            mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[x0, y1], [x1, y1], [x1, y0], [x0, y0]]);
+            mesh.insert_attribute(
+                Mesh::ATTRIBUTE_UV_0,
+                vec![[x0, y1], [x1, y1], [x1, y0], [x0, y0]],
+            );
         } else {
-            mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[x1, y1], [x0, y1], [x0, y0], [x1, y0]]);
+            mesh.insert_attribute(
+                Mesh::ATTRIBUTE_UV_0,
+                vec![[x1, y1], [x0, y1], [x0, y0], [x1, y0]],
+            );
         }
-        
-        mesh.set_indices(Some(Indices::U32( vec![0, 2, 1, 0, 3, 2] )));
+
+        mesh.set_indices(Some(Indices::U32(vec![0, 2, 1, 0, 3, 2])));
         mesh
     }
-
 }
 
 #[derive(Clone)]
@@ -70,7 +87,7 @@ pub struct TexCoords {
 
 impl TexCoords {
     pub const fn new(x: std::ops::Range<u8>, y: u8) -> Self {
-        Self{x,y}
+        Self { x, y }
     }
 
     pub fn to_uv(&self, rng: &mut fastrand::Rng) -> Vec2 {
@@ -86,7 +103,11 @@ impl TexCoords {
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
     ) -> SpriteBundle {
-        let sprite = Sprite3d::Basic { x: self.x.start, y: self.y, flipped: false };
+        let sprite = Sprite3d::Basic {
+            x: self.x.start,
+            y: self.y,
+            flipped: false,
+        };
 
         SpriteBundle {
             in_level: crate::game::LevelObject,
@@ -103,13 +124,12 @@ impl TexCoords {
 }
 
 #[derive(Bundle)]
-pub struct SpriteBundle{
+pub struct SpriteBundle {
     pub in_level: crate::game::LevelObject,
     pub face_camera: FaceCamera,
     pub sprite: Sprite3d,
     pub pbr: PbrBundle,
 }
-
 
 #[derive(Component, Default)]
 pub struct FaceCamera;
@@ -143,34 +163,49 @@ impl Animation {
 
     pub fn next_sprite(&mut self, sprite: Sprite3d) -> Sprite3d {
         let mut x = match sprite {
-            Sprite3d::Basic{x, ..} => x,
-            Sprite3d::Half{x, ..} => x,
-            Sprite3d::Quarter{x, ..} => x,
+            Sprite3d::Basic { x, .. } => x,
+            Sprite3d::Half { x, .. } => x,
+            Sprite3d::Quarter { x, .. } => x,
         };
 
         x += 1;
-        if x == self.frames.end { x = self.frames.start; };
+        if x == self.frames.end {
+            x = self.frames.start;
+        };
 
         match sprite {
-            Sprite3d::Basic {y, flipped , ..} => { Sprite3d::Basic { x, y, flipped} },
-            Sprite3d::Half {y, flipped , ..} => { Sprite3d::Half { x, y, flipped} },
-            Sprite3d::Quarter {y, flipped , ..} => { Sprite3d::Quarter { x, y, flipped} },
+            Sprite3d::Basic { y, flipped, .. } => Sprite3d::Basic { x, y, flipped },
+            Sprite3d::Half { y, flipped, .. } => Sprite3d::Half { x, y, flipped },
+            Sprite3d::Quarter { y, flipped, .. } => Sprite3d::Quarter { x, y, flipped },
         }
     }
 }
 
-#[allow(unused)] // Yes, I know some of these values are unused but I think they will be useful when implementing pickups.
+#[allow(unused)]
+// Yes, I know some of these values are unused but I think they will be useful when implementing pickups.
 // TODO: Check this again after pickups are implemented
 #[derive(Component, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Sprite3d {
-    Basic{x: u8, y:u8, flipped:bool},
-    Half{x: u8, y:u8, flipped:bool},
-    Quarter{x: u8, y:u8, flipped:bool},
+    Basic { x: u8, y: u8, flipped: bool },
+    Half { x: u8, y: u8, flipped: bool },
+    Quarter { x: u8, y: u8, flipped: bool },
 }
 
-impl Sprite3d{
-    pub const fn basic(x:u8, y:u8) -> Self {Self::Basic { x, y, flipped: false }}
-    pub const fn half(x:u8, y:u8) -> Self {Self::Half { x, y, flipped: false }}
+impl Sprite3d {
+    pub const fn basic(x: u8, y: u8) -> Self {
+        Self::Basic {
+            x,
+            y,
+            flipped: false,
+        }
+    }
+    pub const fn half(x: u8, y: u8) -> Self {
+        Self::Half {
+            x,
+            y,
+            flipped: false,
+        }
+    }
 
     pub fn to_sprite_bundle(
         self,

@@ -1,4 +1,7 @@
-use bevy::{prelude::{Vec3, Component, Query, Res, Transform, Entity, Commands}, time::Time};
+use bevy::{
+    prelude::{Commands, Component, Entity, Query, Res, Transform, Vec3},
+    time::Time,
+};
 
 use crate::map::MapData;
 
@@ -30,11 +33,11 @@ pub struct PhysicsMovable {
 
 impl PhysicsMovable {
     pub fn new(velocity: Vec3, gravity: bool) -> Self {
-        Self { velocity, gravity, }
+        Self { velocity, gravity }
     }
 }
 
-fn split_deltas(delta: Vec3) -> [Vec3;2] {
+fn split_deltas(delta: Vec3) -> [Vec3; 2] {
     let delta_abs = delta.abs();
 
     if delta_abs.x > delta_abs.z {
@@ -65,7 +68,9 @@ fn check_map_collision(map: &crate::grid::Grid<crate::map::Tile>, pos: Vec3, rad
 
     for z in z0..=z1 {
         for x in x0..=x1 {
-            if map[(x, z)].is_solid() { return true }
+            if map[(x, z)].is_solid() {
+                return true;
+            }
         }
     }
 
@@ -92,17 +97,16 @@ pub fn do_physics(
         } else {
             match pb.on_hit_wall {
                 MapCollisionEvent::Stop => {
-                    for delta_sub in split_deltas(delta)
-                    {
+                    for delta_sub in split_deltas(delta) {
                         let new_pos = transform.translation + delta_sub;
                         if !check_map_collision(&map.map, new_pos, pb.radius) {
                             transform.translation = new_pos;
                         }
                     }
-                },
+                }
                 MapCollisionEvent::Destroy => {
                     commands.entity(entity).despawn();
-                },
+                }
             }
         }
     }

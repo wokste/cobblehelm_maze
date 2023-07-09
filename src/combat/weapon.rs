@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable}, rendering::TexCoords};
+use crate::{
+    physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
+    rendering::TexCoords,
+};
 
 use super::{CreatureStats, Team};
 
@@ -96,24 +99,30 @@ pub fn fire_weapons(
     for (mut weapon, stats, transform) in query.iter_mut() {
         if weapon.cooldown.tick(time.delta()).finished() {
             let direction = match weapon.firing {
-                FireMode::NoFire => { continue }
+                FireMode::NoFire => continue,
                 FireMode::Fire => transform.rotation * Vec3::NEG_Z,
-                FireMode::FireAt(target_pos) => {(target_pos - transform.translation).normalize()},
+                FireMode::FireAt(target_pos) => (target_pos - transform.translation).normalize(),
             };
             weapon.cooldown.reset();
 
             let velocity = direction * weapon.projectile.speed();
-            
+
             let uv = weapon.projectile.make_uv();
 
-            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(transform.translation, &mut meshes, &mut render_res));
+            let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(
+                transform.translation,
+                &mut meshes,
+                &mut render_res,
+            ));
             proto_projectile.insert(crate::rendering::Animation::new(uv.x, 0.1));
             proto_projectile.insert(weapon.make_projectile(stats.team));
             proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
 
             if weapon.max_distance.is_finite() {
-                proto_projectile.insert(crate::game::Ttl::new(weapon.max_distance / weapon.projectile.speed()));
+                proto_projectile.insert(crate::game::Ttl::new(
+                    weapon.max_distance / weapon.projectile.speed(),
+                ));
             }
 
             let sound = match weapon.projectile {
@@ -135,14 +144,20 @@ pub fn check_projectile_creature_collisions(
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
-    for (projectile_entity, projectile, projectile_body, projectile_transform) in projectile_query.iter_mut() {
+    for (projectile_entity, projectile, projectile_body, projectile_transform) in
+        projectile_query.iter_mut()
+    {
         for (target_entity, target_body, mut stats, target_transform) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
-            
+
             let distance = projectile_body.radius + target_body.radius;
-            if projectile_transform.translation.distance_squared(target_transform.translation) > distance * distance {
+            if projectile_transform
+                .translation
+                .distance_squared(target_transform.translation)
+                > distance * distance
+            {
                 continue;
             }
 
@@ -156,7 +171,6 @@ pub fn check_projectile_creature_collisions(
                 audio.play(sound);
             }
 
-
             if stats.hp <= 0 {
                 if stats.team == Team::Players {
                     game_state.set(crate::game::GameState::GameOver);
@@ -165,7 +179,7 @@ pub fn check_projectile_creature_collisions(
                     game.score += 50; // TODO: What kind of score to use?
                 }
             }
-            
+
             commands.entity(projectile_entity).despawn();
         }
     }

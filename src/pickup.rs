@@ -1,6 +1,12 @@
 use bevy::prelude::*;
 
-use crate::{combat::{CreatureStats, player::Player}, GameInfo, physics::{PhysicsBody, MapCollisionEvent}, rendering::{SpriteResource, Sprite3d}, grid::Coords};
+use crate::{
+    combat::{player::Player, CreatureStats},
+    grid::Coords,
+    physics::{MapCollisionEvent, PhysicsBody},
+    rendering::{Sprite3d, SpriteResource},
+    GameInfo,
+};
 
 #[derive(Component, Clone, Copy)]
 pub enum Pickup {
@@ -41,24 +47,29 @@ impl Pickup {
     const fn can_take(self, stats: &CreatureStats) -> bool {
         match self.to_stat_gain() {
             StatGain::Health(_) => stats.hp < stats.hp_max,
-            _=> true,
+            _ => true,
         }
     }
 
-    fn take(&self, game_info: &mut GameInfo, stats: &mut Mut<CreatureStats>, game_state: &mut ResMut<NextState<crate::game::GameState>>) {
+    fn take(
+        &self,
+        game_info: &mut GameInfo,
+        stats: &mut Mut<CreatureStats>,
+        game_state: &mut ResMut<NextState<crate::game::GameState>>,
+    ) {
         match self.to_stat_gain() {
             StatGain::Health(gain) => {
-                stats.hp = i16::min(stats.hp+gain, stats.hp_max);
-            },
+                stats.hp = i16::min(stats.hp + gain, stats.hp_max);
+            }
             StatGain::NextLevel => {
                 game_state.set(crate::game::GameState::NextLevel);
-            },
+            }
             StatGain::Coins(gain) => {
                 game_info.coins += gain;
-            },
+            }
             StatGain::Key(mask) => {
                 game_info.key_flags |= mask;
-            },
+            }
         }
     }
 
@@ -79,7 +90,7 @@ impl Pickup {
             Pickup::CoinPile => Sprite3d::half(7, 10),
             Pickup::MedPack => Sprite3d::half(8, 10),
             Pickup::Apple => Sprite3d::half(9, 10),
-            
+
             Pickup::SilverKey => Sprite3d::half(6, 11),
             Pickup::GoldKey => Sprite3d::half(7, 11),
             Pickup::RedKey => Sprite3d::half(8, 11),
@@ -94,7 +105,7 @@ impl Pickup {
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
         rng: &mut fastrand::Rng,
-    ) -> Result<(),&'static str> {
+    ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
         self.spawn_at_pos(pos, commands, meshes, render_res);
         Ok(())
@@ -109,21 +120,27 @@ impl Pickup {
     ) {
         let uv = self.make_sprite();
 
-        commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))
+        commands
+            .spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))
             .insert(crate::rendering::FaceCamera)
             .insert(*self)
-            .insert(crate::physics::PhysicsBody::new(0.5, MapCollisionEvent::Stop));
+            .insert(crate::physics::PhysicsBody::new(
+                0.5,
+                MapCollisionEvent::Stop,
+            ));
     }
 }
 
-fn choose_spawn_pos(map_data: &crate::map::MapData, rng: &mut fastrand::Rng) -> Result<Coords, &'static str> {
-    
+fn choose_spawn_pos(
+    map_data: &crate::map::MapData,
+    rng: &mut fastrand::Rng,
+) -> Result<Coords, &'static str> {
     let map = &map_data.map;
-    for _ in 0 .. 4096 {
-        let x = rng.i32(1 .. map.x_max() - 1);
-        let z = rng.i32(1 .. map.z_max() - 1);
+    for _ in 0..4096 {
+        let x = rng.i32(1..map.x_max() - 1);
+        let z = rng.i32(1..map.z_max() - 1);
 
-        if map[(x,z)].is_solid() {
+        if map[(x, z)].is_solid() {
             continue;
         }
 
@@ -148,7 +165,11 @@ pub fn check_pickups(
     for (player_body, mut stats, player_transform) in player_query.iter_mut() {
         for (pickup_entity, pickup, pickup_body, pickup_transform) in pickup_query.iter_mut() {
             let distance = pickup_body.radius + player_body.radius;
-            if pickup_transform.translation.distance_squared(player_transform.translation) > distance * distance {
+            if pickup_transform
+                .translation
+                .distance_squared(player_transform.translation)
+                > distance * distance
+            {
                 continue;
             }
 

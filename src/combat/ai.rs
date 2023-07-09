@@ -1,32 +1,37 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 
-use crate::{grid::{Coords}, map::{MapData}, rendering::{TexCoords, SpriteResource}, physics::MapCollisionEvent};
-use super::{*, weapon::*};
+use super::{weapon::*, *};
+use crate::{
+    grid::Coords,
+    map::MapData,
+    physics::MapCollisionEvent,
+    rendering::{SpriteResource, TexCoords},
+};
 
-const SIGHT_RADIUS : f32 = 16.0;
+const SIGHT_RADIUS: f32 = 16.0;
 
 impl MonsterType {
     pub fn make_ai(&self) -> AI {
         use MonsterType as MT;
         match self {
-            MT::Imp => {AI::new()},
-            MT::EyeMonster => {AI::new()},
-            MT::Goliath => { AI::new()},
-            MT::Laima => {AI::new()},
-            MT::IronGolem => { AI::new()},
+            MT::Imp => AI::new(),
+            MT::EyeMonster => AI::new(),
+            MT::Goliath => AI::new(),
+            MT::Laima => AI::new(),
+            MT::IronGolem => AI::new(),
         }
     }
 
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType as MT;
         let (speed, hp) = match self {
-            MT::Imp        => (6.0, 5),
+            MT::Imp => (6.0, 5),
             MT::EyeMonster => (6.0, 10),
-            MT::Goliath    => (8.0, 20),
-            MT::Laima      => (6.0, 10),
-            MT::IronGolem  => (8.0, 25),
+            MT::Goliath => (8.0, 20),
+            MT::Laima => (6.0, 10),
+            MT::IronGolem => (8.0, 25),
         };
-        CreatureStats{
+        CreatureStats {
             speed,
             hp,
             hp_max: hp,
@@ -37,11 +42,11 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => {Weapon::new(ProjectileType::Shock, 1.8, 3.0)},
-            MT::EyeMonster => {Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY)},
-            MT::Goliath => {Weapon::new(ProjectileType::RedSpikes, 0.9, f32::INFINITY)}
-            MT::Laima => {Weapon::new(ProjectileType::Shock, 1.2, 4.0)},
-            MT::IronGolem => {Weapon::new(ProjectileType::RedSpikes, 0.7, f32::INFINITY)}
+            MT::Imp => Weapon::new(ProjectileType::Shock, 1.8, 3.0),
+            MT::EyeMonster => Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY),
+            MT::Goliath => Weapon::new(ProjectileType::RedSpikes, 0.9, f32::INFINITY),
+            MT::Laima => Weapon::new(ProjectileType::Shock, 1.2, 4.0),
+            MT::IronGolem => Weapon::new(ProjectileType::RedSpikes, 0.7, f32::INFINITY),
         }
     }
 
@@ -63,17 +68,24 @@ impl MonsterType {
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
         rng: &mut fastrand::Rng,
-    ) -> Result<(),&'static str> {
+    ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
         let uv = self.make_uv();
 
-        commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.5), meshes, render_res))
-            .insert(crate::rendering::Animation::new(uv.x, rng.f32() * 0.04 + 0.16))
+        commands
+            .spawn(uv.to_sprite_bundle(pos.to_vec(0.5), meshes, render_res))
+            .insert(crate::rendering::Animation::new(
+                uv.x,
+                rng.f32() * 0.04 + 0.16,
+            ))
             .insert(self.make_ai())
             .insert(self.make_stats())
             .insert(self.make_weapon())
-            .insert(crate::physics::PhysicsBody::new(0.5, MapCollisionEvent::Stop));
-        
+            .insert(crate::physics::PhysicsBody::new(
+                0.5,
+                MapCollisionEvent::Stop,
+            ));
+
         Ok(())
     }
 }
@@ -85,22 +97,24 @@ pub enum AIState {
 }
 
 #[derive(Component)]
-pub struct AI{
+pub struct AI {
     state: AIState,
 }
 
 impl AI {
-    fn new() -> Self{
+    fn new() -> Self {
         Self {
             state: AIState::PlayerUnknown,
         }
     }
 }
 
-fn choose_spawn_pos(map_data: &crate::map::MapData, rng: &mut fastrand::Rng) -> Result<Coords, &'static str> {
-    
+fn choose_spawn_pos(
+    map_data: &crate::map::MapData,
+    rng: &mut fastrand::Rng,
+) -> Result<Coords, &'static str> {
     let map = &map_data.map;
-    for _ in 0 .. 4096 {
+    for _ in 0..4096 {
         let pos = map.size().shrink(1).rand(rng);
 
         if map[pos].is_solid() {
@@ -118,10 +132,7 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng: &mut fastrand::Rng) -> 
     Err("Could not find a proper spawn pos")
 }
 
-pub fn ai_los(
-    map_data: Res<MapData>,
-    mut monster_query: Query<(&mut AI, &Transform)>,
-) {
+pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transform)>) {
     for (mut ai, transform) in monster_query.iter_mut() {
         if map_data.can_see_player(transform.translation, SIGHT_RADIUS) {
             ai.state = AIState::SeePlayer(map_data.player_pos)
@@ -131,9 +142,7 @@ pub fn ai_los(
     }
 }
 
-pub fn ai_fire(
-    mut monster_query: Query<(&AI, &mut Weapon)>,
-) {
+pub fn ai_fire(mut monster_query: Query<(&AI, &mut Weapon)>) {
     for (ai, mut weapon) in monster_query.iter_mut() {
         use FireMode::*;
         let firing = match ai.state {

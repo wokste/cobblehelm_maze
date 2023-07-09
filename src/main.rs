@@ -2,10 +2,10 @@ mod combat;
 mod game;
 mod grid;
 mod map;
-mod modelgen;
-mod pickup;
-mod physics;
 mod mapgen;
+mod modelgen;
+mod physics;
+mod pickup;
 mod rendering;
 mod ui;
 
@@ -46,24 +46,34 @@ fn main() {
     let args = CommandLineArgs::parse();
 
     println!("This program comes with ABSOLUTELY NO WARRANTY.");
-    println!("This is free software, and you are welcome to redistribute it under certain conditions.");
+    println!(
+        "This is free software, and you are welcome to redistribute it under certain conditions."
+    );
     println!();
     println!("Build: {}", env!("VERGEN_BUILD_DATE"));
-    println!("git commit: {} ({})", env!("VERGEN_GIT_SHA"), env!("VERGEN_GIT_COMMIT_DATE"));
+    println!(
+        "git commit: {} ({})",
+        env!("VERGEN_GIT_SHA"),
+        env!("VERGEN_GIT_COMMIT_DATE")
+    );
 
     if args.trace {
         std::env::set_var("RUST_BACKTRACE", "full");
     }
 
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Cobblehem Maze".into(),
-                mode: bevy::window::WindowMode::BorderlessFullscreen,
-                ..Default::default()
-            }),
-            ..Default::default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Cobblehem Maze".into(),
+                        mode: bevy::window::WindowMode::BorderlessFullscreen,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+        )
         .insert_resource(args)
         .add_state::<game::GameState>()
         .add_plugin(ui::UIPlugin)
@@ -89,13 +99,10 @@ fn app_setup(
         base_color_texture: Some(texture),
         alpha_mode: AlphaMode::Mask(0.5),
         unlit: true,
-        ..default()
-        //Color::WHITE.into()
+        ..default() //Color::WHITE.into()
     });
 
-    commands.spawn(Camera3dBundle {
-        ..default()
-    });
+    commands.spawn(Camera3dBundle { ..default() });
 }
 
 // This resource tracks the game's score
@@ -108,7 +115,7 @@ pub struct GameInfo {
     pub level_spawned: bool,
     pub difficulty: Difficulty,
     pub time: Stopwatch,
-    pub key_flags: u8
+    pub key_flags: u8,
 }
 
 impl Default for GameInfo {

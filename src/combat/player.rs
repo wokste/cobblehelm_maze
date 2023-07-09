@@ -1,14 +1,10 @@
-use bevy::{
-    prelude::*, input::mouse::MouseMotion, ecs::event::ManualEventReader,
-};
+use bevy::{ecs::event::ManualEventReader, input::mouse::MouseMotion, prelude::*};
 
-use crate::{
-    physics::{PhysicsBody, MapCollisionEvent, PhysicsMovable},
-};
+use crate::physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable};
 
 use super::{
+    weapon::{FireMode, ProjectileType, Weapon},
     CreatureStats,
-    weapon::{Weapon, ProjectileType, FireMode},
 };
 
 #[derive(Bundle)]
@@ -23,7 +19,7 @@ pub struct PlayerBundle {
 impl Default for PlayerBundle {
     fn default() -> Self {
         Self {
-            player: Player{},
+            player: Player {},
             stats: CreatureStats::player(),
             physisc: PhysicsBody::new(0.125, MapCollisionEvent::Stop),
             weapon: Weapon::new(ProjectileType::BlueBlob, 0.3, 12.0),
@@ -59,7 +55,7 @@ impl Default for InputMap {
             rot_left: KeyCode::Left,
             rot_right: KeyCode::Right,
             fire: KeyCode::Space,
-            
+
             rot_rate_key: 2.5,
             rot_rate_mouse: 0.1,
         }
@@ -67,7 +63,7 @@ impl Default for InputMap {
 }
 
 /// Keeps track of mouse motion events, pitch, and yaw
-#[derive(Resource,Default)]
+#[derive(Resource, Default)]
 pub struct InputState {
     reader_motion: ManualEventReader<MouseMotion>,
     pitch: f32,
@@ -79,13 +75,21 @@ pub fn player_input(
     mouse_motion: Res<Events<MouseMotion>>,
     mut state: ResMut<InputState>,
     time: Res<Time>,
-    mut query: Query<(&CreatureStats, &mut Transform, &mut PhysicsMovable, &mut Weapon), With<Player>>,
+    mut query: Query<
+        (
+            &CreatureStats,
+            &mut Transform,
+            &mut PhysicsMovable,
+            &mut Weapon,
+        ),
+        With<Player>,
+    >,
     key_map: Res<InputMap>,
 ) {
     let delta_time = time.delta_seconds();
     let mut state_delta = state.as_mut();
     for (stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
-        let mut firing = FireMode::NoFire ;
+        let mut firing = FireMode::NoFire;
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -97,25 +101,40 @@ pub fn player_input(
         }
 
         for key in keys.get_pressed() {
-            if *key == key_map.forward   { velocity += forward }
-            if *key == key_map.backward  { velocity -= forward }
-            if *key == key_map.left      { velocity -= right }
-            if *key == key_map.right     { velocity += right }
-            if *key == key_map.rot_left  {
+            if *key == key_map.forward {
+                velocity += forward
+            }
+            if *key == key_map.backward {
+                velocity -= forward
+            }
+            if *key == key_map.left {
+                velocity -= right
+            }
+            if *key == key_map.right {
+                velocity += right
+            }
+            if *key == key_map.rot_left {
                 state_delta.yaw += key_map.rot_rate_key * delta_time;
             }
             if *key == key_map.rot_right {
                 state_delta.yaw -= key_map.rot_rate_key * delta_time;
             }
-            if *key == key_map.fire      { firing = FireMode::Fire }
+            if *key == key_map.fire {
+                firing = FireMode::Fire
+            }
         }
 
-        if state_delta.yaw > std::f32::consts::TAU { state_delta.yaw -= std::f32::consts::TAU }
-        if state_delta.yaw < 0.0 { state_delta.yaw += std::f32::consts::TAU }
+        if state_delta.yaw > std::f32::consts::TAU {
+            state_delta.yaw -= std::f32::consts::TAU
+        }
+        if state_delta.yaw < 0.0 {
+            state_delta.yaw += std::f32::consts::TAU
+        }
 
         state_delta.pitch = state_delta.pitch.clamp(-1.5, 1.5);
 
-        transform.rotation = Quat::from_axis_angle(Vec3::Y, state_delta.yaw) * Quat::from_axis_angle(Vec3::X, state_delta.pitch);
+        transform.rotation = Quat::from_axis_angle(Vec3::Y, state_delta.yaw)
+            * Quat::from_axis_angle(Vec3::X, state_delta.pitch);
 
         movable.velocity = velocity.normalize() * stats.speed;
         weapon.set_fire_state(firing);

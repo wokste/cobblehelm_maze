@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::CursorGrabMode};
 
-use crate::{map::MapData, combat::player::Player};
+use crate::{combat::player::Player, map::MapData};
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
 
@@ -10,33 +10,30 @@ pub enum GameState {
     InGame,
     GameOver,
     Paused,
-    NextLevel
-//    VendingMachine,
+    NextLevel,
 }
 
 pub struct GamePlugin;
 
-impl Plugin for GamePlugin{
+impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app
-            .add_system(despawn_game.in_schedule(OnEnter(GameState::MainMenu)))
+        app.add_system(despawn_game.in_schedule(OnEnter(GameState::MainMenu)))
             .add_system(start_level.in_schedule(OnEnter(GameState::InGame)))
-
-            
             .add_system(capture_mouse.in_schedule(OnEnter(GameState::InGame)))
             .add_system(release_mouse.in_schedule(OnExit(GameState::InGame)))
-
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
-            .add_systems((
-                crate::physics::do_physics.after(crate::combat::player::player_input),
-                crate::pickup::check_pickups.after(crate::physics::do_physics),
-                crate::rendering::face_camera.after(crate::physics::do_physics),
-                crate::rendering::animate_sprites,
-                check_ttl,
-            ).in_set(OnUpdate(GameState::InGame)))
-            ;
+            .add_systems(
+                (
+                    crate::physics::do_physics.after(crate::combat::player::player_input),
+                    crate::pickup::check_pickups.after(crate::physics::do_physics),
+                    crate::rendering::face_camera.after(crate::physics::do_physics),
+                    crate::rendering::animate_sprites,
+                    check_ttl,
+                )
+                    .in_set(OnUpdate(GameState::InGame)),
+            );
     }
 }
 
@@ -92,7 +89,9 @@ fn start_level(
     }
 
     let mut rng = fastrand::Rng::new();
-    if let Some(seed) = cl_args.map_seed { rng.seed(seed); }
+    if let Some(seed) = cl_args.map_seed {
+        rng.seed(seed);
+    }
 
     let level = game_data.level;
     println!("Seed: {}", rng.get_seed());
@@ -103,49 +102,76 @@ fn start_level(
         crate::mapgen::print_map(&data.map);
     }
 
-    let player_pos = Transform::from_translation(data.player_pos.to_vec(0.7)).looking_at(data.stair_pos.to_vec(0.7), Vec3::Y);
+    let player_pos = Transform::from_translation(data.player_pos.to_vec(0.7))
+        .looking_at(data.stair_pos.to_vec(0.7), Vec3::Y);
     map_data.map = data.map;
     map_data.player_pos = player_pos.translation;
 
     // Spawn the map mesh
-    commands.spawn(PbrBundle {
-        mesh: meshes.add( crate::modelgen::map_to_mesh(&map_data.map, &mut rng)),
-        material: render_res.material.clone(),
-        ..default()
-    }).insert(LevelObject);
+    commands
+        .spawn(PbrBundle {
+            mesh: meshes.add(crate::modelgen::map_to_mesh(&map_data.map, &mut rng)),
+            material: render_res.material.clone(),
+            ..default()
+        })
+        .insert(LevelObject);
 
     // Place the player in the map
     if let Ok(mut player_transform) = player_query.get_single_mut() {
         *player_transform = player_pos;
     } else {
-        commands.spawn(crate::combat::player::PlayerBundle::default()).insert(PbrBundle{
-            transform: player_pos,
-            ..default()
-        });
+        commands
+            .spawn(crate::combat::player::PlayerBundle::default())
+            .insert(PbrBundle {
+                transform: player_pos,
+                ..default()
+            });
     }
 
     // Add the monsters
     let level_style = crate::mapgen::style::make_by_level(level);
     let monster_count = level * 5 + 15;
-    for _ in 0 .. monster_count {
+    for _ in 0..monster_count {
         use crate::mapgen::randitem::RandItem;
         let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
-        let err = monster_type.spawn(&mut commands, &map_data, &mut meshes, &mut render_res, &mut rng);
+        let err = monster_type.spawn(
+            &mut commands,
+            &map_data,
+            &mut meshes,
+            &mut render_res,
+            &mut rng,
+        );
         if let Err(err) = err {
             println!("Failed top spawn monster: {}", err);
         }
     }
 
     // Add stairs
-    crate::pickup::Pickup::NextLevel.spawn_at_pos(data.stair_pos, &mut commands, &mut meshes, &mut render_res);
+    crate::pickup::Pickup::NextLevel.spawn_at_pos(
+        data.stair_pos,
+        &mut commands,
+        &mut meshes,
+        &mut render_res,
+    );
 
     // Add pickups
     {
         let level = level as i32;
         use crate::pickup::Pickup::*;
-        for (item_type, count) in [(Apple, 5), (MedPack, 1), (Coin, level + 5), (CoinPile, level * (level-1) / 2)] {
-            for _ in 0 .. count {
-                let err = item_type.spawn(&mut commands, &map_data, &mut meshes, &mut render_res, &mut rng);
+        for (item_type, count) in [
+            (Apple, 5),
+            (MedPack, 1),
+            (Coin, level + 5),
+            (CoinPile, level * (level - 1) / 2),
+        ] {
+            for _ in 0..count {
+                let err = item_type.spawn(
+                    &mut commands,
+                    &map_data,
+                    &mut meshes,
+                    &mut render_res,
+                    &mut rng,
+                );
                 if let Err(err) = err {
                     println!("Failed top spawn item: {}", err);
                 }
@@ -160,7 +186,13 @@ fn start_level(
         rng.shuffle(&mut keys);
 
         for key in keys.iter().take(2) {
-            let err = key.spawn(&mut commands, &map_data, &mut meshes, &mut render_res, &mut rng);
+            let err = key.spawn(
+                &mut commands,
+                &map_data,
+                &mut meshes,
+                &mut render_res,
+                &mut rng,
+            );
             if let Err(err) = err {
                 println!("Failed top spawn item: {}", err);
             }
@@ -168,27 +200,23 @@ fn start_level(
     }
 }
 
-
 #[derive(Component)]
 pub struct LevelObject;
 
 #[derive(Component)]
-pub struct Ttl{
+pub struct Ttl {
     timer: Timer,
 }
 
-impl Ttl{
-    pub fn new(duration: f32) -> Self{
-        Ttl { timer: Timer::from_seconds(duration, TimerMode::Once) }
+impl Ttl {
+    pub fn new(duration: f32) -> Self {
+        Ttl {
+            timer: Timer::from_seconds(duration, TimerMode::Once),
+        }
     }
 }
 
-
-pub fn check_ttl(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut query: Query<(Entity, &mut Ttl)>,
-) {
+pub fn check_ttl(mut commands: Commands, time: Res<Time>, mut query: Query<(Entity, &mut Ttl)>) {
     for (entity, mut ttl) in query.iter_mut() {
         if ttl.timer.tick(time.delta()).finished() {
             commands.entity(entity).despawn();

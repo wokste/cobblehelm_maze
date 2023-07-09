@@ -8,23 +8,27 @@ pub mod weapon;
 
 pub struct CombatPlugin;
 
-impl Plugin for CombatPlugin{
+impl Plugin for CombatPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app
-            .insert_resource(player::InputMap::default())
+        app.insert_resource(player::InputMap::default())
             .insert_resource(player::InputState::default())
-            .add_systems((
-                player::player_input,
-                player::update_map,
-                ai::ai_los.after(player::update_map),
-                ai::ai_fire.after(ai::ai_los),
-                weapon::check_projectile_creature_collisions,
-                weapon::fire_weapons.after(player::player_input).after(ai::ai_fire)
-            ).in_set(OnUpdate(GameState::InGame)));
+            .add_systems(
+                (
+                    player::player_input,
+                    player::update_map,
+                    ai::ai_los.after(player::update_map),
+                    ai::ai_fire.after(ai::ai_los),
+                    weapon::check_projectile_creature_collisions,
+                    weapon::fire_weapons
+                        .after(player::player_input)
+                        .after(ai::ai_fire),
+                )
+                    .in_set(OnUpdate(GameState::InGame)),
+            );
     }
 }
 
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 pub enum MonsterType {
     Imp,
     EyeMonster,
@@ -37,7 +41,7 @@ pub enum MonsterType {
 pub enum Team {
     Players,
     Monsters,
-//    Environment,
+    //    Environment,
 }
 
 #[derive(Component)]
