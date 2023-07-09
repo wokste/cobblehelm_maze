@@ -13,12 +13,12 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.10", features = ["dynamic_linking", "serialize"] }
-clap = { version = "4.3", features = ["derive"] }
-derive_more = "0.99"
-fastrand = "1.9"
-serde = { version = "1.0", features = ["derive"] }
-vergen = { version = "8.0", features = [ "build", "git", "gitcl" ]}
+bevy = { version = "*", features = ["dynamic_linking", "serialize"] }
+clap = { version = "*", features = ["derive"] }
+derive_more = "*"
+fastrand = "*"
+serde = { version = "*", features = ["derive"] }
+vergen = { version = "*", features = [ "build", "git", "gitcl" ]}
 
 [build-dependencies]
-vergen = { version = "8.0", features = [ "build", "git", "gitcl" ]}
+vergen = { version = "*", features = [ "build", "git", "gitcl" ]}
