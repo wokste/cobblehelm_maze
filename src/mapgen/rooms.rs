@@ -89,7 +89,7 @@ fn make_mirror_floor(floor: FloorTile, rng: &mut fastrand::Rng, range: Range<i32
 
 fn make_doublerect_floor(floor: FloorTile, rng: &mut fastrand::Rng, range: Range<i32>) -> Grid<Tile> {
     let x_max = rng.i32(range.clone()) + 2;
-    let z_max = rng.i32(range.clone()) + 2;
+    let z_max = rng.i32(range) + 2;
     let mut map = Grid::<Tile>::new(x_max,z_max);
 
     let min = 4;

@@ -16,8 +16,6 @@ impl std::fmt::Debug for Rect {
 }
 
 impl Rect {
-    pub fn from_xz(x: i32, z: i32) -> Self { Self { p0: Coords::ZERO, p1: Coords::new(x, z) } }
-
     pub fn rand_center(&self, rng: &mut fastrand::Rng) -> Coords {
         Coords::new(
             ((self.p1.x - self.p0.x) + rng.bool() as i32) / 2 + self.p0.x,
@@ -32,14 +30,12 @@ impl Rect {
         )
     }
 
-    pub fn transpose(self) -> Self {
+    pub const fn transpose(self) -> Self {
         Self {
             p0: self.p0.transpose(),
             p1: self.p1.transpose(),
         }
     }
-
-    pub fn grow(self, delta: i32) -> Self { self.shrink(-delta) }
 
     pub fn shrink(self, delta: i32) -> Self {
         let delta = Coords::new(delta, delta);

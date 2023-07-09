@@ -23,7 +23,7 @@ impl std::fmt::Debug for Coords {
 impl Coords {
     pub const ZERO: Coords = Coords{x:0,z:0};
 
-    pub fn new(x: i32, z: i32) -> Self {
+    pub const fn new(x: i32, z: i32) -> Self {
         Self {x,z}
     }
 
@@ -39,12 +39,12 @@ impl Coords {
         }
     }
 
-    pub fn transpose(self) -> Self { Self {x: self.z, z: self.x } }
+    pub const fn transpose(self) -> Self { Self {x: self.z, z: self.x } }
     
-    pub fn left(self) -> Self { Self {x: self.x - 1, z: self.z } }
-    pub fn right(self) -> Self { Self {x: self.x + 1, z: self.z } }
-    pub fn top(self) -> Self { Self {x: self.x, z: self.z - 1} }
-    pub fn bottom(self) -> Self { Self {x: self.x, z: self.z + 1} }
+    pub const fn left(self) -> Self { Self {x: self.x - 1, z: self.z } }
+    pub const fn right(self) -> Self { Self {x: self.x + 1, z: self.z } }
+    pub const fn top(self) -> Self { Self {x: self.x, z: self.z - 1} }
+    pub const fn bottom(self) -> Self { Self {x: self.x, z: self.z + 1} }
 
     /*
     pub fn manhattan_dist(self, other: Self) -> i32 {

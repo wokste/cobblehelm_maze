@@ -24,7 +24,7 @@ enum StatGain {
 }
 
 impl Pickup {
-    fn to_stat_gain(&self) -> StatGain {
+    const fn to_stat_gain(self) -> StatGain {
         match self {
             Pickup::Apple => StatGain::Health(15),
             Pickup::MedPack => StatGain::Health(45),
@@ -38,7 +38,7 @@ impl Pickup {
         }
     }
 
-    fn can_take(&self, stats: &CreatureStats) -> bool {
+    const fn can_take(self, stats: &CreatureStats) -> bool {
         match self.to_stat_gain() {
             StatGain::Health(_) => stats.hp < stats.hp_max,
             _=> true,
@@ -62,7 +62,7 @@ impl Pickup {
         }
     }
 
-    fn to_sound(&self) -> Option<&'static str> {
+    fn to_sound(self) -> Option<&'static str> {
         match self.to_stat_gain() {
             StatGain::Health(_) => Some("audio/pickup_heal.ogg"),
             StatGain::NextLevel => None,
@@ -96,7 +96,8 @@ impl Pickup {
         rng: &mut fastrand::Rng,
     ) -> Result<(),&'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
-        Ok(self.spawn_at_pos(pos, commands, meshes, render_res))
+        self.spawn_at_pos(pos, commands, meshes, render_res);
+        Ok(())
     }
 
     pub fn spawn_at_pos(
@@ -110,7 +111,7 @@ impl Pickup {
 
         commands.spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))
             .insert(crate::rendering::FaceCamera)
-            .insert(self.clone())
+            .insert(*self)
             .insert(crate::physics::PhysicsBody::new(0.5, MapCollisionEvent::Stop));
     }
 }

@@ -72,6 +72,7 @@ fn despawn_game(
 }
 
 /// set up the level
+#[allow(clippy::too_many_arguments)] // Not really applicable for bevy systems
 fn start_level(
     mut commands: Commands,
     game_data: Res<crate::GameInfo>,
@@ -115,10 +116,10 @@ fn start_level(
 
     // Place the player in the map
     if let Ok(mut player_transform) = player_query.get_single_mut() {
-        *player_transform = player_pos.clone();
+        *player_transform = player_pos;
     } else {
         commands.spawn(crate::combat::player::PlayerBundle::default()).insert(PbrBundle{
-            transform: player_pos.clone(),
+            transform: player_pos,
             ..default()
         });
     }
@@ -129,7 +130,7 @@ fn start_level(
     for _ in 0 .. monster_count {
         use crate::mapgen::randitem::RandItem;
         let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
-        let err = monster_type.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+        let err = monster_type.spawn(&mut commands, &map_data, &mut meshes, &mut render_res, &mut rng);
         if let Err(err) = err {
             println!("Failed top spawn monster: {}", err);
         }
@@ -144,7 +145,7 @@ fn start_level(
         use crate::pickup::Pickup::*;
         for (item_type, count) in [(Apple, 5), (MedPack, 1), (Coin, level + 5), (CoinPile, level * (level-1) / 2)] {
             for _ in 0 .. count {
-                let err = item_type.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+                let err = item_type.spawn(&mut commands, &map_data, &mut meshes, &mut render_res, &mut rng);
                 if let Err(err) = err {
                     println!("Failed top spawn item: {}", err);
                 }
@@ -159,7 +160,7 @@ fn start_level(
         rng.shuffle(&mut keys);
 
         for key in keys.iter().take(2) {
-            let err = key.spawn(&mut commands, &mut map_data, &mut meshes, &mut render_res, &mut rng);
+            let err = key.spawn(&mut commands, &map_data, &mut meshes, &mut render_res, &mut rng);
             if let Err(err) = err {
                 println!("Failed top spawn item: {}", err);
             }
@@ -172,13 +173,13 @@ fn start_level(
 pub struct LevelObject;
 
 #[derive(Component)]
-pub struct TTL{
+pub struct Ttl{
     timer: Timer,
 }
 
-impl TTL{
+impl Ttl{
     pub fn new(duration: f32) -> Self{
-        TTL { timer: Timer::from_seconds(duration, TimerMode::Once) }
+        Ttl { timer: Timer::from_seconds(duration, TimerMode::Once) }
     }
 }
 
@@ -186,7 +187,7 @@ impl TTL{
 pub fn check_ttl(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(Entity, &mut TTL)>,
+    mut query: Query<(Entity, &mut Ttl)>,
 ) {
     for (entity, mut ttl) in query.iter_mut() {
         if ttl.timer.tick(time.delta()).finished() {

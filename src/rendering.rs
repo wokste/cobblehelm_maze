@@ -69,7 +69,7 @@ pub struct TexCoords {
 }
 
 impl TexCoords {
-    pub fn new(x: std::ops::Range<u8>, y: u8) -> Self {
+    pub const fn new(x: std::ops::Range<u8>, y: u8) -> Self {
         Self{x,y}
     }
 
@@ -169,11 +169,11 @@ pub enum Sprite3d {
 }
 
 impl Sprite3d{
-    pub fn basic(x:u8, y:u8) -> Self {Self::Basic { x, y, flipped: false }}
-    pub fn half(x:u8, y:u8) -> Self {Self::Half { x, y, flipped: false }}
+    pub const fn basic(x:u8, y:u8) -> Self {Self::Basic { x, y, flipped: false }}
+    pub const fn half(x:u8, y:u8) -> Self {Self::Half { x, y, flipped: false }}
 
     pub fn to_sprite_bundle(
-        &self,
+        self,
         pos: Vec3,
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
@@ -181,9 +181,9 @@ impl Sprite3d{
         SpriteBundle {
             in_level: crate::game::LevelObject,
             face_camera: FaceCamera,
-            sprite: *self,
+            sprite: self,
             pbr: PbrBundle {
-                mesh: render_res.get_mesh(*self, meshes),
+                mesh: render_res.get_mesh(self, meshes),
                 material: render_res.material.clone(),
                 transform: Transform::from_translation(pos).looking_at(Vec3::ZERO, Vec3::Y),
                 ..Default::default()

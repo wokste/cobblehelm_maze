@@ -24,7 +24,7 @@ impl GridTransform {
 
         if rng.bool() {transform.do_flip_x(room_size);}
         if rng.bool() {transform.do_flip_z(room_size);}
-        
+
         transform
     }
 
@@ -44,10 +44,6 @@ impl GridTransform {
         if self.flip_z {self.dz += delta;} else {self.dz -= delta;}
     }
 
-    pub fn map_xz(&self, x: i32, z: i32) -> Coords {
-        self.map(Coords::new(x,z))
-    }
-
     pub fn map(&self, coords: Coords) -> Coords {
         let mut coords = coords;
 
@@ -65,30 +61,33 @@ impl GridTransform {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
+
+    const fn coord(x:i32, z:i32) -> Coords { Coords::new(x,z) }
+
+    const ROOM_SIZE : Rect = Rect{p0: Coords::ZERO, p1: coord(8,8)};
 
     #[test]
     fn map_simple() {
         let mut t = GridTransform::new(4,8,false);
-        assert_eq!(t.map_xz(1,3), Coords::new(5,11));
+        assert_eq!(t.map(coord(1,3)), coord(5,11));
 
-        t.do_flip_x(Rect::from_xz(8,8));
-        assert_eq!(t.map_xz(6,3), Coords::new(5,11));
+        t.do_flip_x(ROOM_SIZE);
+        assert_eq!(t.map(coord(6,3)), coord(5,11));
 
-        t.do_flip_z(Rect::from_xz(8,8));
-        assert_eq!(t.map_xz(6,4), Coords::new(5,11));
+        t.do_flip_z(ROOM_SIZE);
+        assert_eq!(t.map(coord(6,4)), coord(5,11));
     }
 
     #[test]
     fn map_transpose() {
         let mut t = GridTransform::new(4,8,true);
-        assert_eq!(t.map_xz(3,1), Coords::new(5,11));
+        assert_eq!(t.map(coord(3,1)), coord(5,11));
 
-        t.do_flip_z(Rect::from_xz(8,8));
-        assert_eq!(t.map_xz(4,1), Coords::new(5,11));
+        t.do_flip_z(ROOM_SIZE);
+        assert_eq!(t.map(coord(4,1)), coord(5,11));
 
-        t.do_flip_x(Rect::from_xz(8,8));
-        assert_eq!(t.map_xz(4,6), Coords::new(5,11));
+        t.do_flip_x(ROOM_SIZE);
+        assert_eq!(t.map(coord(4,6)), coord(5,11));
     }
 }

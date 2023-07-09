@@ -113,7 +113,7 @@ pub fn fire_weapons(
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
 
             if weapon.max_distance.is_finite() {
-                proto_projectile.insert(crate::game::TTL::new(weapon.max_distance / weapon.projectile.speed()));
+                proto_projectile.insert(crate::game::Ttl::new(weapon.max_distance / weapon.projectile.speed()));
             }
 
             let sound = match weapon.projectile {

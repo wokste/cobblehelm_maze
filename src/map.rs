@@ -73,25 +73,25 @@ impl Default for MapData {
 }
 
 impl MapData {
-    fn range(f0 : f32, f1: f32) -> Option<std::ops::Range<i32>> {
-        let i0 = f0.floor() as i32;
-        let i1 = f1.floor() as i32;
-
-        if i0 == i1 {
-            None
-        } else {
-            Some(if i0 < i1 {
-                (i0+1)..(i1+1)
-            } else {
-                (i1+1)..(i0+1)
-            })
-        }
-    }
-
     pub fn line_of_sight(&self, p0: Vec3, p1: Vec3) -> bool {
+        fn make_range(f0 : f32, f1: f32) -> Option<std::ops::Range<i32>> {
+            let i0 = f0.floor() as i32;
+            let i1 = f1.floor() as i32;
+    
+            if i0 == i1 {
+                None
+            } else {
+                Some(if i0 < i1 {
+                    (i0+1)..(i1+1)
+                } else {
+                    (i1+1)..(i0+1)
+                })
+            }
+        }
+
         let delta = p1 - p0;
         // Steps over X boundaries
-        if let Some(range) = Self::range(p0.x, p1.x)
+        if let Some(range) = make_range(p0.x, p1.x)
         {
             // z = ax + b
             let a = delta.z / delta.x;
@@ -106,7 +106,7 @@ impl MapData {
         }
 
         // Steps over Z boundaries
-        if let Some(range) = Self::range(p0.z, p1.z)
+        if let Some(range) = make_range(p0.z, p1.z)
         {
             // x = az + b
             let a = delta.x / delta.z;

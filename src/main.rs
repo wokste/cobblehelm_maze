@@ -47,7 +47,7 @@ fn main() {
 
     println!("This program comes with ABSOLUTELY NO WARRANTY.");
     println!("This is free software, and you are welcome to redistribute it under certain conditions.");
-    println!("");
+    println!();
     println!("Build: {}", env!("VERGEN_BUILD_DATE"));
     println!("git commit: {} ({})", env!("VERGEN_GIT_SHA"), env!("VERGEN_GIT_COMMIT_DATE"));
 
