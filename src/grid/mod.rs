@@ -28,11 +28,11 @@ impl<T> Grid<T> {
     pub fn size(&self) -> Rect {Rect{p0: Coords::ZERO, p1: self.size}}
 
     pub fn contains_coord(&self, x: i32, z: i32) -> bool {
-        x >= 0 && x < self.x_max() && z >= 0 && z < self.z_max()
+        x >= 0 && x < self.size.x && z >= 0 && z < self.size.z
     }
 
     fn to_index(&self, x: i32, z: i32) -> usize {
-        assert!(self.contains_coord(x,z), "Error: ({},{}) not in range (0..{},0..{})", x, z, self.x_max(), self.z_max());
+        assert!(self.contains_coord(x,z), "Error: ({},{}) not in range (0..{},0..{})", x, z, self.size.x, self.size.z);
 
         (x + z * self.size.x) as usize
     }

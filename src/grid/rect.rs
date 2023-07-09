@@ -38,4 +38,46 @@ impl Rect {
             p1: self.p1.transpose(),
         }
     }
+
+    pub fn grow(self, delta: i32) -> Self { self.shrink(-delta) }
+
+    pub fn shrink(self, delta: i32) -> Self {
+        let delta = Coords::new(delta, delta);
+        Self {
+            p0: self.p0 + delta,
+            p1: self.p1 - delta,
+        }
+    }
+
+    pub fn iter(&self) -> RectIter {
+        RectIter{
+            pos: self.p0,
+            rect: self,
+        }
+    }
+}
+
+pub struct RectIter<'a>{
+    pos : Coords,
+    rect : &'a Rect
+}
+
+impl<'a> Iterator for RectIter<'a> {
+    type Item = Coords;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let old_pos = self.pos;
+        
+        if old_pos.x < self.rect.p1.x {
+            self.pos.z += 1;
+            if self.pos.z >= self.rect.p1.z {
+                self.pos.z = self.rect.p0.z;
+                self.pos.x += 1;
+            }
+
+            Some(old_pos)
+        } else {
+            None
+        }
+    }
 }

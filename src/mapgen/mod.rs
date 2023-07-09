@@ -66,30 +66,21 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
 }
 
 fn check_place_room(map: &mut Grid<Tile>, room: &Grid<Tile>, transform: &GridTransform) -> Result<(),()> {
-    println!("Placing room with room size: {:?}, x_max: {}, z_max: {}", room.size(), room.x_max(), room.z_max());
+    for src_pos in room.size().iter() {
+        let src = room[src_pos];
+        let dst = transform.map(src_pos);
+        let dst = map[dst];
 
-    for sz in 0 .. room.z_max() {
-        for sx in 0 .. room.x_max() {
-            let src = room[(sx, sz)];
-            let dst = transform.map_xz(sx,sz);
-            if !map.contains_coord(dst.x, dst.z) {
-                println!("-> ({}x{}) => {:?}", sx, sz, dst);
-            }
-            let dst = map[dst];
-
-            if src != Tile::Void && dst != Tile::Void && src != dst {
-                return Result::Err(());
-            }
+        if src != Tile::Void && dst != Tile::Void && src != dst {
+            return Result::Err(());
         }
     }
 
-    for sz in 0 .. room.z_max() {
-        for sx in 0 .. room.x_max() {
-            let src = room[(sx, sz)];
-            let dst = transform.map_xz(sx,sz);
-            if src != Tile::Void {
-                map[dst] = src;
-            }
+    for src_pos in room.size().iter() {
+        let src = room[src_pos];
+        let dst = transform.map(src_pos);
+        if src != Tile::Void {
+            map[dst] = src;
         }
     }
 

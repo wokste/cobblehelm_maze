@@ -101,14 +101,12 @@ fn choose_spawn_pos(map_data: &crate::map::MapData, rng: &mut fastrand::Rng) -> 
     
     let map = &map_data.map;
     for _ in 0 .. 4096 {
-        let x = rng.i32(1 .. map.x_max() - 1);
-        let z = rng.i32(1 .. map.z_max() - 1);
+        let pos = map.size().shrink(1).rand(rng);
 
-        if map[(x,z)].is_solid() {
+        if map[pos].is_solid() {
             continue;
         }
 
-        let pos = Coords::new(x, z);
         if map_data.can_see_player(pos.to_vec(0.6), 10.0) {
             continue;
         }

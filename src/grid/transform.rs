@@ -24,9 +24,7 @@ impl GridTransform {
 
         if rng.bool() {transform.do_flip_x(room_size);}
         if rng.bool() {transform.do_flip_z(room_size);}
-
-        println!("Created transform:{:?}, map_size:{:?} room_size:{:?}", transform, map_size, room_size);
-        println!("Mapped this is {:?}=>{:?}, {:?}=>{:?}", room_size.p0, transform.map(room_size.p0), room_size.p1, transform.map(room_size.p1));
+        
         transform
     }
 

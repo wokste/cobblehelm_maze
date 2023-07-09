@@ -2,7 +2,7 @@ use bevy::{
     prelude::{Mesh, Vec2, Vec3},
     render::{render_resource::PrimitiveTopology, mesh}
 };
-use crate::{grid::{Grid, Coords}, map::{Tile, WallTile, FloorTile}, rendering::TexCoords};
+use crate::{grid::{Grid}, map::{Tile, WallTile, FloorTile}, rendering::TexCoords};
 
 
 #[derive(Default, Clone)]
@@ -49,29 +49,25 @@ impl MeshBuilder {
 pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
     let mut builder = MeshBuilder::default();
 
-    for z in 1 .. map.z_max() - 1 {
-        for x in 1 .. map.x_max() - 1 {
-            let pos = Coords::new(x,z);
+    for pos in map.size().shrink(1).iter() {
+        if let Tile::Floor(floor) = map[pos] {
+            
+            let p0 = Vec3::new(pos.x as f32, 0.0, pos.z as f32);
+            // Floor tiles
+            builder.add_rect(p0, Vec3::X, Vec3::Z, floor_tex_id(floor).to_uv(rng));
 
-            if let Tile::Floor(floor) = map[pos] {
-                
-                let p0 = Vec3::new(x as f32, 0.0, z as f32);
-                // Floor tiles
-                builder.add_rect(p0, Vec3::X, Vec3::Z, floor_tex_id(floor).to_uv(rng));
-
-                // Wall tiles
-                if let Tile::Wall(wall) = map[pos.top()] {
-                    builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, wall_tex_id(wall).to_uv(rng));
-                }
-                if let Tile::Wall(wall) = map[pos.right()] {
-                    builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y, wall_tex_id(wall).to_uv(rng));
-                }
-                if let Tile::Wall(wall) = map[pos.bottom()] {
-                    builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y, wall_tex_id(wall).to_uv(rng));
-                }
-                if let Tile::Wall(wall) = map[pos.left()] {
-                    builder.add_rect(p0,  Vec3::Z, Vec3::Y, wall_tex_id(wall).to_uv(rng));
-                }
+            // Wall tiles
+            if let Tile::Wall(wall) = map[pos.top()] {
+                builder.add_rect(p0 + Vec3::X, Vec3::NEG_X,Vec3::Y, wall_tex_id(wall).to_uv(rng));
+            }
+            if let Tile::Wall(wall) = map[pos.right()] {
+                builder.add_rect(p0 + Vec3::X + Vec3::Z, Vec3::NEG_Z, Vec3::Y, wall_tex_id(wall).to_uv(rng));
+            }
+            if let Tile::Wall(wall) = map[pos.bottom()] {
+                builder.add_rect(p0 + Vec3::Z, Vec3::X, Vec3::Y, wall_tex_id(wall).to_uv(rng));
+            }
+            if let Tile::Wall(wall) = map[pos.left()] {
+                builder.add_rect(p0,  Vec3::Z, Vec3::Y, wall_tex_id(wall).to_uv(rng));
             }
         }
     }
