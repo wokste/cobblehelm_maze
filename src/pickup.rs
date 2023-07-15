@@ -181,7 +181,9 @@ pub fn check_pickups(
                     audio.play(asset_server.load(filename));
                 }
 
-                commands.entity(pickup_entity).despawn();
+                commands
+                    .entity(pickup_entity)
+                    .insert(crate::lifecycle::ToBeDestroyed);
             }
         }
     }

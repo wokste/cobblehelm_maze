@@ -120,7 +120,7 @@ pub fn fire_weapons(
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
 
             if weapon.max_distance.is_finite() {
-                proto_projectile.insert(crate::game::Ttl::new(
+                proto_projectile.insert(crate::lifecycle::Ttl::new(
                     weapon.max_distance / weapon.projectile.speed(),
                 ));
             }
@@ -140,7 +140,6 @@ pub fn check_projectile_creature_collisions(
     mut projectile_query: Query<(Entity, &Projectile, &PhysicsBody, &Transform)>,
     mut target_query: Query<(Entity, &PhysicsBody, &mut CreatureStats, &Transform)>,
     mut game: ResMut<crate::GameInfo>,
-    mut game_state: ResMut<NextState<crate::game::GameState>>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
@@ -172,15 +171,14 @@ pub fn check_projectile_creature_collisions(
             }
 
             if stats.hp <= 0 {
-                if stats.team == Team::Players {
-                    game_state.set(crate::game::GameState::GameOver);
-                } else {
-                    commands.entity(target_entity).despawn();
-                    game.score += 50; // TODO: What kind of score to use?
-                }
+                commands
+                    .entity(target_entity)
+                    .insert(crate::lifecycle::ToBeDestroyed);
             }
 
-            commands.entity(projectile_entity).despawn();
+            commands
+                .entity(projectile_entity)
+                .insert(crate::lifecycle::ToBeDestroyed);
         }
     }
 }

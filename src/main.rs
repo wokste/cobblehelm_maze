@@ -1,6 +1,7 @@
 mod combat;
 mod game;
 mod grid;
+mod lifecycle;
 mod map;
 mod mapgen;
 mod modelgen;

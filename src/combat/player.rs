@@ -15,6 +15,7 @@ pub struct PlayerBundle {
     pub physisc: PhysicsBody,
     pub velocity: PhysicsMovable,
     pub weapon: Weapon,
+    pub on_destroy: crate::lifecycle::DestroyEffect,
 }
 
 impl Default for PlayerBundle {
@@ -25,6 +26,7 @@ impl Default for PlayerBundle {
             physisc: PhysicsBody::new(0.125, MapCollisionEvent::Stop),
             weapon: Weapon::new(ProjectileType::BlueBlob, 0.3, 12.0),
             velocity: PhysicsMovable::default(),
+            on_destroy: crate::lifecycle::DestroyEffect::GameOver,
         }
     }
 }

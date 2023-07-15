@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::CursorGrabMode};
 
-use crate::{combat::player::Player, map::MapData};
+use crate::{combat::player::Player, lifecycle::LevelObject, map::MapData};
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
 
@@ -30,7 +30,8 @@ impl Plugin for GamePlugin {
                     crate::pickup::check_pickups.after(crate::physics::do_physics),
                     crate::rendering::face_camera.after(crate::physics::do_physics),
                     crate::rendering::animate_sprites,
-                    check_ttl,
+                    crate::lifecycle::check_ttl,
+                    crate::lifecycle::destroy_entities.after(crate::lifecycle::check_ttl), // TODO: After everything
                 )
                     .in_set(OnUpdate(GameState::InGame)),
             );
@@ -196,30 +197,6 @@ fn start_level(
             if let Err(err) = err {
                 println!("Failed top spawn item: {}", err);
             }
-        }
-    }
-}
-
-#[derive(Component)]
-pub struct LevelObject;
-
-#[derive(Component)]
-pub struct Ttl {
-    timer: Timer,
-}
-
-impl Ttl {
-    pub fn new(duration: f32) -> Self {
-        Ttl {
-            timer: Timer::from_seconds(duration, TimerMode::Once),
-        }
-    }
-}
-
-pub fn check_ttl(mut commands: Commands, time: Res<Time>, mut query: Query<(Entity, &mut Ttl)>) {
-    for (entity, mut ttl) in query.iter_mut() {
-        if ttl.timer.tick(time.delta()).finished() {
-            commands.entity(entity).despawn();
         }
     }
 }

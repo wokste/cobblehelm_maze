@@ -110,7 +110,7 @@ impl TexCoords {
         };
 
         SpriteBundle {
-            in_level: crate::game::LevelObject,
+            in_level: crate::lifecycle::LevelObject,
             face_camera: FaceCamera,
             sprite,
             pbr: PbrBundle {
@@ -125,7 +125,7 @@ impl TexCoords {
 
 #[derive(Bundle)]
 pub struct SpriteBundle {
-    pub in_level: crate::game::LevelObject,
+    pub in_level: crate::lifecycle::LevelObject,
     pub face_camera: FaceCamera,
     pub sprite: Sprite3d,
     pub pbr: PbrBundle,
@@ -214,7 +214,7 @@ impl Sprite3d {
         render_res: &mut ResMut<SpriteResource>,
     ) -> SpriteBundle {
         SpriteBundle {
-            in_level: crate::game::LevelObject,
+            in_level: crate::lifecycle::LevelObject,
             face_camera: FaceCamera,
             sprite: self,
             pbr: PbrBundle {
