@@ -1,17 +1,5 @@
 use bevy::prelude::*;
 
-use crate::combat::ai::AiPos;
-
-#[derive(Component)]
-pub struct ToBeDestroyed;
-
-#[derive(Component)]
-pub enum DestroyEffect {
-    //ChangeSprite(Sprite3d),
-    GameOver,
-    // TODO: Add more options here
-}
-
 #[derive(Component)]
 pub struct LevelObject;
 
@@ -31,29 +19,6 @@ impl Ttl {
 pub fn check_ttl(mut commands: Commands, time: Res<Time>, mut query: Query<(Entity, &mut Ttl)>) {
     for (entity, mut ttl) in query.iter_mut() {
         if ttl.timer.tick(time.delta()).finished() {
-            commands.entity(entity).insert(ToBeDestroyed);
-        }
-    }
-}
-
-pub fn destroy_entities(
-    mut commands: Commands,
-    query: Query<(Entity, Option<&mut DestroyEffect>, Option<&AiPos>), With<ToBeDestroyed>>,
-    mut game_state: ResMut<NextState<crate::game::GameState>>,
-    mut map_data: ResMut<crate::map::MapData>,
-) {
-    for (entity, destroy_effect, ai) in query.iter() {
-        // For AI, remove the colliders from the AI map
-        if let Some(pos) = ai {
-            pos.remove(&mut map_data.monster_map);
-        }
-
-        // Destroy stuff
-        if let Some(destroy_effect) = destroy_effect {
-            match destroy_effect {
-                DestroyEffect::GameOver => game_state.set(crate::game::GameState::GameOver),
-            }
-        } else {
             commands.entity(entity).despawn();
         }
     }

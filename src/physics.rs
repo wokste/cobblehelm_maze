@@ -104,11 +104,7 @@ pub fn do_physics(
                         }
                     }
                 }
-                MapCollisionEvent::Destroy => {
-                    commands
-                        .entity(entity)
-                        .insert(crate::lifecycle::ToBeDestroyed);
-                }
+                MapCollisionEvent::Destroy => commands.entity(entity).despawn(),
             }
         }
     }

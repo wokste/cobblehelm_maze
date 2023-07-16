@@ -5,7 +5,7 @@ use crate::{
     rendering::TexCoords,
 };
 
-use super::{CreatureStats, Team};
+use super::{ai::AiPos, CreatureStats, Team};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
@@ -138,15 +138,25 @@ pub fn fire_weapons(
 pub fn check_projectile_creature_collisions(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Projectile, &PhysicsBody, &Transform)>,
-    mut target_query: Query<(Entity, &PhysicsBody, &mut CreatureStats, &Transform)>,
+    mut target_query: Query<(
+        Entity,
+        &PhysicsBody,
+        &mut CreatureStats,
+        &Transform,
+        Option<&AiPos>,
+    )>,
     mut game: ResMut<crate::GameInfo>,
+    mut game_state: ResMut<NextState<crate::game::GameState>>,
+    mut map_data: ResMut<crate::map::MapData>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
 ) {
     for (projectile_entity, projectile, projectile_body, projectile_transform) in
         projectile_query.iter_mut()
     {
-        for (target_entity, target_body, mut stats, target_transform) in target_query.iter_mut() {
+        for (target_entity, target_body, mut stats, target_transform, ai_pos) in
+            target_query.iter_mut()
+        {
             if projectile.team == stats.team {
                 continue;
             }
@@ -160,25 +170,25 @@ pub fn check_projectile_creature_collisions(
                 continue;
             }
 
-            stats.hp -= projectile.damage;
-            if stats.team == Team::Players {
-                game.update_hp(&stats);
-                let sound = asset_server.load("audio/player_hurt.ogg");
-                audio.play(sound);
+            let dead = stats.take_damage(
+                target_entity,
+                super::Damage::new(projectile.damage),
+                &mut commands,
+                &mut game,
+                &mut game_state,
+                &mut map_data,
+                ai_pos,
+            );
+
+            let sound_name = if stats.team == Team::Players {
+                "audio/player_hurt.ogg"
             } else {
-                let sound = asset_server.load("audio/monster_hurt.ogg");
-                audio.play(sound);
-            }
+                "audio/monster_hurt.ogg"
+            };
+            let sound = asset_server.load(sound_name);
+            audio.play(sound);
 
-            if stats.hp <= 0 {
-                commands
-                    .entity(target_entity)
-                    .insert(crate::lifecycle::ToBeDestroyed);
-            }
-
-            commands
-                .entity(projectile_entity)
-                .insert(crate::lifecycle::ToBeDestroyed);
+            commands.entity(projectile_entity).despawn();
         }
     }
 }

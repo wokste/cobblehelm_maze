@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::game::GameState;
 
+use self::ai::AiPos;
+
 pub mod ai;
 pub mod player;
 pub mod weapon;
@@ -44,6 +46,16 @@ pub enum Team {
     //    Environment,
 }
 
+pub struct Damage {
+    value: i16,
+}
+
+impl Damage {
+    pub fn new(value: i16) -> Self {
+        Self { value }
+    }
+}
+
 #[derive(Component)]
 pub struct CreatureStats {
     pub speed: f32,
@@ -60,5 +72,34 @@ impl CreatureStats {
             hp_max: 100,
             team: Team::Players,
         }
+    }
+
+    pub fn take_damage(
+        &mut self,
+        entity: Entity,
+        damage: Damage,
+        commands: &mut Commands,
+        game: &mut ResMut<crate::GameInfo>,
+        game_state: &mut ResMut<NextState<crate::game::GameState>>,
+        map_data: &mut ResMut<crate::map::MapData>,
+        ai_pos: Option<&AiPos>,
+    ) -> bool {
+        self.hp -= damage.value;
+        if self.team == Team::Players {
+            game.update_hp(&self);
+        }
+
+        if self.hp <= 0 {
+            if self.team == Team::Players {
+                game_state.set(crate::game::GameState::GameOver);
+            } else {
+                commands.entity(entity).despawn();
+                game.score += 50; // TODO: What kind of score to use?
+                if let Some(ai_pos) = ai_pos {
+                    ai_pos.remove_from(&mut map_data.monster_map);
+                }
+            }
+        }
+        self.hp <= 0
     }
 }

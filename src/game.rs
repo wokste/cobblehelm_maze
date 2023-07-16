@@ -31,7 +31,6 @@ impl Plugin for GamePlugin {
                     crate::rendering::face_camera.after(crate::physics::do_physics),
                     crate::rendering::animate_sprites,
                     crate::lifecycle::check_ttl,
-                    crate::lifecycle::destroy_entities.after(crate::lifecycle::check_ttl), // TODO: After everything
                 )
                     .in_set(OnUpdate(GameState::InGame)),
             );

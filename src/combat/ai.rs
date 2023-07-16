@@ -146,7 +146,7 @@ impl AiPos {
         self.f -= 1.0;
     }
 
-    pub fn remove(&self, grid: &mut Grid<bool>) {
+    pub fn remove_from(&self, grid: &mut Grid<bool>) {
         debug_assert!(grid[self.to] == true);
         grid[self.to] = false;
     }
