@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 
 use super::styles::*;
-use crate::game::GameState;
+use crate::{game::GameState, GameSettings};
 
 #[derive(Component)]
 pub struct Menu;
@@ -9,6 +9,7 @@ pub struct Menu;
 #[derive(Component)]
 pub enum ButtonAction {
     Play,
+    PlayDaily,
     Resume,
     ToMainMenu,
     NextLevel,
@@ -51,6 +52,7 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, state
                         TextAlignment::Center,
                     ));
                     make_button(parent, asset_server, "Play", ButtonAction::Play);
+                    make_button(parent, asset_server, "Daily Run", ButtonAction::PlayDaily);
                     make_button(parent, asset_server, "Quit", ButtonAction::Quit);
                 }
                 GameState::InGame => panic!("No menu should call this"),
@@ -131,6 +133,8 @@ pub fn interact_with_button(
     mut game_state: ResMut<NextState<GameState>>,
     mut game_data: ResMut<crate::GameInfo>,
     mut exit: EventWriter<AppExit>,
+    mut game_settings: ResMut<GameSettings>,
+    cl_args: Res<crate::CommandLineArgs>,
 ) {
     for (interaction, mut background_color, action) in &mut button_query {
         *background_color = match interaction {
@@ -142,6 +146,11 @@ pub fn interact_with_button(
         if let Interaction::Clicked = interaction {
             match action {
                 ButtonAction::Play => {
+                    *game_settings = GameSettings::from_cl(&cl_args);
+                    game_state.set(GameState::InGame);
+                }
+                ButtonAction::PlayDaily => {
+                    *game_settings = GameSettings::from_daily(std::time::SystemTime::now());
                     game_state.set(GameState::InGame);
                 }
                 ButtonAction::Resume => {

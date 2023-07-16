@@ -23,7 +23,7 @@ pub enum Difficulty {
 
 #[derive(Parser, Resource, Debug)]
 #[command(author, version, about, long_about = None)]
-struct CommandLineArgs {
+pub struct CommandLineArgs {
     /// Adds cheats to the game pause menu.
     #[arg(long, default_value_t = false)]
     cheat: bool,
@@ -114,7 +114,6 @@ pub struct GameInfo {
     pub coins: i32,
     pub level: u8,
     pub level_spawned: bool,
-    pub difficulty: Difficulty,
     pub time: Stopwatch,
     pub key_flags: u8,
 }
@@ -133,9 +132,42 @@ impl Default for GameInfo {
             coins: 0,
             level: 1,
             level_spawned: false,
-            difficulty: Difficulty::Medium,
             time: Stopwatch::default(),
             key_flags: 0,
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct GameSettings {
+    pub map_seed: Option<u64>,
+}
+
+impl Default for GameSettings {
+    fn default() -> Self {
+        Self { map_seed: None }
+    }
+}
+
+impl GameSettings {
+    pub fn from_daily(now: std::time::SystemTime) -> Self {
+        let elapsed = now.duration_since(std::time::UNIX_EPOCH).unwrap();
+        let elapsed_days = elapsed.as_secs() / 60 / 60 / 24;
+        let mut seed = std::num::Wrapping(elapsed_days);
+
+        // There is nothing magical about the numbers. These are merely used to avoid using seeds that people would randomly use.
+        // Thanks to random.org
+        seed ^= 465075828575581282;
+        seed *= 765521045181377115;
+
+        Self {
+            map_seed: Some(seed.0),
+        }
+    }
+
+    pub fn from_cl(args: &CommandLineArgs) -> Self {
+        Self {
+            map_seed: args.map_seed,
         }
     }
 }

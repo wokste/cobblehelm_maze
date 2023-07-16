@@ -24,6 +24,7 @@ impl Plugin for GamePlugin {
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
+            .insert_resource(crate::GameSettings::default())
             .add_systems(
                 (
                     crate::physics::do_physics.after(crate::combat::player::player_input),
@@ -78,6 +79,7 @@ fn start_level(
     mut render_res: ResMut<crate::rendering::SpriteResource>,
     mut level_query: Query<Entity, With<LevelObject>>,
     mut player_query: Query<&mut Transform, With<Player>>,
+    game_settings: Res<crate::GameSettings>,
     cl_args: Res<crate::CommandLineArgs>,
 ) {
     if game_data.level_spawned {
@@ -89,7 +91,7 @@ fn start_level(
     }
 
     let mut rng = fastrand::Rng::new();
-    if let Some(seed) = cl_args.map_seed {
+    if let Some(seed) = game_settings.map_seed {
         rng.seed(seed);
     }
 
