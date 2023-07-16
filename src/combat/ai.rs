@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bitflags::bitflags;
 use tinyvec::ArrayVec;
 
 use super::{weapon::*, *};
@@ -15,19 +16,19 @@ impl MonsterType {
     pub fn make_ai(&self) -> AI {
         use MonsterType as MT;
         match self {
-            MT::Imp => AI::new(),
-            MT::EyeMonster => AI::new(),
-            MT::Goliath => AI::new(),
-            MT::Laima => AI::new(),
-            MT::IronGolem => AI::new(),
+            MT::Imp => AI::new(Flags::Approach | Flags::Follow),
+            MT::EyeMonster => AI::new(Flags::Follow),
+            MT::Goliath => AI::new(Flags::Approach),
+            MT::Laima => AI::new(Flags::Approach),
+            MT::IronGolem => AI::new(Flags::empty()),
         }
     }
 
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType as MT;
         let (speed, hp) = match self {
-            MT::Imp => (2.0, 5),
-            MT::EyeMonster => (1.0, 10),
+            MT::Imp => (3.0, 5),
+            MT::EyeMonster => (2.0, 10),
             MT::Goliath => (2.0, 20),
             MT::Laima => (1.0, 15),
             MT::IronGolem => (1.0, 25),
@@ -97,16 +98,26 @@ pub enum AIState {
     SeePlayer(Vec3),
     FollowPlayer(Coords),
 }
+bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    pub struct Flags: u32 {
+        const None = 0;
+        const Approach = 0x1;
+        const Follow = 0x2;
+    }
+}
 
 #[derive(Component)]
 pub struct AI {
     state: AIState,
+    flags: Flags,
 }
 
 impl AI {
-    fn new() -> Self {
+    fn new(flags: Flags) -> Self {
         Self {
             state: AIState::PlayerUnknown,
+            flags,
         }
     }
 }
@@ -181,9 +192,13 @@ fn choose_spawn_pos(
 pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transform)>) {
     for (mut ai, transform) in monster_query.iter_mut() {
         if map_data.can_see_player(transform.translation, SIGHT_RADIUS) {
-            ai.state = AIState::SeePlayer(map_data.player_pos.translation)
+            ai.state = AIState::SeePlayer(map_data.player_pos.translation);
         } else if let AIState::SeePlayer(pos) = ai.state {
-            ai.state = AIState::FollowPlayer(Coords::from_vec(pos))
+            if ai.flags.contains(Flags::Follow) {
+                ai.state = AIState::FollowPlayer(Coords::from_vec(pos))
+            } else {
+                ai.state = AIState::PlayerUnknown
+            }
         }
     }
 }
@@ -234,7 +249,13 @@ pub fn ai_move(
         if ai_mover.add_dist(stats.speed * time) {
             let target_pos = match ai_state.state {
                 AIState::PlayerUnknown => None,
-                AIState::SeePlayer(player_pos) => Some(Coords::from_vec(player_pos)),
+                AIState::SeePlayer(player_pos) => {
+                    if ai_state.flags.contains(Flags::Approach) {
+                        Some(Coords::from_vec(player_pos))
+                    } else {
+                        None
+                    }
+                }
                 AIState::FollowPlayer(player_pos) => Some(player_pos),
             };
 

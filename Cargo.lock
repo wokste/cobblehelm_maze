@@ -1220,6 +1220,7 @@ name = "cobblehelm_maze"
 version = "0.2.0-pre"
 dependencies = [
  "bevy",
+ "bitflags 2.3.3",
  "clap",
  "derive_more",
  "fastrand",
