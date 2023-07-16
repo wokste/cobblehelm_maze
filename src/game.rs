@@ -98,20 +98,25 @@ fn start_level(
     println!("Seed: {}", rng.get_seed());
 
     // Get initial data
-    let data = crate::mapgen::make_map(level, &mut rng);
+    let map_gen_result = crate::mapgen::make_map(level, &mut rng);
     if cl_args.verbose {
-        crate::mapgen::print_map(&data.map);
+        crate::mapgen::print_map(&map_gen_result.tilemap);
     }
 
-    let player_pos = Transform::from_translation(data.player_pos.to_vec(0.7))
-        .looking_at(data.stair_pos.to_vec(0.7), Vec3::Y);
-    map_data.map = data.map;
-    map_data.player_pos = player_pos.translation;
+    let player_pos = Transform::from_translation(map_gen_result.player_pos.to_vec(0.7))
+        .looking_at(map_gen_result.stair_pos.to_vec(0.7), Vec3::Y);
+    map_data.solid_map = map_gen_result.tilemap.map(|t| t.is_solid());
+    map_data.monster_map = map_gen_result.tilemap.map(|t| t.is_solid());
+    map_data.los_map = map_gen_result.tilemap.map(|t| t.is_solid());
+    map_data.player_pos = player_pos;
 
     // Spawn the map mesh
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(crate::modelgen::map_to_mesh(&map_data.map, &mut rng)),
+            mesh: meshes.add(crate::modelgen::map_to_mesh(
+                &map_gen_result.tilemap,
+                &mut rng,
+            )),
             material: render_res.material.clone(),
             ..default()
         })
@@ -137,7 +142,7 @@ fn start_level(
         let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
         let err = monster_type.spawn(
             &mut commands,
-            &map_data,
+            &mut map_data,
             &mut meshes,
             &mut render_res,
             &mut rng,
@@ -149,7 +154,7 @@ fn start_level(
 
     // Add stairs
     crate::pickup::Pickup::NextLevel.spawn_at_pos(
-        data.stair_pos,
+        map_gen_result.stair_pos,
         &mut commands,
         &mut meshes,
         &mut render_res,

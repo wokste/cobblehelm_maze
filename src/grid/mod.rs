@@ -56,6 +56,18 @@ impl<T> Grid<T> {
 
         (x + z * self.size.x) as usize
     }
+
+    pub fn map<B, F>(&self, f: F) -> Grid<B>
+    where
+        F: FnMut(T) -> B,
+        B: Sized,
+        T: Clone,
+    {
+        Grid::<B> {
+            size: self.size,
+            tiles: self.tiles.clone().into_iter().map(f).collect(),
+        }
+    }
 }
 
 impl<T> Index<Coords> for Grid<T> {

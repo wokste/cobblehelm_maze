@@ -176,7 +176,7 @@ pub fn update_map(
     mut camera_query: Query<&mut Transform, (With<Camera3d>, Without<Player>)>,
 ) {
     let player_transform = player_query.get_single().unwrap();
-    map_data.player_pos = player_transform.translation;
+    map_data.player_pos = *player_transform;
     let mut camera_transform = camera_query.get_single_mut().unwrap();
     *camera_transform = *player_transform;
 }

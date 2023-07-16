@@ -12,7 +12,7 @@ use randitem::RandItem;
 use crate::grid::GridTransform;
 
 pub struct MapGenResult {
-    pub map: Grid<Tile>,
+    pub tilemap: Grid<Tile>,
     pub player_pos: Coords,
     pub stair_pos: Coords,
     // TODO: Stuff like locations for keys and end of level positions.
@@ -58,7 +58,7 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
     map[stair_pos] = Tile::Floor(FloorTile::Exit);
 
     MapGenResult {
-        map,
+        tilemap: map,
         player_pos,
         stair_pos,
     }

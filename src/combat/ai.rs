@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::{weapon::*, *};
 use crate::{
-    grid::Coords,
+    grid::{Coords, Grid},
     map::MapData,
     physics::MapCollisionEvent,
     rendering::{SpriteResource, TexCoords},
@@ -64,7 +64,7 @@ impl MonsterType {
     pub fn spawn(
         &self,
         commands: &mut Commands,
-        map_data: &ResMut<crate::map::MapData>,
+        map_data: &mut ResMut<crate::map::MapData>,
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
         rng: &mut fastrand::Rng,
@@ -79,6 +79,7 @@ impl MonsterType {
                 rng.f32() * 0.04 + 0.16,
             ))
             .insert(self.make_ai())
+            .insert(pos)
             .insert(self.make_stats())
             .insert(self.make_weapon())
             .insert(crate::physics::PhysicsBody::new(
@@ -109,15 +110,56 @@ impl AI {
     }
 }
 
-fn choose_spawn_pos(
-    map_data: &crate::map::MapData,
-    rng: &mut fastrand::Rng,
-) -> Result<Coords, &'static str> {
-    let map = &map_data.map;
-    for _ in 0..4096 {
-        let pos = map.size().shrink(1).rand(rng);
+#[derive(Component)]
+pub struct AiPos {
+    from: Coords,
+    to: Coords,
+    f: f32,
+}
 
-        if map[pos].is_solid() {
+impl AiPos {
+    fn new(pos: Coords, grid: &mut Grid<bool>) -> Self {
+        debug_assert!(grid[pos] == false);
+        grid[pos] = true;
+
+        Self {
+            from: pos,
+            to: pos,
+            f: 1.0,
+        }
+    }
+
+    pub fn to_vec(&self, height: f32) -> Vec3 {
+        let from = self.from.to_vec(height);
+        let to = self.to.to_vec(height);
+        Vec3::lerp(from, to, self.f)
+    }
+
+    pub fn set_next_square(&mut self, pos: Coords, grid: &mut Grid<bool>) {
+        debug_assert!(grid[self.to] == true);
+        debug_assert!(grid[pos] == false);
+        grid[self.to] = false;
+        grid[pos] = true;
+
+        self.from = self.to;
+        self.to = pos;
+        self.f -= 1.0;
+    }
+
+    pub fn remove(&self, grid: &mut Grid<bool>) {
+        debug_assert!(grid[self.to] == true);
+        grid[self.to] = false;
+    }
+}
+
+fn choose_spawn_pos(
+    map_data: &mut ResMut<crate::map::MapData>,
+    rng: &mut fastrand::Rng,
+) -> Result<AiPos, &'static str> {
+    for _ in 0..4096 {
+        let pos = map_data.solid_map.size().shrink(1).rand(rng);
+
+        if map_data.solid_map[pos] || map_data.monster_map[pos] {
             continue;
         }
 
@@ -125,9 +167,7 @@ fn choose_spawn_pos(
             continue;
         }
 
-        // TODO: Monster check (Multiple monsters at the same spot)
-
-        return Ok(pos);
+        return Ok(AiPos::new(pos, &mut map_data.monster_map));
     }
     Err("Could not find a proper spawn pos")
 }
@@ -135,7 +175,7 @@ fn choose_spawn_pos(
 pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transform)>) {
     for (mut ai, transform) in monster_query.iter_mut() {
         if map_data.can_see_player(transform.translation, SIGHT_RADIUS) {
-            ai.state = AIState::SeePlayer(map_data.player_pos)
+            ai.state = AIState::SeePlayer(map_data.player_pos.translation)
         } else if let AIState::SeePlayer(pos) = ai.state {
             ai.state = AIState::FollowPlayer(Coords::from_vec(pos))
         }

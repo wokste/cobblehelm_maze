@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::combat::ai::AI;
+use crate::combat::ai::AiPos;
 
 #[derive(Component)]
 pub struct ToBeDestroyed;
@@ -38,12 +38,15 @@ pub fn check_ttl(mut commands: Commands, time: Res<Time>, mut query: Query<(Enti
 
 pub fn destroy_entities(
     mut commands: Commands,
-    query: Query<(Entity, Option<&mut DestroyEffect>, Option<&AI>), With<ToBeDestroyed>>,
+    query: Query<(Entity, Option<&mut DestroyEffect>, Option<&AiPos>), With<ToBeDestroyed>>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
+    mut map_data: ResMut<crate::map::MapData>,
 ) {
     for (entity, destroy_effect, ai) in query.iter() {
         // For AI, remove the colliders from the AI map
-        if let Some(ai) = ai {}
+        if let Some(pos) = ai {
+            pos.remove(&mut map_data.monster_map);
+        }
 
         // Destroy stuff
         if let Some(destroy_effect) = destroy_effect {

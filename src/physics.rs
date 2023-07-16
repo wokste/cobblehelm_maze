@@ -49,7 +49,7 @@ fn split_deltas(delta: Vec3) -> [Vec3; 2] {
 
 // TODO: crate::grid::Grid<bool>
 // TODO: Better return type
-fn check_map_collision(map: &crate::grid::Grid<crate::map::Tile>, pos: Vec3, radius: f32) -> bool {
+fn check_map_collision(grid_solid: &crate::grid::Grid<bool>, pos: Vec3, radius: f32) -> bool {
     let floor_height = 0.0;
     let ceil_height = 1.0;
 
@@ -68,7 +68,7 @@ fn check_map_collision(map: &crate::grid::Grid<crate::map::Tile>, pos: Vec3, rad
 
     for z in z0..=z1 {
         for x in x0..=x1 {
-            if map[(x, z)].is_solid() {
+            if grid_solid[(x, z)] {
                 return true;
             }
         }
@@ -92,14 +92,14 @@ pub fn do_physics(
         let delta = velocity.velocity * delta_time;
 
         let new_pos = transform.translation + delta;
-        if !check_map_collision(&map.map, new_pos, pb.radius) {
+        if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
             transform.translation = new_pos;
         } else {
             match pb.on_hit_wall {
                 MapCollisionEvent::Stop => {
                     for delta_sub in split_deltas(delta) {
                         let new_pos = transform.translation + delta_sub;
-                        if !check_map_collision(&map.map, new_pos, pb.radius) {
+                        if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
                             transform.translation = new_pos;
                         }
                     }

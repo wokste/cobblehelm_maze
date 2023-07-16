@@ -1,5 +1,5 @@
 use crate::grid::Grid;
-use bevy::prelude::{Resource, Vec3};
+use bevy::prelude::{Resource, Transform, Vec3};
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 pub enum Tile {
@@ -58,15 +58,19 @@ impl Tile {
 
 #[derive(Resource)]
 pub struct MapData {
-    pub map: Grid<Tile>,
-    pub player_pos: Vec3,
+    pub solid_map: Grid<bool>,
+    pub los_map: Grid<bool>,
+    pub monster_map: Grid<bool>,
+    pub player_pos: Transform,
 }
 
 impl Default for MapData {
     fn default() -> Self {
         Self {
-            map: Grid::<Tile>::new(1, 1),
-            player_pos: Vec3::ZERO,
+            solid_map: Grid::<bool>::new(1, 1),
+            los_map: Grid::<bool>::new(1, 1),
+            monster_map: Grid::<bool>::new(1, 1),
+            player_pos: Transform::IDENTITY,
         }
     }
 }
@@ -97,7 +101,7 @@ impl MapData {
 
             for x in range {
                 let z = (a * (x as f32) + b) as i32;
-                if self.map[(x, z)].is_solid() {
+                if self.los_map[(x, z)] {
                     return false;
                 }
             }
@@ -111,7 +115,7 @@ impl MapData {
 
             for z in range {
                 let x = (a * (z as f32) + b) as i32;
-                if self.map[(x, z)].is_solid() {
+                if self.los_map[(x, z)] {
                     return false;
                 }
             }
@@ -120,7 +124,7 @@ impl MapData {
     }
 
     pub fn can_see_player(&self, pos: Vec3, sight_radius: f32) -> bool {
-        (pos).distance_squared(self.player_pos) < sight_radius * sight_radius
-            && self.line_of_sight(pos, self.player_pos)
+        (pos).distance_squared(self.player_pos.translation) < sight_radius * sight_radius
+            && self.line_of_sight(pos, self.player_pos.translation)
     }
 }

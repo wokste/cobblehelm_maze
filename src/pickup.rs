@@ -136,12 +136,12 @@ fn choose_spawn_pos(
     map_data: &crate::map::MapData,
     rng: &mut fastrand::Rng,
 ) -> Result<Coords, &'static str> {
-    let map = &map_data.map;
+    let solid_map = &map_data.solid_map;
     for _ in 0..4096 {
-        let x = rng.i32(1..map.x_max() - 1);
-        let z = rng.i32(1..map.z_max() - 1);
+        let x = rng.i32(1..solid_map.x_max() - 1);
+        let z = rng.i32(1..solid_map.z_max() - 1);
 
-        if map[(x, z)].is_solid() {
+        if solid_map[(x, z)] {
             continue;
         }
 
