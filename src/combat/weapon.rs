@@ -5,7 +5,7 @@ use crate::{
     rendering::TexCoords,
 };
 
-use super::{ai::AiPos, CreatureStats, Team};
+use super::{ai::AiMover, CreatureStats, Team};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
@@ -143,7 +143,7 @@ pub fn check_projectile_creature_collisions(
         &PhysicsBody,
         &mut CreatureStats,
         &Transform,
-        Option<&AiPos>,
+        Option<&AiMover>,
     )>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,

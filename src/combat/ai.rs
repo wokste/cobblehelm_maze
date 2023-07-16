@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use tinyvec::ArrayVec;
 
 use super::{weapon::*, *};
 use crate::{
@@ -25,11 +26,11 @@ impl MonsterType {
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType as MT;
         let (speed, hp) = match self {
-            MT::Imp => (6.0, 5),
-            MT::EyeMonster => (6.0, 10),
-            MT::Goliath => (8.0, 20),
-            MT::Laima => (6.0, 10),
-            MT::IronGolem => (8.0, 25),
+            MT::Imp => (2.0, 5),
+            MT::EyeMonster => (1.0, 10),
+            MT::Goliath => (2.0, 20),
+            MT::Laima => (1.0, 15),
+            MT::IronGolem => (1.0, 25),
         };
         CreatureStats {
             speed,
@@ -111,13 +112,13 @@ impl AI {
 }
 
 #[derive(Component)]
-pub struct AiPos {
+pub struct AiMover {
     from: Coords,
     to: Coords,
     f: f32,
 }
 
-impl AiPos {
+impl AiMover {
     fn new(pos: Coords, grid: &mut Grid<bool>) -> Self {
         debug_assert!(grid[pos] == false);
         grid[pos] = true;
@@ -150,12 +151,17 @@ impl AiPos {
         debug_assert!(grid[self.to] == true);
         grid[self.to] = false;
     }
+
+    pub fn add_dist(&mut self, dist: f32) -> bool {
+        self.f += dist;
+        self.f >= 1.0
+    }
 }
 
 fn choose_spawn_pos(
     map_data: &mut ResMut<crate::map::MapData>,
     rng: &mut fastrand::Rng,
-) -> Result<AiPos, &'static str> {
+) -> Result<AiMover, &'static str> {
     for _ in 0..4096 {
         let pos = map_data.solid_map.size().shrink(1).rand(rng);
 
@@ -167,7 +173,7 @@ fn choose_spawn_pos(
             continue;
         }
 
-        return Ok(AiPos::new(pos, &mut map_data.monster_map));
+        return Ok(AiMover::new(pos, &mut map_data.monster_map));
     }
     Err("Could not find a proper spawn pos")
 }
@@ -190,5 +196,57 @@ pub fn ai_fire(mut monster_query: Query<(&AI, &mut Weapon)>) {
             _ => NoFire,
         };
         weapon.set_fire_state(firing);
+    }
+}
+
+fn choose_pos(map_data: &MapData, src: Coords, dest: Option<Coords>) -> Option<Coords> {
+    // Do fuzzy path
+    let mut options = ArrayVec::<[Coords; 4]>::new();
+
+    for option in [src.left(), src.right(), src.top(), src.bottom()] {
+        if !map_data.solid_map[option] && !map_data.monster_map[option] {
+            options.push(option);
+        }
+    }
+
+    if let Some(target_pos) = dest {
+        options
+            .as_slice()
+            .iter()
+            .min_by_key(|p| Coords::eucledian_dist_sq(**p, target_pos))
+            .copied()
+    } else {
+        if options.len() == 0 {
+            None
+        } else {
+            Some(options[fastrand::usize(0..options.len())])
+        }
+    }
+}
+
+pub fn ai_move(
+    mut map_data: ResMut<MapData>,
+    time: Res<Time>,
+    mut monster_query: Query<(&AI, &mut AiMover, &CreatureStats, &mut Transform)>,
+) {
+    let time = time.delta().as_secs_f32();
+    for (ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
+        if ai_mover.add_dist(stats.speed * time) {
+            let target_pos = match ai_state.state {
+                AIState::PlayerUnknown => None,
+                AIState::SeePlayer(player_pos) => Some(Coords::from_vec(player_pos)),
+                AIState::FollowPlayer(player_pos) => Some(player_pos),
+            };
+
+            let dest_pos = choose_pos(&map_data, ai_mover.to, target_pos);
+
+            if let Some(dest_pos) = dest_pos {
+                ai_mover.set_next_square(dest_pos, &mut map_data.monster_map);
+            } else {
+                ai_mover.f = 1.0;
+            }
+        }
+
+        transform.translation = ai_mover.to_vec(0.5); //TODO: Eye height
     }
 }

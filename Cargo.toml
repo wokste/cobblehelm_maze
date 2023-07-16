@@ -18,6 +18,7 @@ clap = { version = "*", features = ["derive"] }
 derive_more = "*"
 fastrand = "*"
 serde = { version = "*", features = ["derive"] }
+tinyvec = "1.6.0"
 vergen = { version = "*", features = [ "build", "git", "gitcl" ]}
 
 [build-dependencies]

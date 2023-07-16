@@ -3,7 +3,7 @@ use std::fmt;
 use bevy::prelude::Vec3;
 use derive_more::{Add, Sub};
 
-#[derive(PartialEq, Eq, Add, Sub, Copy, Clone)]
+#[derive(Default, PartialEq, Eq, Add, Sub, Copy, Clone)]
 pub struct Coords {
     pub x: i32,
     pub z: i32,

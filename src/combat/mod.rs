@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::game::GameState;
 
-use self::ai::AiPos;
+use self::ai::AiMover;
 
 pub mod ai;
 pub mod player;
@@ -20,6 +20,7 @@ impl Plugin for CombatPlugin {
                     player::update_map,
                     ai::ai_los.after(player::update_map),
                     ai::ai_fire.after(ai::ai_los),
+                    ai::ai_move.after(ai::ai_fire),
                     weapon::check_projectile_creature_collisions,
                     weapon::fire_weapons
                         .after(player::player_input)
@@ -82,7 +83,7 @@ impl CreatureStats {
         game: &mut ResMut<crate::GameInfo>,
         game_state: &mut ResMut<NextState<crate::game::GameState>>,
         map_data: &mut ResMut<crate::map::MapData>,
-        ai_pos: Option<&AiPos>,
+        ai_pos: Option<&AiMover>,
     ) -> bool {
         self.hp -= damage.value;
         if self.team == Team::Players {
