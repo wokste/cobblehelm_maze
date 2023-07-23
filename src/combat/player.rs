@@ -1,4 +1,12 @@
-use bevy::{ecs::event::ManualEventReader, input::mouse::MouseMotion, prelude::*, utils::HashMap};
+use bevy::{
+    ecs::event::ManualEventReader,
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent},
+        mouse::MouseMotion,
+    },
+    prelude::*,
+    utils::HashMap,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable};
@@ -50,10 +58,15 @@ pub enum InputAction {
 #[derive(Resource, Serialize, Deserialize)]
 pub struct InputMap {
     pub keys: HashMap<KeyCode, InputAction>,
-    pub mouse_buttons: HashMap<MouseButton, InputAction>,
+    pub button_rot_rate: f32,
 
-    pub rot_rate_key: f32,
-    pub rot_rate_mouse: f32,
+    pub mouse_buttons: HashMap<MouseButton, InputAction>,
+    pub mouse_rot_rate: f32,
+
+    pub pad_buttons: HashMap<GamepadButtonType, InputAction>,
+    pub pad_rot_x: GamepadAxisType,
+    pub pad_rot_y: GamepadAxisType,
+    pub pad_rot_rate: f32,
 }
 
 impl Default for InputMap {
@@ -71,12 +84,25 @@ impl Default for InputMap {
                 (KeyCode::Space, InputAction::Interact),
                 (KeyCode::Escape, InputAction::Pause),
             ]),
+            button_rot_rate: 2.5,
             mouse_buttons: HashMap::from([
                 (MouseButton::Left, InputAction::Fire),
                 (MouseButton::Right, InputAction::Interact),
             ]),
-            rot_rate_key: 2.5,
-            rot_rate_mouse: 0.1,
+            mouse_rot_rate: 0.1,
+            pad_buttons: HashMap::from([
+                (GamepadButtonType::LeftTrigger, InputAction::Fire),
+                (GamepadButtonType::RightTrigger, InputAction::Fire),
+                (GamepadButtonType::South, InputAction::Interact), // A
+                (GamepadButtonType::DPadUp, InputAction::Forward),
+                (GamepadButtonType::DPadDown, InputAction::Backward),
+                (GamepadButtonType::DPadLeft, InputAction::Left),
+                (GamepadButtonType::DPadRight, InputAction::Right),
+                (GamepadButtonType::Select, InputAction::Pause),
+            ]),
+            pad_rot_x: GamepadAxisType::RightStickX,
+            pad_rot_y: GamepadAxisType::RightStickY,
+            pad_rot_rate: 0.1,
         }
     }
 }
@@ -87,6 +113,7 @@ pub struct InputState {
     reader_motion: ManualEventReader<MouseMotion>,
     pitch: f32,
     yaw: f32,
+    gamepad: Option<Gamepad>,
 }
 
 impl InputState {
@@ -106,18 +133,50 @@ impl InputState {
     }
 }
 
+pub fn gamepad_connections(
+    mut state: ResMut<InputState>,
+    mut gamepad_evr: EventReader<GamepadEvent>,
+) {
+    for ev in gamepad_evr.iter() {
+        if let GamepadEvent::Connection(GamepadConnectionEvent {
+            gamepad,
+            connection,
+        }) = ev
+        {
+            match connection {
+                GamepadConnection::Connected(info) => {
+                    println!("New gamepad connected with name: {}", info.name);
+
+                    if state.gamepad.is_none() {
+                        state.gamepad = Some(*gamepad);
+                    }
+                }
+                GamepadConnection::Disconnected => {
+                    println!("Lost gamepad connection");
+
+                    if state.gamepad == Some(*gamepad) {
+                        state.gamepad = None;
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn get_player_input(
     keys: Res<Input<KeyCode>>,
     mouse: Res<Input<MouseButton>>,
     mouse_motion: Res<Events<MouseMotion>>,
     mut state: ResMut<InputState>,
     key_map: Res<InputMap>,
+    pad_axes: Res<Axis<GamepadAxis>>,
+    pad_buttons: Res<Input<GamepadButton>>,
 ) -> tinyvec::TinyVec<[InputAction; 4]> {
-    let mut state_delta = state.as_mut();
+    let mut state = state.as_mut();
 
-    for ev in state_delta.reader_motion.iter(&mouse_motion) {
-        state_delta.pitch -= (key_map.rot_rate_mouse * ev.delta.y).to_radians();
-        state_delta.yaw -= (key_map.rot_rate_mouse * ev.delta.x).to_radians();
+    for ev in state.reader_motion.iter(&mouse_motion) {
+        state.pitch -= (key_map.mouse_rot_rate * ev.delta.y).to_radians();
+        state.yaw -= (key_map.mouse_rot_rate * ev.delta.x).to_radians();
     }
 
     let mut acts = tinyvec::tiny_vec!([InputAction; 4]);
@@ -132,6 +191,30 @@ pub fn get_player_input(
             acts.push(*act);
         }
     }
+
+    if let Some(gamepad) = state.gamepad {
+        fn axis(gamepad: Gamepad, axis_type: GamepadAxisType) -> GamepadAxis {
+            GamepadAxis { gamepad, axis_type }
+        }
+
+        // TODO: Configurable sticks
+        if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_rot_x)) {
+            state.pitch += dx;
+        }
+        if let Some(dy) = pad_axes.get(axis(gamepad, key_map.pad_rot_y)) {
+            state.pitch += dy;
+        }
+
+        for (button_type, action) in key_map.pad_buttons.iter() {
+            let button = GamepadButton {
+                gamepad,
+                button_type: *button_type,
+            };
+            if pad_buttons.pressed(button) {
+                acts.push(*action);
+            }
+        }
+    };
 
     acts
 }
@@ -168,8 +251,8 @@ pub fn handle_player_input(
                 InputAction::Backward => velocity -= forward,
                 InputAction::Left => velocity -= right,
                 InputAction::Right => velocity += right,
-                InputAction::RotLeft => state_delta.yaw += key_map.rot_rate_key * delta_time,
-                InputAction::RotRight => state_delta.yaw -= key_map.rot_rate_key * delta_time,
+                InputAction::RotLeft => state_delta.yaw += key_map.button_rot_rate * delta_time,
+                InputAction::RotRight => state_delta.yaw -= key_map.button_rot_rate * delta_time,
                 InputAction::Fire => firing = FireMode::Fire,
                 InputAction::Interact => {
                     // TODO: Do interaction

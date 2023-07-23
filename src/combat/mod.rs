@@ -16,6 +16,7 @@ impl Plugin for CombatPlugin {
             .insert_resource(player::InputState::default())
             .add_systems(
                 (
+                    player::gamepad_connections,
                     player::get_player_input.pipe(player::handle_player_input),
                     player::update_map,
                     ai::ai_los.after(player::update_map),
