@@ -266,10 +266,6 @@ pub fn ai_move(
 ) {
     let time = time.delta().as_secs_f32();
     for (ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
-        if ai_mover.is_removed() {
-            continue;
-        }
-
         if ai_mover.add_dist(stats.speed * time) {
             let target_pos = match ai_state.state {
                 AIState::PlayerUnknown => None,
