@@ -44,6 +44,7 @@ pub enum InputAction {
     RotRight,
     Fire,
     Interact,
+    Pause,
 }
 
 #[derive(Resource, Serialize, Deserialize)]
@@ -68,6 +69,7 @@ impl Default for InputMap {
                 (KeyCode::LControl, InputAction::Fire),
                 (KeyCode::RControl, InputAction::Fire),
                 (KeyCode::Space, InputAction::Interact),
+                (KeyCode::Escape, InputAction::Pause),
             ]),
             mouse_buttons: HashMap::from([
                 (MouseButton::Left, InputAction::Fire),
@@ -104,10 +106,39 @@ impl InputState {
     }
 }
 
-pub fn player_input(
+pub fn get_player_input(
     keys: Res<Input<KeyCode>>,
     mouse: Res<Input<MouseButton>>,
     mouse_motion: Res<Events<MouseMotion>>,
+    mut state: ResMut<InputState>,
+    key_map: Res<InputMap>,
+) -> tinyvec::TinyVec<[InputAction; 4]> {
+    let mut state_delta = state.as_mut();
+
+    for ev in state_delta.reader_motion.iter(&mouse_motion) {
+        state_delta.pitch -= (key_map.rot_rate_mouse * ev.delta.y).to_radians();
+        state_delta.yaw -= (key_map.rot_rate_mouse * ev.delta.x).to_radians();
+    }
+
+    let mut acts = tinyvec::tiny_vec!([InputAction; 4]);
+    for key in keys.get_pressed() {
+        if let Some(act) = key_map.keys.get(key) {
+            acts.push(*act);
+        }
+    }
+
+    for button in mouse.get_pressed() {
+        if let Some(act) = key_map.mouse_buttons.get(button) {
+            acts.push(*act);
+        }
+    }
+
+    acts
+}
+
+pub fn handle_player_input(
+    acts: In<tinyvec::TinyVec<[InputAction; 4]>>,
+    mut game_state: ResMut<NextState<crate::game::GameState>>,
     mut state: ResMut<InputState>,
     time: Res<Time>,
     mut query: Query<
@@ -130,25 +161,7 @@ pub fn player_input(
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
         let right = Vec3::new(local_z.z, 0., -local_z.x);
 
-        for ev in state_delta.reader_motion.iter(&mouse_motion) {
-            state_delta.pitch -= (key_map.rot_rate_mouse * ev.delta.y).to_radians();
-            state_delta.yaw -= (key_map.rot_rate_mouse * ev.delta.x).to_radians();
-        }
-
-        let mut acts = tinyvec::tiny_vec!([InputAction; 4]);
-        for key in keys.get_pressed() {
-            if let Some(act) = key_map.keys.get(key) {
-                acts.push(*act);
-            }
-        }
-
-        for button in mouse.get_pressed() {
-            if let Some(act) = key_map.mouse_buttons.get(button) {
-                acts.push(*act);
-            }
-        }
-
-        for act in acts {
+        for act in &acts.0 {
             match act {
                 InputAction::None => {}
                 InputAction::Forward => velocity += forward,
@@ -160,6 +173,9 @@ pub fn player_input(
                 InputAction::Fire => firing = FireMode::Fire,
                 InputAction::Interact => {
                     // TODO: Do interaction
+                }
+                InputAction::Pause => {
+                    game_state.set(crate::game::GameState::Paused);
                 }
             };
         }

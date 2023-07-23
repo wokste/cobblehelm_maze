@@ -27,7 +27,7 @@ impl Plugin for GamePlugin {
             .insert_resource(crate::GameSettings::default())
             .add_systems(
                 (
-                    crate::physics::do_physics.after(crate::combat::player::player_input),
+                    crate::physics::do_physics.after(crate::combat::player::get_player_input),
                     crate::pickup::check_pickups.after(crate::physics::do_physics),
                     crate::rendering::face_camera.after(crate::physics::do_physics),
                     crate::rendering::animate_sprites,
@@ -73,7 +73,7 @@ fn despawn_game(
 #[allow(clippy::too_many_arguments)] // Not really applicable for bevy systems
 fn start_level(
     mut commands: Commands,
-    game_data: Res<crate::GameInfo>,
+    mut game_data: ResMut<crate::GameInfo>,
     mut map_data: ResMut<MapData>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
@@ -85,6 +85,7 @@ fn start_level(
     if game_data.level_spawned {
         return; // No need to spawn the level again
     }
+    game_data.level_spawned = true;
 
     for entity in level_query.iter_mut() {
         commands.entity(entity).despawn();

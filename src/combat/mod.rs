@@ -16,14 +16,14 @@ impl Plugin for CombatPlugin {
             .insert_resource(player::InputState::default())
             .add_systems(
                 (
-                    player::player_input,
+                    player::get_player_input.pipe(player::handle_player_input),
                     player::update_map,
                     ai::ai_los.after(player::update_map),
                     ai::ai_fire.after(ai::ai_los),
                     ai::ai_move.after(ai::ai_fire),
                     weapon::check_projectile_creature_collisions,
                     weapon::fire_weapons
-                        .after(player::player_input)
+                        .after(player::get_player_input)
                         .after(ai::ai_fire),
                 )
                     .in_set(OnUpdate(GameState::InGame)),

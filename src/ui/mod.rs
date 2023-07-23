@@ -22,9 +22,7 @@ impl Plugin for UIPlugin {
             .add_system(menus::interact_with_button.in_set(OnUpdate(GameState::Paused)))
             .add_system(menus::interact_with_button.in_set(OnUpdate(GameState::NextLevel)))
             .add_system(hud::spawn.in_schedule(OnEnter(GameState::InGame)))
-            .add_system(hud::despawn.in_schedule(OnEnter(GameState::GameOver)))
-            .add_system(hud::despawn.in_schedule(OnEnter(GameState::MainMenu)))
-            .add_system(hud::despawn.in_schedule(OnEnter(GameState::NextLevel)))
+            .add_system(hud::despawn.in_schedule(OnExit(GameState::InGame)))
             .add_system(hud::update_hud.in_set(OnUpdate(GameState::InGame)));
     }
 }

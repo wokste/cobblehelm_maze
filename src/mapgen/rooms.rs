@@ -11,7 +11,7 @@ pub fn make_room(wall: WallTile, rng: &mut fastrand::Rng) -> Grid<Tile> {
     let floor = super::style::choose_floor(wall, rng);
 
     let mut map = match shape {
-        super::RoomShape::Organic => make_organic_floor(floor, rng, rng.i32(6..14), rng.i32(6..14)),
+        super::RoomShape::Organic => make_organic_floor(floor, rng, rng.i32(8..16), rng.i32(8..16)),
         super::RoomShape::Constructed => {
             make_constructed_floor(floor, rng, rng.i32(5..14), rng.i32(4..12))
         }
