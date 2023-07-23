@@ -170,7 +170,7 @@ pub fn check_projectile_creature_collisions(
                 continue;
             }
 
-            let dead = stats.take_damage(
+            let hurt = stats.take_damage(
                 target_entity,
                 super::Damage::new(projectile.damage),
                 &mut commands,
@@ -180,13 +180,11 @@ pub fn check_projectile_creature_collisions(
                 ai_pos,
             );
 
-            let sound_name = if stats.team == Team::Players {
-                "audio/player_hurt.ogg"
-            } else {
-                "audio/monster_hurt.ogg"
-            };
-            let sound = asset_server.load(sound_name);
-            audio.play(sound);
+            if hurt {
+                if let Some(sound) = stats.get_hurt_sound(&asset_server) {
+                    audio.play(sound);
+                }
+            }
 
             commands.entity(projectile_entity).despawn();
         }

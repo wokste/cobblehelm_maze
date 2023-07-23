@@ -85,12 +85,16 @@ impl CreatureStats {
         map_data: &mut ResMut<crate::map::MapData>,
         ai_pos: Option<&AiMover>,
     ) -> bool {
+        if damage.value <= 0 {
+            return false;
+        }
+
         self.hp -= damage.value;
         if self.team == Team::Players {
             game.update_hp(&self);
         }
 
-        if self.hp <= 0 {
+        if !self.alive() {
             if self.team == Team::Players {
                 game_state.set(crate::game::GameState::GameOver);
             } else {
@@ -100,7 +104,20 @@ impl CreatureStats {
                     ai_pos.remove_from(&mut map_data.monster_map);
                 }
             }
-        }
-        self.hp <= 0
+        };
+        true
+    }
+
+    pub fn alive(&self) -> bool {
+        self.hp > 0
+    }
+
+    pub fn get_hurt_sound(&self, asset_server: &Res<AssetServer>) -> Option<Handle<AudioSource>> {
+        let sound_name = if self.team == Team::Players {
+            "audio/player_hurt.ogg"
+        } else {
+            "audio/monster_hurt.ogg"
+        };
+        Some(asset_server.load(sound_name))
     }
 }
