@@ -77,7 +77,7 @@ impl Default for MapData {
 
 impl MapData {
     pub fn line_of_sight(&self, p0: Vec3, p1: Vec3) -> bool {
-        fn make_range(f0: f32, f1: f32) -> Option<std::ops::Range<i32>> {
+        fn make_range(f0: f32, f1: f32) -> Option<(std::ops::Range<i32>, i32)> {
             let i0 = f0.floor() as i32;
             let i1 = f1.floor() as i32;
 
@@ -85,37 +85,37 @@ impl MapData {
                 None
             } else {
                 Some(if i0 < i1 {
-                    (i0 + 1)..(i1 + 1)
+                    ((i0 + 1)..(i1 + 1), 0)
                 } else {
-                    (i1 + 1)..(i0 + 1)
+                    ((i1 + 1)..(i0 + 1), -1)
                 })
             }
         }
 
         let delta = p1 - p0;
         // Steps over X boundaries
-        if let Some(range) = make_range(p0.x, p1.x) {
+        if let Some((range, offset)) = make_range(p0.x, p1.x) {
             // z = ax + b
             let a = delta.z / delta.x;
             let b = p0.z - a * p0.x;
 
             for x in range {
                 let z = (a * (x as f32) + b) as i32;
-                if self.los_map[(x, z)] {
+                if self.los_map[(x + offset, z)] {
                     return false;
                 }
             }
         }
 
         // Steps over Z boundaries
-        if let Some(range) = make_range(p0.z, p1.z) {
+        if let Some((range, offset)) = make_range(p0.z, p1.z) {
             // x = az + b
             let a = delta.x / delta.z;
             let b = p0.x - a * p0.z;
 
             for z in range {
                 let x = (a * (z as f32) + b) as i32;
-                if self.los_map[(x, z)] {
+                if self.los_map[(x, z + offset)] {
                     return false;
                 }
             }
