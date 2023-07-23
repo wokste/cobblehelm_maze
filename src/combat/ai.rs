@@ -255,7 +255,12 @@ pub fn ai_fire(mut monster_query: Query<(&AI, &mut Weapon)>) {
     }
 }
 
-fn choose_pos(map_data: &MapData, src: Coords, dest: Option<Coords>) -> Option<Coords> {
+enum Movement {
+    Random,
+    To(Coords, bool),
+}
+
+fn choose_pos(map_data: &MapData, src: Coords, movement: Movement) -> Option<Coords> {
     // Do fuzzy path
     let mut options = ArrayVec::<[Coords; 4]>::new();
 
@@ -265,37 +270,48 @@ fn choose_pos(map_data: &MapData, src: Coords, dest: Option<Coords>) -> Option<C
         }
     }
 
-    if let Some(target_pos) = dest {
-        options
-            .as_slice()
-            .iter()
-            .min_by_key(|p| Coords::eucledian_dist_sq(**p, target_pos))
-            .copied()
-    } else if options.is_empty() {
-        None
-    } else {
-        Some(options[fastrand::usize(0..options.len())])
+    match movement {
+        Movement::Random => {
+            if options.is_empty() {
+                None
+            } else {
+                Some(options[fastrand::usize(0..options.len())])
+            }
+        }
+        Movement::To(dest_pos, do_last_step) => {
+            let res = options
+                .as_slice()
+                .iter()
+                .min_by_key(|p| Coords::eucledian_dist_sq(**p, dest_pos))
+                .copied();
+
+            if !do_last_step && res == Some(dest_pos) {
+                return None;
+            }
+
+            res
+        }
     }
 }
 
 pub fn ai_move(
     mut map_data: ResMut<MapData>,
     time: Res<Time>,
-    mut monster_query: Query<(&AI, &mut AiMover, &CreatureStats, &mut Transform)>,
+    mut monster_query: Query<(&mut AI, &mut AiMover, &CreatureStats, &mut Transform)>,
 ) {
     let time = time.delta().as_secs_f32();
-    for (ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
+    for (mut ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
         if ai_mover.add_dist(stats.speed * time) {
             let target_pos = match ai_state.state {
-                AIState::PlayerUnknown => None,
+                AIState::PlayerUnknown => Movement::Random,
                 AIState::SeePlayer(player_pos) => {
                     if ai_state.flags.contains(Flags::Approach) {
-                        Some(Coords::from_vec(player_pos))
+                        Movement::To(Coords::from_vec(player_pos), false)
                     } else {
-                        None
+                        Movement::Random
                     }
                 }
-                AIState::FollowPlayer(player_pos) => Some(player_pos),
+                AIState::FollowPlayer(player_pos) => Movement::To(player_pos, true),
             };
 
             let dest_pos = choose_pos(&map_data, ai_mover.to, target_pos);
@@ -305,6 +321,17 @@ pub fn ai_move(
             } else {
                 ai_mover.f = 1.0;
             }
+
+            // Cleanup
+
+            match ai_state.state {
+                AIState::FollowPlayer(pos) => {
+                    if Some(pos) == dest_pos {
+                        ai_state.state = AIState::PlayerUnknown;
+                    }
+                }
+                _ => {}
+            };
         }
 
         let ai_jumps = stats.monster_type.unwrap().jumps(); // TODO: No unwrap here
