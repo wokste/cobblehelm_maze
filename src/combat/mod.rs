@@ -83,7 +83,7 @@ impl CreatureStats {
         game: &mut ResMut<crate::GameInfo>,
         game_state: &mut ResMut<NextState<crate::game::GameState>>,
         map_data: &mut ResMut<crate::map::MapData>,
-        ai_pos: Option<&AiMover>,
+        ai_pos: Option<&mut AiMover>,
     ) -> bool {
         if damage.value <= 0 {
             return false;

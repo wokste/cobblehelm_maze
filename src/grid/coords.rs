@@ -21,6 +21,7 @@ impl std::fmt::Debug for Coords {
 
 impl Coords {
     pub const ZERO: Coords = Coords { x: 0, z: 0 };
+    pub const INVALID: Coords = Coords { x: -1, z: -1 };
 
     pub const fn new(x: i32, z: i32) -> Self {
         Self { x, z }

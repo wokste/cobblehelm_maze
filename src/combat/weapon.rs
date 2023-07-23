@@ -143,7 +143,7 @@ pub fn check_projectile_creature_collisions(
         &PhysicsBody,
         &mut CreatureStats,
         &Transform,
-        Option<&AiMover>,
+        Option<&mut AiMover>,
     )>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
@@ -154,7 +154,7 @@ pub fn check_projectile_creature_collisions(
     for (projectile_entity, projectile, projectile_body, projectile_transform) in
         projectile_query.iter_mut()
     {
-        for (target_entity, target_body, mut stats, target_transform, ai_pos) in
+        for (target_entity, target_body, mut stats, target_transform, mut ai_pos) in
             target_query.iter_mut()
         {
             if projectile.team == stats.team {
@@ -177,7 +177,7 @@ pub fn check_projectile_creature_collisions(
                 &mut game,
                 &mut game_state,
                 &mut map_data,
-                ai_pos,
+                ai_pos.as_deref_mut(),
             );
 
             if hurt {

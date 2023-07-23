@@ -122,6 +122,8 @@ impl AI {
     }
 }
 
+use std::sync::atomic::*;
+
 #[derive(Component)]
 pub struct AiMover {
     from: Coords,
@@ -141,6 +143,10 @@ impl AiMover {
         }
     }
 
+    pub fn is_removed(&self) -> bool {
+        self.from == Coords::INVALID
+    }
+
     pub fn to_vec(&self, height: f32) -> Vec3 {
         let from = self.from.to_vec(height);
         let to = self.to.to_vec(height);
@@ -148,19 +154,33 @@ impl AiMover {
     }
 
     pub fn set_next_square(&mut self, pos: Coords, grid: &mut Grid<bool>) {
-        debug_assert!(grid[self.to] == true);
+        debug_assert!(!self.is_removed());
+
+        let old_pos = self.to;
+
+        debug_assert!(old_pos != pos);
+        debug_assert!(grid[old_pos] == true);
         debug_assert!(grid[pos] == false);
-        grid[self.to] = false;
+
+        grid[old_pos] = false;
         grid[pos] = true;
 
-        self.from = self.to;
+        self.from = old_pos;
         self.to = pos;
         self.f -= 1.0;
     }
 
-    pub fn remove_from(&self, grid: &mut Grid<bool>) {
-        debug_assert!(grid[self.to] == true);
-        grid[self.to] = false;
+    pub fn remove_from(&mut self, grid: &mut Grid<bool>) {
+        debug_assert!(!self.is_removed());
+
+        let pos = self.to;
+
+        debug_assert!(grid[pos] == true);
+        grid[pos] = false;
+
+        self.from = Coords::INVALID;
+        self.to = Coords::INVALID;
+        self.f = f32::NEG_INFINITY; // Never trigger add_dist again
     }
 
     pub fn add_dist(&mut self, dist: f32) -> bool {
@@ -246,6 +266,10 @@ pub fn ai_move(
 ) {
     let time = time.delta().as_secs_f32();
     for (ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
+        if ai_mover.is_removed() {
+            continue;
+        }
+
         if ai_mover.add_dist(stats.speed * time) {
             let target_pos = match ai_state.state {
                 AIState::PlayerUnknown => None,
