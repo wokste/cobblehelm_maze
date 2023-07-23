@@ -47,7 +47,6 @@ fn split_deltas(delta: Vec3) -> [Vec3; 2] {
     }
 }
 
-// TODO: crate::grid::Grid<bool>
 // TODO: Better return type
 fn check_map_collision(grid_solid: &crate::grid::Grid<bool>, pos: Vec3, radius: f32) -> bool {
     let floor_height = 0.0;

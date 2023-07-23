@@ -14,13 +14,6 @@ use bevy::{prelude::*, time::Stopwatch};
 
 use clap::Parser;
 
-#[derive(Debug, Clone)]
-pub enum Difficulty {
-    Easy,
-    Medium,
-    Hard,
-}
-
 #[derive(Parser, Resource, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct CommandLineArgs {
@@ -39,6 +32,9 @@ pub struct CommandLineArgs {
     /// Select a specific seed
     #[arg(long)]
     map_seed: Option<u64>,
+
+    #[arg(long)]
+    difficulty: Option<f32>,
 }
 
 fn main() {
@@ -141,11 +137,15 @@ impl Default for GameInfo {
 #[derive(Resource)]
 pub struct GameSettings {
     pub map_seed: Option<u64>,
+    pub difficulty: f32,
 }
 
 impl Default for GameSettings {
     fn default() -> Self {
-        Self { map_seed: None }
+        Self {
+            map_seed: None,
+            difficulty: 1.0,
+        }
     }
 }
 
@@ -162,12 +162,14 @@ impl GameSettings {
 
         Self {
             map_seed: Some(seed.0),
+            difficulty: 1.0,
         }
     }
 
     pub fn from_cl(args: &CommandLineArgs) -> Self {
         Self {
             map_seed: args.map_seed,
+            difficulty: args.difficulty.unwrap_or(1.0),
         }
     }
 }

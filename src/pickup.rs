@@ -60,7 +60,7 @@ impl Pickup {
         match self.to_stat_gain() {
             StatGain::Health(gain) => {
                 stats.hp = i16::min(stats.hp + gain, stats.hp_max);
-                game_info.update_hp(&stats);
+                game_info.update_hp(stats);
             }
             StatGain::NextLevel => {
                 game_state.set(crate::game::GameState::NextLevel);

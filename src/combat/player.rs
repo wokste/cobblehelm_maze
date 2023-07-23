@@ -32,8 +32,10 @@ impl Default for PlayerBundle {
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
 pub enum InputAction {
+    #[default]
+    None,
     Forward,
     Backward,
     Left,
@@ -133,21 +135,22 @@ pub fn player_input(
             state_delta.yaw -= (key_map.rot_rate_mouse * ev.delta.x).to_radians();
         }
 
-        let mut acts = vec![]; // TODO: Maybe use the smallvec crate
+        let mut acts = tinyvec::tiny_vec!([InputAction; 4]);
         for key in keys.get_pressed() {
             if let Some(act) = key_map.keys.get(key) {
-                acts.push(act);
+                acts.push(*act);
             }
         }
 
         for button in mouse.get_pressed() {
             if let Some(act) = key_map.mouse_buttons.get(button) {
-                acts.push(act);
+                acts.push(*act);
             }
         }
 
         for act in acts {
             match act {
+                InputAction::None => {}
                 InputAction::Forward => velocity += forward,
                 InputAction::Backward => velocity -= forward,
                 InputAction::Left => velocity -= right,

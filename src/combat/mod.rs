@@ -33,7 +33,7 @@ impl Plugin for CombatPlugin {
 
 #[derive(Copy, Clone)]
 pub enum MonsterType {
-    Imp,
+    Imp = 1,
     EyeMonster,
     Goliath,
     Laima,
@@ -63,6 +63,7 @@ pub struct CreatureStats {
     pub hp: i16,
     pub hp_max: i16,
     pub team: Team,
+    pub monster_type: Option<MonsterType>,
 }
 
 impl CreatureStats {
@@ -72,6 +73,7 @@ impl CreatureStats {
             hp: 100,
             hp_max: 100,
             team: Team::Players,
+            monster_type: None,
         }
     }
 
@@ -91,7 +93,7 @@ impl CreatureStats {
 
         self.hp -= damage.value;
         if self.team == Team::Players {
-            game.update_hp(&self);
+            game.update_hp(self);
         }
 
         if !self.alive() {
@@ -119,5 +121,18 @@ impl CreatureStats {
             "audio/monster_hurt.ogg"
         };
         Some(asset_server.load(sound_name))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn monster_null_optimization() {
+        assert_eq!(
+            std::mem::size_of::<Option<MonsterType>>(),
+            std::mem::size_of::<MonsterType>()
+        );
     }
 }

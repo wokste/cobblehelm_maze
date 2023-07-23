@@ -24,6 +24,17 @@ impl MonsterType {
         }
     }
 
+    pub fn jumps(&self) -> bool {
+        use MonsterType as MT;
+        match self {
+            MT::Imp => true,
+            MT::EyeMonster => false,
+            MT::Goliath => true,
+            MT::Laima => false,
+            MT::IronGolem => true,
+        }
+    }
+
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType as MT;
         let (speed, hp) = match self {
@@ -38,6 +49,7 @@ impl MonsterType {
             hp,
             hp_max: hp,
             team: Team::Monsters,
+            monster_type: Some(*self),
         }
     }
 
@@ -75,7 +87,7 @@ impl MonsterType {
         let uv = self.make_uv();
 
         commands
-            .spawn(uv.to_sprite_bundle(pos.to_vec(0.5), meshes, render_res))
+            .spawn(uv.to_sprite_bundle(pos.to_vec(self.jumps(), 0.0), meshes, render_res))
             .insert(crate::rendering::Animation::new(
                 uv.x,
                 rng.f32() * 0.04 + 0.16,
@@ -122,8 +134,6 @@ impl AI {
     }
 }
 
-use std::sync::atomic::*;
-
 #[derive(Component)]
 pub struct AiMover {
     from: Coords,
@@ -132,9 +142,9 @@ pub struct AiMover {
 }
 
 impl AiMover {
-    fn new(pos: Coords, grid: &mut Grid<bool>) -> Self {
-        debug_assert!(grid[pos] == false);
-        grid[pos] = true;
+    fn new(pos: Coords, has_monster_grid: &mut Grid<bool>) -> Self {
+        debug_assert!(!has_monster_grid[pos]);
+        has_monster_grid[pos] = true;
 
         Self {
             from: pos,
@@ -147,36 +157,47 @@ impl AiMover {
         self.from == Coords::INVALID
     }
 
-    pub fn to_vec(&self, height: f32) -> Vec3 {
+    pub fn to_vec(&self, jumps: bool, speed: f32) -> Vec3 {
+        let height = if jumps {
+            let jump_count = (3.0 / speed).ceil();
+            let jump_time = 1.0 / jump_count / speed;
+            let jump_height = jump_time * jump_time * 1.5;
+            let f = (self.f * jump_count).fract();
+
+            0.5 + 4.0 * (f - f * f) * jump_height
+        } else {
+            0.5
+        };
+
         let from = self.from.to_vec(height);
         let to = self.to.to_vec(height);
         Vec3::lerp(from, to, self.f)
     }
 
-    pub fn set_next_square(&mut self, pos: Coords, grid: &mut Grid<bool>) {
+    pub fn set_next_square(&mut self, pos: Coords, has_monster_grid: &mut Grid<bool>) {
         debug_assert!(!self.is_removed());
 
         let old_pos = self.to;
 
         debug_assert!(old_pos != pos);
-        debug_assert!(grid[old_pos] == true);
-        debug_assert!(grid[pos] == false);
+        debug_assert!(has_monster_grid[old_pos]);
+        debug_assert!(!has_monster_grid[pos]);
 
-        grid[old_pos] = false;
-        grid[pos] = true;
+        has_monster_grid[old_pos] = false;
+        has_monster_grid[pos] = true;
 
         self.from = old_pos;
         self.to = pos;
         self.f -= 1.0;
     }
 
-    pub fn remove_from(&mut self, grid: &mut Grid<bool>) {
+    pub fn remove_from(&mut self, has_monster_grid: &mut Grid<bool>) {
         debug_assert!(!self.is_removed());
 
         let pos = self.to;
 
-        debug_assert!(grid[pos] == true);
-        grid[pos] = false;
+        debug_assert!(has_monster_grid[pos]);
+        has_monster_grid[pos] = false;
 
         self.from = Coords::INVALID;
         self.to = Coords::INVALID;
@@ -200,7 +221,7 @@ fn choose_spawn_pos(
             continue;
         }
 
-        if map_data.can_see_player(pos.to_vec(0.6), 10.0) {
+        if map_data.can_see_player(pos.to_vec(0.5), 15.0) {
             continue;
         }
 
@@ -250,12 +271,10 @@ fn choose_pos(map_data: &MapData, src: Coords, dest: Option<Coords>) -> Option<C
             .iter()
             .min_by_key(|p| Coords::eucledian_dist_sq(**p, target_pos))
             .copied()
+    } else if options.is_empty() {
+        None
     } else {
-        if options.len() == 0 {
-            None
-        } else {
-            Some(options[fastrand::usize(0..options.len())])
-        }
+        Some(options[fastrand::usize(0..options.len())])
     }
 }
 
@@ -288,6 +307,7 @@ pub fn ai_move(
             }
         }
 
-        transform.translation = ai_mover.to_vec(0.5); //TODO: Eye height
+        let ai_jumps = stats.monster_type.unwrap().jumps(); // TODO: No unwrap here
+        transform.translation = ai_mover.to_vec(ai_jumps, stats.speed);
     }
 }
