@@ -35,10 +35,12 @@ impl Plugin for CombatPlugin {
 #[derive(Copy, Clone)]
 pub enum MonsterType {
     Imp = 1,
-    EyeMonster,
+    EyeMonster1,
+    EyeMonster2,
     Goliath,
     Laima,
     IronGolem,
+    Demon,
 }
 
 #[derive(Eq, PartialEq, Copy, Clone)]

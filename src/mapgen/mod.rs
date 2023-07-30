@@ -55,8 +55,6 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
 
     let (player_pos, stair_pos) = choose_start_and_end(&map, rng);
 
-    map[stair_pos] = Tile::Floor(FloorTile::Exit);
-
     MapGenResult {
         tilemap: map,
         player_pos,

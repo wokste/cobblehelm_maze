@@ -17,32 +17,30 @@ impl MonsterType {
         use MonsterType as MT;
         match self {
             MT::Imp => AI::new(Flags::Approach | Flags::Follow),
-            MT::EyeMonster => AI::new(Flags::Follow),
+            MT::EyeMonster1 => AI::new(Flags::Follow),
             MT::Goliath => AI::new(Flags::Approach),
             MT::Laima => AI::new(Flags::Approach),
             MT::IronGolem => AI::new(Flags::empty()),
+            MT::EyeMonster2 => AI::new(Flags::empty()),
+            MT::Demon => AI::new(Flags::Approach | Flags::Follow),
         }
     }
 
     pub fn jumps(&self) -> bool {
         use MonsterType as MT;
-        match self {
-            MT::Imp => true,
-            MT::EyeMonster => false,
-            MT::Goliath => true,
-            MT::Laima => false,
-            MT::IronGolem => true,
-        }
+        matches!(self, MT::Imp | MT::Goliath | MT::IronGolem | MT::Demon)
     }
 
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType as MT;
         let (speed, hp) = match self {
             MT::Imp => (3.0, 5),
-            MT::EyeMonster => (2.0, 10),
+            MT::EyeMonster1 => (0.0, 10),
+            MT::EyeMonster2 => (2.0, 10),
             MT::Goliath => (2.0, 20),
             MT::Laima => (1.0, 15),
-            MT::IronGolem => (1.0, 25),
+            MT::IronGolem => (1.0, 40),
+            MT::Demon => (1.0, 20),
         };
         CreatureStats {
             speed,
@@ -57,21 +55,25 @@ impl MonsterType {
         use MonsterType as MT;
         match self {
             MT::Imp => Weapon::new(ProjectileType::Shock, 1.8, 3.0),
-            MT::EyeMonster => Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY),
-            MT::Goliath => Weapon::new(ProjectileType::RedSpikes, 0.9, f32::INFINITY),
+            MT::EyeMonster1 => Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY),
+            MT::EyeMonster2 => Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY),
+            MT::Goliath => Weapon::new(ProjectileType::RockLarge, 0.9, f32::INFINITY),
             MT::Laima => Weapon::new(ProjectileType::Shock, 1.2, 4.0),
             MT::IronGolem => Weapon::new(ProjectileType::RedSpikes, 0.7, f32::INFINITY),
+            MT::Demon => Weapon::new(ProjectileType::Fire, 0.7, f32::INFINITY),
         }
     }
 
     fn make_uv(&self) -> TexCoords {
         use MonsterType as MT;
         match self {
-            MT::Imp => TexCoords::new(0..4, 7),
-            MT::EyeMonster => TexCoords::new(4..6, 7),
-            MT::Goliath => TexCoords::new(8..10, 7),
-            MT::Laima => TexCoords::new(12..15, 7),
-            MT::IronGolem => TexCoords::new(16..18, 7),
+            MT::Imp => TexCoords::basic(0..4, 7),
+            MT::EyeMonster1 => TexCoords::basic(4..6, 7),
+            MT::Goliath => TexCoords::basic(8..10, 7),
+            MT::Laima => TexCoords::basic(12..15, 7),
+            MT::IronGolem => TexCoords::basic(16..18, 7),
+            MT::EyeMonster2 => TexCoords::basic(6..8, 7),
+            MT::Demon => TexCoords::basic(10..12, 7),
         }
     }
 
@@ -89,7 +91,7 @@ impl MonsterType {
         commands
             .spawn(uv.to_sprite_bundle(pos.to_vec(self.jumps(), 0.0), meshes, render_res))
             .insert(crate::rendering::Animation::new(
-                uv.x,
+                uv.x_range(),
                 rng.f32() * 0.04 + 0.16,
             ))
             .insert(self.make_ai())
@@ -301,6 +303,10 @@ pub fn ai_move(
 ) {
     let time = time.delta().as_secs_f32();
     for (mut ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
+        if stats.speed == 0.0 {
+            continue;
+        }
+
         if ai_mover.add_dist(stats.speed * time) {
             let target_pos = match ai_state.state {
                 AIState::PlayerUnknown => Movement::Random,

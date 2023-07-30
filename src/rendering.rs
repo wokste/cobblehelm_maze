@@ -80,21 +80,41 @@ impl SpriteResource {
 }
 
 #[derive(Clone)]
-pub struct TexCoords {
-    pub x: std::ops::Range<u8>,
-    pub y: u8,
+pub enum TexCoords {
+    Basic { x: std::ops::Range<u8>, y: u8 },
+    Half { x: std::ops::Range<u8>, y: u8 },
 }
 
 impl TexCoords {
-    pub const fn new(x: std::ops::Range<u8>, y: u8) -> Self {
-        Self { x, y }
+    pub const fn basic(x: std::ops::Range<u8>, y: u8) -> Self {
+        Self::Basic { x, y }
     }
 
-    pub fn to_uv(&self, rng: &mut fastrand::Rng) -> Vec2 {
-        let x = rng.u8(self.x.clone());
-        let y = self.y;
+    pub const fn half(x: std::ops::Range<u8>, y: u8) -> Self {
+        Self::Half { x, y }
+    }
 
-        Vec2::new(x as f32 / TILE_X as f32, y as f32 / TILE_Y as f32)
+    pub fn to_uv(&self, rng: &mut fastrand::Rng) -> (Vec2, f32) {
+        let (x, y, scale) = match self {
+            TexCoords::Basic { x, y } => (x, y, 1.0),
+            TexCoords::Half { x, y } => (x, y, 0.5),
+        };
+
+        let x = rng.u8(x.clone());
+        (
+            Vec2::new(
+                x as f32 / TILE_X as f32 * scale,
+                *y as f32 / TILE_Y as f32 * scale,
+            ),
+            scale,
+        )
+    }
+
+    pub fn x_range(&self) -> Range<u8> {
+        match self {
+            TexCoords::Basic { x, .. } => x.clone(),
+            TexCoords::Half { x, .. } => x.clone(),
+        }
     }
 
     pub fn to_sprite_bundle(
@@ -103,10 +123,17 @@ impl TexCoords {
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
     ) -> SpriteBundle {
-        let sprite = Sprite3d::Basic {
-            x: self.x.start,
-            y: self.y,
-            flipped: false,
+        let sprite = match self {
+            TexCoords::Basic { x, y } => Sprite3d::Basic {
+                x: x.start,
+                y: *y,
+                flipped: false,
+            },
+            TexCoords::Half { x, y } => Sprite3d::Half {
+                x: x.start,
+                y: *y,
+                flipped: false,
+            },
         };
 
         SpriteBundle {

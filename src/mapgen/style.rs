@@ -31,7 +31,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             doors: &[DoorType::Chips],
             monsters: &[
                 MonsterType::Imp,
-                MonsterType::EyeMonster,
+                MonsterType::EyeMonster1,
                 MonsterType::Laima,
             ],
         },
@@ -48,9 +48,10 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             ],
             doors: &[],
             monsters: &[
-                MonsterType::EyeMonster,
+                MonsterType::EyeMonster1,
                 MonsterType::Laima,
                 MonsterType::Goliath,
+                MonsterType::EyeMonster2,
             ],
         },
         3 => LevelStyle {
@@ -65,8 +66,9 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             doors: &[DoorType::Chips],
             monsters: &[
                 MonsterType::Laima,
-                MonsterType::EyeMonster,
+                MonsterType::EyeMonster2,
                 MonsterType::Imp,
+                MonsterType::EyeMonster1,
             ],
         },
         4 => LevelStyle {
@@ -81,7 +83,8 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             doors: &[DoorType::Chips],
             monsters: &[
                 MonsterType::Imp,
-                MonsterType::EyeMonster,
+                MonsterType::EyeMonster2,
+                MonsterType::Demon,
                 MonsterType::Goliath,
             ],
         },
@@ -98,8 +101,9 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             doors: &[],
             monsters: &[
                 MonsterType::IronGolem,
-                MonsterType::EyeMonster,
+                MonsterType::EyeMonster2,
                 MonsterType::Goliath,
+                MonsterType::Demon,
             ],
         },
     }

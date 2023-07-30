@@ -12,6 +12,9 @@ pub enum ProjectileType {
     RedSpikes,
     BlueBlob,
     Shock,
+    RockLarge,
+    RockSmall,
+    Fire,
 }
 
 impl ProjectileType {
@@ -19,6 +22,9 @@ impl ProjectileType {
         match self {
             ProjectileType::BlueBlob => 15,
             ProjectileType::RedSpikes => 10,
+            ProjectileType::RockLarge => 12,
+            ProjectileType::RockSmall => 3,
+            ProjectileType::Fire => 13,
             ProjectileType::Shock => 20,
         }
     }
@@ -27,15 +33,21 @@ impl ProjectileType {
         match self {
             ProjectileType::BlueBlob => 8.0,
             ProjectileType::RedSpikes => 6.0,
+            ProjectileType::RockLarge => 6.0,
+            ProjectileType::RockSmall => 6.0,
+            ProjectileType::Fire => 6.0,
             ProjectileType::Shock => 2.0,
         }
     }
 
     fn make_uv(&self) -> TexCoords {
         match self {
-            ProjectileType::RedSpikes => TexCoords::new(0..1, 6),
-            ProjectileType::BlueBlob => TexCoords::new(1..2, 6),
-            ProjectileType::Shock => TexCoords::new(2..5, 6),
+            ProjectileType::RedSpikes => TexCoords::half(0..1, 12),
+            ProjectileType::BlueBlob => TexCoords::half(1..2, 12),
+            ProjectileType::Shock => TexCoords::basic(2..5, 6),
+            ProjectileType::RockLarge => TexCoords::half(0..1, 13),
+            ProjectileType::RockSmall => TexCoords::half(1..2, 13),
+            ProjectileType::Fire => TexCoords::half(2..4, 12),
         }
     }
 }
@@ -114,7 +126,7 @@ pub fn fire_weapons(
                 &mut meshes,
                 &mut render_res,
             ));
-            proto_projectile.insert(crate::rendering::Animation::new(uv.x, 0.1));
+            proto_projectile.insert(crate::rendering::Animation::new(uv.x_range(), 0.1));
             proto_projectile.insert(weapon.make_projectile(stats.team));
             proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
             proto_projectile.insert(PhysicsMovable::new(velocity, false));
@@ -127,6 +139,9 @@ pub fn fire_weapons(
 
             let sound = match weapon.projectile {
                 ProjectileType::RedSpikes => "audio/shoot_redspikes.ogg",
+                ProjectileType::Fire => "audio/shoot_fire.ogg",
+                ProjectileType::RockLarge => "audio/shoot_rock.ogg",
+                ProjectileType::RockSmall => "audio/shoot_rock.ogg",
                 ProjectileType::BlueBlob => "audio/shoot_blueblob.ogg",
                 ProjectileType::Shock => "audio/shoot_shock.ogg",
             };
