@@ -55,7 +55,7 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => Weapon::new_melee(1.8, Damage { value: 25 }),
+            MT::Imp => Weapon::new_melee(0.5, 4, DamageType::Normal),
             MT::EyeMonster1 => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
@@ -163,9 +163,9 @@ pub struct AI {
 }
 
 impl AI {
-    pub fn get_fire_target(&self) -> Option<Vec3> {
+    pub fn get_fire_dir(&self, self_pos: &Vec3) -> Option<Vec3> {
         match self.state {
-            AIState::SeePlayer(pos) => Some(pos),
+            AIState::SeePlayer(pos) => Some((pos - *self_pos).normalize()),
             _ => None,
         }
     }

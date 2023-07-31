@@ -15,6 +15,7 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(player::InputMap::default())
             .insert_resource(player::InputState::default())
+            .add_event::<DamageEvent>()
             .add_systems(
                 (
                     player::gamepad_connections,
@@ -22,7 +23,10 @@ impl Plugin for CombatPlugin {
                     player::update_map,
                     ai::ai_los.after(player::update_map),
                     ai::ai_move.after(ai::ai_los),
-                    projectile::check_projectile_creature_collisions,
+                    projectile::check_collisions,
+                    projectile::take_damage_system
+                        .after(projectile::check_collisions)
+                        .after(weapon::fire_weapons),
                     weapon::fire_weapons
                         .after(player::get_player_input)
                         .after(ai::ai_move),
@@ -51,14 +55,16 @@ pub enum Team {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Damage {
-    value: i16,
+pub enum DamageType {
+    Normal,
 }
 
-impl Damage {
-    pub fn new(value: i16) -> Self {
-        Self { value }
-    }
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct DamageEvent {
+    instigator: Option<Entity>,
+    target: Entity,
+    damage: i16,
+    dam_type: DamageType,
 }
 
 #[derive(Component)]
@@ -83,19 +89,18 @@ impl CreatureStats {
 
     pub fn take_damage(
         &mut self,
-        entity: Entity,
-        damage: Damage,
+        evt: &DamageEvent,
         commands: &mut Commands,
         game: &mut ResMut<crate::GameInfo>,
         game_state: &mut ResMut<NextState<crate::game::GameState>>,
         map_data: &mut ResMut<crate::map::MapData>,
         ai_pos: Option<&mut AiMover>,
     ) -> bool {
-        if damage.value <= 0 {
+        if evt.damage <= 0 {
             return false;
         }
 
-        self.hp -= damage.value;
+        self.hp -= evt.damage;
         if self.team == Team::Players {
             game.update_hp(self);
         }
@@ -104,7 +109,7 @@ impl CreatureStats {
             if self.team == Team::Players {
                 game_state.set(crate::game::GameState::GameOver);
             } else {
-                commands.entity(entity).despawn();
+                commands.entity(evt.target).despawn();
                 if let Some(monster_type) = self.monster_type {
                     game.score += monster_type.get_score();
                 }

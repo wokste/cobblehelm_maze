@@ -5,7 +5,7 @@ use crate::{
     rendering::{SpriteResource, TexCoords},
 };
 
-use super::{ai::AiMover, CreatureStats, Team};
+use super::{ai::AiMover, CreatureStats, DamageEvent, DamageType, Team};
 
 #[derive(Copy, Clone)]
 pub enum ProjectileType {
@@ -18,14 +18,15 @@ pub enum ProjectileType {
 }
 
 impl ProjectileType {
-    pub fn damage(&self) -> i16 {
+    pub fn damage(&self) -> (i16, DamageType) {
+        type DT = DamageType;
         match self {
-            ProjectileType::BlueBlob => 15,
-            ProjectileType::RedSpikes => 10,
-            ProjectileType::RockLarge => 12,
-            ProjectileType::RockSmall => 3,
-            ProjectileType::Fire => 7,
-            ProjectileType::Shock => 20,
+            ProjectileType::BlueBlob => (15, DT::Normal),
+            ProjectileType::RedSpikes => (10, DT::Normal),
+            ProjectileType::RockLarge => (12, DT::Normal),
+            ProjectileType::RockSmall => (3, DT::Normal),
+            ProjectileType::Fire => (7, DT::Normal),
+            ProjectileType::Shock => (20, DT::Normal),
         }
     }
 
@@ -52,9 +53,11 @@ impl ProjectileType {
     }
 
     fn make_projectile(&self, team: Team) -> Projectile {
+        let (damage, dam_type) = self.damage();
         Projectile {
             team,
-            damage: self.damage(),
+            damage,
+            dam_type,
         }
     }
 }
@@ -63,6 +66,7 @@ impl ProjectileType {
 pub struct Projectile {
     pub team: Team,
     pub damage: i16,
+    pub dam_type: DamageType,
 }
 
 pub fn spawn_projectile(
@@ -90,28 +94,16 @@ pub fn spawn_projectile(
     }
 }
 
-pub fn check_projectile_creature_collisions(
+pub fn check_collisions(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Projectile, &PhysicsBody, &Transform)>,
-    mut target_query: Query<(
-        Entity,
-        &PhysicsBody,
-        &mut CreatureStats,
-        &Transform,
-        Option<&mut AiMover>,
-    )>,
-    mut game: ResMut<crate::GameInfo>,
-    mut game_state: ResMut<NextState<crate::game::GameState>>,
-    mut map_data: ResMut<crate::map::MapData>,
-    asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
+    mut target_query: Query<(Entity, &PhysicsBody, &CreatureStats, &Transform)>,
+    mut ev_damage: EventWriter<DamageEvent>,
 ) {
     for (projectile_entity, projectile, projectile_body, projectile_transform) in
         projectile_query.iter_mut()
     {
-        for (target_entity, target_body, mut stats, target_transform, mut ai_pos) in
-            target_query.iter_mut()
-        {
+        for (target_entity, target_body, stats, target_transform) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
@@ -125,23 +117,46 @@ pub fn check_projectile_creature_collisions(
                 continue;
             }
 
-            let hurt = stats.take_damage(
-                target_entity,
-                super::Damage::new(projectile.damage),
-                &mut commands,
-                &mut game,
-                &mut game_state,
-                &mut map_data,
-                ai_pos.as_deref_mut(),
-            );
-
-            if hurt {
-                if let Some(sound) = stats.get_hurt_sound(&asset_server) {
-                    audio.play(sound);
-                }
-            }
+            ev_damage.send(DamageEvent {
+                instigator: None, // TODO: Implement
+                target: target_entity,
+                damage: projectile.damage,
+                dam_type: projectile.dam_type,
+            });
+            // TODO: Send event
 
             commands.entity(projectile_entity).despawn();
+        }
+    }
+}
+
+pub fn take_damage_system(
+    mut commands: Commands,
+    mut target_query: Query<(&mut CreatureStats, Option<&mut AiMover>)>,
+    mut game: ResMut<crate::GameInfo>,
+    mut game_state: ResMut<NextState<crate::game::GameState>>,
+    mut map_data: ResMut<crate::map::MapData>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+    mut ev_damage: EventReader<DamageEvent>,
+) {
+    for ev in ev_damage.iter() {
+        let Ok((mut stats, mut ai_pos)) =
+            target_query.get_mut(ev.target) else {continue;};
+
+        let hurt = stats.take_damage(
+            ev,
+            &mut commands,
+            &mut game,
+            &mut game_state,
+            &mut map_data,
+            ai_pos.as_deref_mut(),
+        );
+
+        if hurt {
+            if let Some(sound) = stats.get_hurt_sound(&asset_server) {
+                audio.play(sound);
+            }
         }
     }
 }

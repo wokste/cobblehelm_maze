@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{
     ai::AI,
     projectile::{spawn_projectile, ProjectileType},
-    CreatureStats, Damage,
+    CreatureStats, DamageEvent, DamageType,
 };
 
 #[derive(Component)]
@@ -15,18 +15,21 @@ pub struct Weapon {
 
 pub enum WeaponEffect {
     Ranged {
-        ptype: ProjectileType,
         max_dist: f32,
         accuracy: f32,
+        ptype: ProjectileType,
     },
     RangedArc {
-        ptype: ProjectileType,
         max_dist: f32,
         arc: f32,
+        ptype: ProjectileType,
         count: u8,
     },
     Melee {
-        damage: Damage,
+        arc: f32,
+        reach: f32,
+        damage: i16,
+        dam_type: DamageType,
     },
 }
 
@@ -47,8 +50,16 @@ impl Weapon {
         }
     }
 
-    pub fn new_melee(fire_speed: f32, damage: Damage) -> Self {
-        Self::new(fire_speed, WeaponEffect::Melee { damage })
+    pub fn new_melee(fire_speed: f32, damage: i16, dam_type: DamageType) -> Self {
+        Self::new(
+            fire_speed,
+            WeaponEffect::Melee {
+                damage,
+                dam_type,
+                arc: 1.0,   // TODO
+                reach: 1.5, // TODO
+            },
+        )
     }
 
     pub fn new_ranged(fire_speed: f32, projectile: ProjectileType, max_distance: f32) -> Self {
@@ -85,63 +96,74 @@ impl Weapon {
 pub fn fire_weapons(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(&mut Weapon, &CreatureStats, &Transform, Option<&AI>)>,
+    mut query: Query<(Entity, &mut Weapon, &CreatureStats, &Transform, Option<&AI>)>,
+    melee_target_query: Query<(Entity, &CreatureStats, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
+    mut ev_damage: EventWriter<DamageEvent>,
 ) {
-    for (mut weapon, stats, transform, ai) in query.iter_mut() {
-        if weapon.cooldown.tick(time.delta()).finished() {
-            if !weapon.firing {
-                continue;
-            }
+    for (instigator, mut weapon, stats, transform, ai) in query.iter_mut() {
+        if !weapon.cooldown.tick(time.delta()).finished() {
+            continue;
+        }
+        if !weapon.firing {
+            continue;
+        }
 
-            let pos = transform.translation;
-            let dir = match ai {
-                Some(ai) => match ai.get_fire_target() {
-                    Some(taget_pos) => (taget_pos - pos).normalize(),
-                    _ => {
+        let pos = transform.translation;
+        let dir = match ai {
+            Some(ai) => ai.get_fire_dir(&pos),
+            None => Some(transform.rotation * Vec3::NEG_Z),
+        };
+
+        let Some(dir) = dir else {continue;};
+
+        match weapon.effect {
+            WeaponEffect::Melee {
+                damage,
+                dam_type,
+                arc,
+                reach,
+            } => {
+                let mut ai_hits = false;
+                for (target, target_stats, target_transform) in melee_target_query.iter() {
+                    if stats.team == target_stats.team {
                         continue;
                     }
-                },
-                None => transform.rotation * Vec3::NEG_Z,
-            };
 
-            weapon.cooldown.reset();
+                    let delta = pos - target_transform.translation;
 
-            match weapon.effect {
-                WeaponEffect::Melee { damage } => {
-                    // TODO: Implement
-                }
-                WeaponEffect::RangedArc {
-                    ptype,
-                    max_dist,
-                    arc,
-                    count,
-                } => {
-                    for i in 0..count {
-                        let f = (i as f32 + 0.5) / (count as f32) - 0.5;
-                        let dir = Quat::from_rotation_y(f * arc) * dir;
-
-                        spawn_projectile(
-                            ptype,
-                            stats.team,
-                            pos,
-                            dir,
-                            max_dist,
-                            &mut commands,
-                            &mut meshes,
-                            &mut render_res,
-                        );
+                    if delta.length_squared() > reach * reach {
+                        continue;
                     }
+                    if -delta.angle_between(dir) > arc / 2.0 {
+                        continue;
+                    }
+
+                    ev_damage.send(DamageEvent {
+                        instigator: Some(instigator),
+                        target,
+                        damage,
+                        dam_type,
+                    });
+                    ai_hits = true;
                 }
-                WeaponEffect::Ranged {
-                    ptype,
-                    max_dist,
-                    accuracy,
-                } => {
-                    let dir = Quat::from_rotation_y((fastrand::f32() - 0.5) * accuracy) * dir;
+
+                if ai.is_some() && !ai_hits {
+                    continue; // TODO: Should this be done earlier?
+                }
+            }
+            WeaponEffect::RangedArc {
+                ptype,
+                max_dist,
+                arc,
+                count,
+            } => {
+                for i in 0..count {
+                    let f = (i as f32 + 0.5) / (count as f32) - 0.5;
+                    let dir = Quat::from_rotation_y(f * arc) * dir;
 
                     spawn_projectile(
                         ptype,
@@ -154,9 +176,28 @@ pub fn fire_weapons(
                         &mut render_res,
                     );
                 }
-            };
+            }
+            WeaponEffect::Ranged {
+                ptype,
+                max_dist,
+                accuracy,
+            } => {
+                let dir = Quat::from_rotation_y((fastrand::f32() - 0.5) * accuracy) * dir;
 
-            audio.play(asset_server.load(weapon.get_sound()));
-        }
+                spawn_projectile(
+                    ptype,
+                    stats.team,
+                    pos,
+                    dir,
+                    max_dist,
+                    &mut commands,
+                    &mut meshes,
+                    &mut render_res,
+                );
+            }
+        };
+
+        weapon.cooldown.reset();
+        audio.play(asset_server.load(weapon.get_sound()));
     }
 }
