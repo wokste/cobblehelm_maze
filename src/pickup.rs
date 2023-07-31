@@ -8,7 +8,7 @@ use crate::{
     GameInfo,
 };
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, PartialEq)]
 pub enum Pickup {
     Apple,
     MedPack,
@@ -77,7 +77,13 @@ impl Pickup {
 
     fn get_score(self, level: i32) -> i32 {
         match self.to_stat_gain() {
-            StatGain::Health(_) => 0,
+            StatGain::Health(_) => {
+                if self == Pickup::MedPack {
+                    -1000
+                } else {
+                    0
+                }
+            }
             StatGain::NextLevel => level * 250,
             StatGain::Coins(count) => count * 25,
             StatGain::Key(_) => level * 100,
