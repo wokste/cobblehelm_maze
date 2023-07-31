@@ -128,6 +128,18 @@ impl MonsterType {
 
         Ok(())
     }
+
+    pub fn get_score(&self) -> i32 {
+        match self {
+            MonsterType::Imp => 20,
+            MonsterType::EyeMonster1 => 50,
+            MonsterType::EyeMonster2 => 70,
+            MonsterType::Goliath => 100,
+            MonsterType::Laima => 30,
+            MonsterType::IronGolem => 140,
+            MonsterType::Demon => 170,
+        }
+    }
 }
 
 pub enum AIState {

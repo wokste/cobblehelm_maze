@@ -105,7 +105,10 @@ impl CreatureStats {
                 game_state.set(crate::game::GameState::GameOver);
             } else {
                 commands.entity(entity).despawn();
-                game.score += 50; // TODO: What kind of score to use?
+                if let Some(monster_type) = self.monster_type {
+                    game.score += monster_type.get_score();
+                }
+
                 if let Some(ai_pos) = ai_pos {
                     ai_pos.remove_from(&mut map_data.monster_map);
                 }

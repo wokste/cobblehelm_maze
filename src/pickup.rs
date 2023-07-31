@@ -72,6 +72,16 @@ impl Pickup {
                 game_info.key_flags |= mask;
             }
         }
+        game_info.score += self.get_score(game_info.level as i32);
+    }
+
+    fn get_score(self, level: i32) -> i32 {
+        match self.to_stat_gain() {
+            StatGain::Health(_) => 0,
+            StatGain::NextLevel => level * 250,
+            StatGain::Coins(count) => count * 25,
+            StatGain::Key(_) => level * 100,
+        }
     }
 
     fn to_sound(self) -> Option<&'static str> {
