@@ -101,7 +101,6 @@ pub fn fire_weapons(
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<crate::rendering::SpriteResource>,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
     mut ev_damage: EventWriter<DamageEvent>,
 ) {
     for (instigator, mut weapon, stats, transform, ai) in query.iter_mut() {
@@ -198,6 +197,9 @@ pub fn fire_weapons(
         };
 
         weapon.cooldown.reset();
-        audio.play(asset_server.load(weapon.get_sound()));
+        commands.spawn(AudioBundle {
+            source: asset_server.load(weapon.get_sound()),
+            settings: default(),
+        });
     }
 }

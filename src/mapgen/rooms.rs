@@ -11,9 +11,9 @@ pub fn make_room(wall: WallTile, rng: &mut fastrand::Rng) -> Grid<Tile> {
     let floor = super::style::choose_floor(wall, rng);
 
     let mut map = match shape {
-        super::RoomShape::Organic => make_organic_floor(floor, rng, rng.i32(8..16), rng.i32(8..16)),
+        super::RoomShape::Organic => make_organic_floor(floor, rng.i32(8..16), rng.i32(8..16), rng),
         super::RoomShape::Constructed => {
-            make_constructed_floor(floor, rng, rng.i32(5..14), rng.i32(4..12))
+            make_constructed_floor(floor, rng.i32(5..14), rng.i32(4..12), rng)
         }
         super::RoomShape::Mirror => make_mirror_floor(floor, rng, 10..20),
         super::RoomShape::DoubleRect => make_doublerect_floor(floor, rng, 5..14),
@@ -26,9 +26,9 @@ pub fn make_room(wall: WallTile, rng: &mut fastrand::Rng) -> Grid<Tile> {
 
 fn make_organic_floor(
     floor: FloorTile,
-    rng: &mut fastrand::Rng,
     x_max: i32,
     z_max: i32,
+    rng: &mut fastrand::Rng,
 ) -> Grid<Tile> {
     let mut map = Grid::<Tile>::new(x_max + 2, z_max + 2);
 
@@ -56,9 +56,9 @@ fn make_organic_floor(
 
 fn make_constructed_floor(
     floor: FloorTile,
-    rng: &mut fastrand::Rng,
     mut x_max: i32,
     z_max: i32,
+    rng: &mut fastrand::Rng,
 ) -> Grid<Tile> {
     if x_max % 2 == 0 {
         x_max += 1;

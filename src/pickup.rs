@@ -177,7 +177,6 @@ pub fn check_pickups(
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
 ) {
     for (player_body, mut stats, player_transform) in player_query.iter_mut() {
         for (pickup_entity, pickup, pickup_body, pickup_transform) in pickup_query.iter_mut() {
@@ -194,7 +193,10 @@ pub fn check_pickups(
                 pickup.take(&mut game, &mut stats, &mut game_state);
 
                 if let Some(filename) = pickup.to_sound() {
-                    audio.play(asset_server.load(filename));
+                    commands.spawn(AudioBundle {
+                        source: asset_server.load(filename),
+                        settings: default(),
+                    });
                 }
 
                 commands.entity(pickup_entity).despawn();

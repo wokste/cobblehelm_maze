@@ -360,14 +360,10 @@ pub fn ai_move(
             }
 
             // Cleanup
-
-            match ai_state.state {
-                AIState::FollowPlayer(pos) => {
-                    if Some(pos) == dest_pos {
-                        ai_state.state = AIState::PlayerUnknown;
-                    }
+            if let AIState::FollowPlayer(pos) = ai_state.state {
+                if Some(pos) == dest_pos {
+                    ai_state.state = AIState::PlayerUnknown;
                 }
-                _ => {}
             };
         }
 

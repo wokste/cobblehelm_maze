@@ -137,7 +137,6 @@ pub fn take_damage_system(
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     mut map_data: ResMut<crate::map::MapData>,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
     mut ev_damage: EventReader<DamageEvent>,
 ) {
     for ev in ev_damage.iter() {
@@ -154,8 +153,11 @@ pub fn take_damage_system(
         );
 
         if hurt {
-            if let Some(sound) = stats.get_hurt_sound(&asset_server) {
-                audio.play(sound);
+            if let Some(source) = stats.get_hurt_sound(&asset_server) {
+                commands.spawn(AudioBundle {
+                    source,
+                    settings: default(),
+                });
             }
         }
     }

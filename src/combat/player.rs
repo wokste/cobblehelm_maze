@@ -79,8 +79,8 @@ impl Default for InputMap {
                 (KeyCode::D, InputAction::Right),
                 (KeyCode::Left, InputAction::RotLeft),
                 (KeyCode::Right, InputAction::RotRight),
-                (KeyCode::LControl, InputAction::Fire),
-                (KeyCode::RControl, InputAction::Fire),
+                (KeyCode::ControlLeft, InputAction::Fire),
+                (KeyCode::ControlRight, InputAction::Fire),
                 (KeyCode::Space, InputAction::Interact),
                 (KeyCode::Escape, InputAction::Pause),
             ]),
@@ -172,7 +172,7 @@ pub fn get_player_input(
     pad_axes: Res<Axis<GamepadAxis>>,
     pad_buttons: Res<Input<GamepadButton>>,
 ) -> tinyvec::TinyVec<[InputAction; 4]> {
-    let mut state = state.as_mut();
+    let state = state.as_mut();
 
     for ev in state.reader_motion.iter(&mouse_motion) {
         state.pitch -= (key_map.mouse_rot_rate * ev.delta.y).to_radians();
@@ -236,7 +236,7 @@ pub fn handle_player_input(
     key_map: Res<InputMap>,
 ) {
     let delta_time = time.delta_seconds();
-    let mut state_delta = state.as_mut();
+    let state_delta = state.as_mut();
     for (stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
         let mut firing = false;
         let mut velocity = Vec3::ZERO;

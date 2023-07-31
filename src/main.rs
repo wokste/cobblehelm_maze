@@ -73,10 +73,8 @@ fn main() {
         )
         .insert_resource(args)
         .add_state::<game::GameState>()
-        .add_plugin(ui::UIPlugin)
-        .add_plugin(game::GamePlugin)
-        .add_plugin(combat::CombatPlugin)
-        .add_startup_system(app_setup)
+        .add_plugins((ui::UIPlugin, game::GamePlugin, combat::CombatPlugin))
+        .add_systems(Startup, app_setup)
         .run();
 }
 

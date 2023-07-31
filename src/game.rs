@@ -17,15 +17,15 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(despawn_game.in_schedule(OnEnter(GameState::MainMenu)))
-            .add_system(start_level.in_schedule(OnEnter(GameState::InGame)))
-            .add_system(capture_mouse.in_schedule(OnEnter(GameState::InGame)))
-            .add_system(release_mouse.in_schedule(OnExit(GameState::InGame)))
+        app.add_systems(OnEnter(GameState::MainMenu), despawn_game)
+            .add_systems(OnEnter(GameState::InGame), (start_level, capture_mouse))
+            .add_systems(OnExit(GameState::InGame), release_mouse)
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::rendering::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
             .insert_resource(crate::GameSettings::default())
             .add_systems(
+                Update,
                 (
                     crate::physics::do_physics.after(crate::combat::player::get_player_input),
                     crate::pickup::check_pickups.after(crate::physics::do_physics),
@@ -33,7 +33,7 @@ impl Plugin for GamePlugin {
                     crate::rendering::animate_sprites,
                     crate::lifecycle::check_ttl,
                 )
-                    .in_set(OnUpdate(GameState::InGame)),
+                    .run_if(in_state(GameState::InGame)),
             );
     }
 }

@@ -1,30 +1,34 @@
 use bevy::prelude::*;
 
-pub const MENU_STYLE: Style = Style {
-    flex_direction: FlexDirection::Column,
-    justify_content: JustifyContent::Center,
-    align_items: AlignItems::Center,
-    margin: UiRect {
+pub const MENU_STYLE: Style = {
+    let mut style = Style::DEFAULT;
+    style.flex_direction = FlexDirection::Column;
+    style.justify_content = JustifyContent::Center;
+    style.align_items = AlignItems::Center;
+    style.margin = UiRect {
         left: Val::Auto,
         right: Val::Auto,
         top: Val::Auto,
         bottom: Val::Auto,
-    },
-    padding: UiRect {
+    };
+    style.padding = UiRect {
         left: Val::Px(50.0),
         right: Val::Px(50.0),
         top: Val::Px(50.0),
         bottom: Val::Px(50.0),
-    },
-    gap: Size::new(Val::Px(16.0), Val::Px(16.0)),
-    ..Style::DEFAULT
+    };
+    style.row_gap = Val::Px(16.0);
+    style.column_gap = Val::Px(16.0);
+    style
 };
 
-pub const BUTTON_STYLE: Style = Style {
-    justify_content: JustifyContent::Center,
-    align_items: AlignItems::Center,
-    size: Size::new(Val::Px(250.0), Val::Px(100.0)),
-    ..Style::DEFAULT
+pub const BUTTON_STYLE: Style = {
+    let mut style = Style::DEFAULT;
+    style.justify_content = JustifyContent::Center;
+    style.align_items = AlignItems::Center;
+    style.width = Val::Px(250.0);
+    style.height = Val::Px(100.0);
+    style
 };
 
 pub const FONT_P: f32 = 30.0;

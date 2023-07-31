@@ -17,6 +17,7 @@ impl Plugin for CombatPlugin {
             .insert_resource(player::InputState::default())
             .add_event::<DamageEvent>()
             .add_systems(
+                Update,
                 (
                     player::gamepad_connections,
                     player::get_player_input.pipe(player::handle_player_input),
@@ -31,7 +32,7 @@ impl Plugin for CombatPlugin {
                         .after(player::get_player_input)
                         .after(ai::ai_move),
                 )
-                    .in_set(OnUpdate(GameState::InGame)),
+                    .run_if(in_state(GameState::InGame)),
             );
     }
 }
@@ -59,7 +60,7 @@ pub enum DamageType {
     Normal,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Event, Debug, PartialEq, Eq)]
 pub struct DamageEvent {
     instigator: Option<Entity>,
     target: Entity,

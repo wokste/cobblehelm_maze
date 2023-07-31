@@ -28,7 +28,7 @@ pub fn spawn_pause_menu(mut commands: Commands, asset_server: Res<AssetServer>) 
     make_menu(&mut commands, &asset_server, GameState::Paused)
 }
 
-pub fn spawn_next_level_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_next_level_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     make_menu(&mut commands, &asset_server, GameState::NextLevel)
 }
 
@@ -138,12 +138,12 @@ pub fn interact_with_button(
 ) {
     for (interaction, mut background_color, action) in &mut button_query {
         *background_color = match interaction {
-            Interaction::Clicked => Color::rgb(0.25, 0.25, 1.0).into(),
+            Interaction::Pressed => Color::rgb(0.25, 0.25, 1.0).into(),
             Interaction::Hovered => Color::rgb(0.2, 0.2, 0.2).into(),
             Interaction::None => Color::rgb(0.15, 0.15, 0.15).into(),
         };
 
-        if let Interaction::Clicked = interaction {
+        if let Interaction::Pressed = interaction {
             match action {
                 ButtonAction::Play => {
                     *game_settings = GameSettings::from_cl(&cl_args);

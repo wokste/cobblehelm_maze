@@ -9,20 +9,22 @@ pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(menus::spawn_main_menu.in_schedule(OnEnter(GameState::MainMenu)))
-            .add_system(menus::spawn_gameover_menu.in_schedule(OnEnter(GameState::GameOver)))
-            .add_system(menus::spawn_pause_menu.in_schedule(OnEnter(GameState::Paused)))
-            .add_system(menus::spawn_next_level_screen.in_schedule(OnEnter(GameState::NextLevel)))
-            .add_system(menus::despawn_menu.in_schedule(OnExit(GameState::MainMenu)))
-            .add_system(menus::despawn_menu.in_schedule(OnExit(GameState::GameOver)))
-            .add_system(menus::despawn_menu.in_schedule(OnExit(GameState::Paused)))
-            .add_system(menus::despawn_menu.in_schedule(OnExit(GameState::NextLevel)))
-            .add_system(menus::interact_with_button.in_set(OnUpdate(GameState::MainMenu)))
-            .add_system(menus::interact_with_button.in_set(OnUpdate(GameState::GameOver)))
-            .add_system(menus::interact_with_button.in_set(OnUpdate(GameState::Paused)))
-            .add_system(menus::interact_with_button.in_set(OnUpdate(GameState::NextLevel)))
-            .add_system(hud::spawn.in_schedule(OnEnter(GameState::InGame)))
-            .add_system(hud::despawn.in_schedule(OnExit(GameState::InGame)))
-            .add_system(hud::update_hud.in_set(OnUpdate(GameState::InGame)));
+        app.add_systems(OnEnter(GameState::MainMenu), menus::spawn_main_menu)
+            .add_systems(OnEnter(GameState::GameOver), menus::spawn_gameover_menu)
+            .add_systems(OnEnter(GameState::Paused), menus::spawn_pause_menu)
+            .add_systems(OnEnter(GameState::NextLevel), menus::spawn_next_level_menu)
+            .add_systems(OnExit(GameState::MainMenu), menus::despawn_menu)
+            .add_systems(OnExit(GameState::GameOver), menus::despawn_menu)
+            .add_systems(OnExit(GameState::Paused), menus::despawn_menu)
+            .add_systems(OnExit(GameState::NextLevel), menus::despawn_menu)
+            .add_systems(OnEnter(GameState::InGame), hud::spawn)
+            .add_systems(OnExit(GameState::InGame), hud::despawn)
+            .add_systems(
+                Update,
+                (
+                    menus::interact_with_button.run_if(not(in_state(GameState::InGame))),
+                    hud::update_hud.run_if(in_state(GameState::InGame)),
+                ),
+            );
     }
 }
