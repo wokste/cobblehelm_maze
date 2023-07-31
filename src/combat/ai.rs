@@ -4,6 +4,7 @@ use tinyvec::ArrayVec;
 
 use super::{weapon::*, *};
 use crate::{
+    combat::projectile::ProjectileType,
     grid::{Coords, Grid},
     map::MapData,
     physics::MapCollisionEvent,
@@ -54,13 +55,35 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => Weapon::new(ProjectileType::Shock, 1.8, 3.0),
-            MT::EyeMonster1 => Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY),
-            MT::EyeMonster2 => Weapon::new(ProjectileType::RedSpikes, 0.6, f32::INFINITY),
-            MT::Goliath => Weapon::new(ProjectileType::RockLarge, 0.9, f32::INFINITY),
-            MT::Laima => Weapon::new(ProjectileType::Shock, 1.2, 4.0),
-            MT::IronGolem => Weapon::new(ProjectileType::RedSpikes, 0.7, f32::INFINITY),
-            MT::Demon => Weapon::new(ProjectileType::Fire, 0.7, f32::INFINITY),
+            MT::Imp => Weapon::new_melee(1.8, Damage { value: 25 }),
+            MT::EyeMonster1 => Weapon::new(
+                0.9,
+                WeaponEffect::Ranged {
+                    ptype: ProjectileType::RedSpikes,
+                    max_dist: f32::INFINITY,
+                    accuracy: 0.1,
+                },
+            ),
+            MT::EyeMonster2 => Weapon::new_ranged(0.6, ProjectileType::RedSpikes, f32::INFINITY),
+            MT::Goliath => Weapon::new(
+                0.9,
+                WeaponEffect::Ranged {
+                    ptype: ProjectileType::RockLarge,
+                    max_dist: 9.0,
+                    accuracy: 0.1,
+                },
+            ),
+            MT::Laima => Weapon::new_ranged(1.2, ProjectileType::Shock, 4.0),
+            MT::IronGolem => Weapon::new_ranged(0.7, ProjectileType::RedSpikes, f32::INFINITY),
+            MT::Demon => Weapon::new(
+                0.9,
+                WeaponEffect::RangedArc {
+                    ptype: ProjectileType::Fire,
+                    max_dist: f32::INFINITY,
+                    arc: 0.6,
+                    count: 5,
+                },
+            ),
         }
     }
 
@@ -128,6 +151,13 @@ pub struct AI {
 }
 
 impl AI {
+    pub fn get_fire_target(&self) -> Option<Vec3> {
+        match self.state {
+            AIState::SeePlayer(pos) => Some(pos),
+            _ => None,
+        }
+    }
+
     fn new(flags: Flags) -> Self {
         Self {
             state: AIState::PlayerUnknown,
@@ -243,17 +273,6 @@ pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transf
                 ai.state = AIState::PlayerUnknown
             }
         }
-    }
-}
-
-pub fn ai_fire(mut monster_query: Query<(&AI, &mut Weapon)>) {
-    for (ai, mut weapon) in monster_query.iter_mut() {
-        use FireMode::*;
-        let firing = match ai.state {
-            AIState::SeePlayer(pos) => FireAt(pos),
-            _ => NoFire,
-        };
-        weapon.set_fire_state(firing);
     }
 }
 

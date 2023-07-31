@@ -6,6 +6,7 @@ use self::ai::AiMover;
 
 pub mod ai;
 pub mod player;
+pub mod projectile;
 pub mod weapon;
 
 pub struct CombatPlugin;
@@ -20,12 +21,11 @@ impl Plugin for CombatPlugin {
                     player::get_player_input.pipe(player::handle_player_input),
                     player::update_map,
                     ai::ai_los.after(player::update_map),
-                    ai::ai_fire.after(ai::ai_los),
-                    ai::ai_move.after(ai::ai_fire),
-                    weapon::check_projectile_creature_collisions,
+                    ai::ai_move.after(ai::ai_los),
+                    projectile::check_projectile_creature_collisions,
                     weapon::fire_weapons
                         .after(player::get_player_input)
-                        .after(ai::ai_fire),
+                        .after(ai::ai_move),
                 )
                     .in_set(OnUpdate(GameState::InGame)),
             );
@@ -50,6 +50,7 @@ pub enum Team {
     //    Environment,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Damage {
     value: i16,
 }

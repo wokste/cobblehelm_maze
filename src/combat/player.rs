@@ -11,10 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable};
 
-use super::{
-    weapon::{FireMode, ProjectileType, Weapon},
-    CreatureStats,
-};
+use super::{projectile::ProjectileType, weapon::Weapon, CreatureStats};
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -27,11 +24,14 @@ pub struct PlayerBundle {
 
 impl Default for PlayerBundle {
     fn default() -> Self {
+        let mut weapon = Weapon::new_ranged(0.3, ProjectileType::BlueBlob, 12.0);
+        weapon.set_fire_state(false); // Unlike AI's don't automatically fire.
+
         Self {
             player: Player {},
             stats: CreatureStats::player(),
             physisc: PhysicsBody::new(0.125, MapCollisionEvent::Stop),
-            weapon: Weapon::new(ProjectileType::BlueBlob, 0.3, 12.0),
+            weapon,
             velocity: PhysicsMovable::default(),
         }
     }
@@ -238,7 +238,7 @@ pub fn handle_player_input(
     let delta_time = time.delta_seconds();
     let mut state_delta = state.as_mut();
     for (stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
-        let mut firing = FireMode::NoFire;
+        let mut firing = false;
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -253,7 +253,7 @@ pub fn handle_player_input(
                 InputAction::Right => velocity += right,
                 InputAction::RotLeft => state_delta.yaw += key_map.button_rot_rate * delta_time,
                 InputAction::RotRight => state_delta.yaw -= key_map.button_rot_rate * delta_time,
-                InputAction::Fire => firing = FireMode::Fire,
+                InputAction::Fire => firing = true,
                 InputAction::Interact => {
                     // TODO: Do interaction
                 }

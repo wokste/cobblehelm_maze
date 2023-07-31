@@ -30,6 +30,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             ],
             doors: &[DoorType::Chips],
             monsters: &[
+                MonsterType::Demon,
                 MonsterType::Imp,
                 MonsterType::EyeMonster1,
                 MonsterType::Laima,
