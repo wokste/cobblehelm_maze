@@ -70,6 +70,8 @@ pub struct InputMap {
     pub pad_buttons: HashMap<GamepadButtonType, InputAction>,
     pub pad_rot_x: GamepadAxisType,
     pub pad_rot_y: GamepadAxisType,
+    pub pad_move_x: GamepadAxisType,
+    pub pad_move_y: GamepadAxisType,
     pub pad_rot_rate: f32,
 }
 
@@ -105,7 +107,9 @@ impl Default for InputMap {
             ]),
             pad_rot_x: GamepadAxisType::RightStickX,
             pad_rot_y: GamepadAxisType::RightStickY,
-            pad_rot_rate: 0.1,
+            pad_move_x: GamepadAxisType::LeftStickX,
+            pad_move_y: GamepadAxisType::LeftStickY,
+            pad_rot_rate: 2.0,
         }
     }
 }
@@ -167,6 +171,7 @@ pub fn gamepad_connections(
 }
 
 pub fn get_player_input(
+    time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     mouse: Res<Input<MouseButton>>,
     mouse_motion: Res<Events<MouseMotion>>,
@@ -202,10 +207,16 @@ pub fn get_player_input(
 
         // TODO: Configurable sticks
         if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_rot_x)) {
-            state.pitch += dx;
+            state.pitch += dx * time.delta_seconds();
         }
         if let Some(dy) = pad_axes.get(axis(gamepad, key_map.pad_rot_y)) {
-            state.pitch += dy;
+            state.pitch += dy * time.delta_seconds();
+        }
+
+        if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_move_x)) {
+            if let Some(dy) = pad_axes.get(axis(gamepad, key_map.pad_move_y)) {
+                acts.send(InputAction::Move(dx, dy));
+            }
         }
 
         for (button_type, action) in key_map.pad_buttons.iter() {
