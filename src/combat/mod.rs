@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::game::GameState;
+use crate::{
+    game::GameState,
+    ui::menus::{MenuInfo, MenuType},
+};
 
 use self::ai::AiMover;
 
@@ -16,11 +19,13 @@ impl Plugin for CombatPlugin {
         app.insert_resource(player::InputMap::default())
             .insert_resource(player::InputState::default())
             .add_event::<DamageEvent>()
+            .add_event::<player::InputAction>()
             .add_systems(
                 Update,
                 (
                     player::gamepad_connections,
-                    player::get_player_input.pipe(player::handle_player_input),
+                    player::get_player_input,
+                    player::handle_player_input.after(player::get_player_input),
                     player::update_map,
                     ai::ai_los.after(player::update_map),
                     ai::ai_move.after(ai::ai_los),
@@ -95,6 +100,7 @@ impl CreatureStats {
         game: &mut ResMut<crate::GameInfo>,
         game_state: &mut ResMut<NextState<crate::game::GameState>>,
         map_data: &mut ResMut<crate::map::MapData>,
+        menu_info: &mut ResMut<MenuInfo>,
         ai_pos: Option<&mut AiMover>,
     ) -> bool {
         if evt.damage <= 0 {
@@ -108,7 +114,8 @@ impl CreatureStats {
 
         if !self.alive() {
             if self.team == Team::Players {
-                game_state.set(crate::game::GameState::GameOver);
+                game_state.set(crate::game::GameState::GameMenu);
+                menu_info.set(MenuType::GameOver);
             } else {
                 commands.entity(evt.target).despawn();
                 if let Some(monster_type) = self.monster_type {

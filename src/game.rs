@@ -8,9 +8,7 @@ pub enum GameState {
     #[default]
     MainMenu,
     InGame,
-    GameOver,
-    Paused,
-    NextLevel,
+    GameMenu,
 }
 
 pub struct GamePlugin;

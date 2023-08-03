@@ -5,6 +5,7 @@ use crate::{
     grid::Coords,
     physics::{MapCollisionEvent, PhysicsBody},
     rendering::{Sprite3d, SpriteResource},
+    ui::menus::{MenuInfo, MenuType},
     GameInfo,
 };
 
@@ -54,6 +55,7 @@ impl Pickup {
     fn take(
         &self,
         game_info: &mut GameInfo,
+        menu_info: &mut MenuInfo,
         stats: &mut Mut<CreatureStats>,
         game_state: &mut ResMut<NextState<crate::game::GameState>>,
     ) {
@@ -63,7 +65,8 @@ impl Pickup {
                 game_info.update_hp(stats);
             }
             StatGain::NextLevel => {
-                game_state.set(crate::game::GameState::NextLevel);
+                game_state.set(crate::game::GameState::GameMenu);
+                menu_info.set(MenuType::NextLevel);
             }
             StatGain::Coins(gain) => {
                 game_info.coins += gain;
@@ -177,6 +180,7 @@ pub fn check_pickups(
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     asset_server: Res<AssetServer>,
+    mut menu_info: ResMut<MenuInfo>,
 ) {
     for (player_body, mut stats, player_transform) in player_query.iter_mut() {
         for (pickup_entity, pickup, pickup_body, pickup_transform) in pickup_query.iter_mut() {
@@ -190,7 +194,7 @@ pub fn check_pickups(
             }
 
             if pickup.can_take(&stats) {
-                pickup.take(&mut game, &mut stats, &mut game_state);
+                pickup.take(&mut game, &mut menu_info, &mut stats, &mut game_state);
 
                 if let Some(filename) = pickup.to_sound() {
                     commands.spawn(AudioBundle {

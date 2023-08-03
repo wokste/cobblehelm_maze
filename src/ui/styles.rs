@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 
+pub const BT_PRESS_COLOR: Color = Color::rgb(0.25, 0.25, 1.0);
+pub const BT_HOVER_COLOR: Color = Color::rgb(0.2, 0.2, 0.2);
+pub const BT_BASIC_COLOR: Color = Color::rgb(0.15, 0.15, 0.15);
+
 pub const MENU_STYLE: Style = {
     let mut style = Style::DEFAULT;
     style.flex_direction = FlexDirection::Column;

@@ -138,6 +138,7 @@ pub fn take_damage_system(
     mut map_data: ResMut<crate::map::MapData>,
     asset_server: Res<AssetServer>,
     mut ev_damage: EventReader<DamageEvent>,
+    mut menu_info: ResMut<crate::ui::menus::MenuInfo>,
 ) {
     for ev in ev_damage.iter() {
         let Ok((mut stats, mut ai_pos)) =
@@ -149,6 +150,7 @@ pub fn take_damage_system(
             &mut game,
             &mut game_state,
             &mut map_data,
+            &mut menu_info,
             ai_pos.as_deref_mut(),
         );
 

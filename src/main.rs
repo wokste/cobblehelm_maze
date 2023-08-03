@@ -9,6 +9,7 @@ mod physics;
 mod pickup;
 mod rendering;
 mod ui;
+mod utils;
 
 use bevy::{prelude::*, time::Stopwatch};
 

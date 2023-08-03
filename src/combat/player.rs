@@ -9,7 +9,10 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable};
+use crate::{
+    physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
+    ui::menus::{MenuInfo, MenuType},
+};
 
 use super::{projectile::ProjectileType, weapon::Weapon, CreatureStats};
 
@@ -40,7 +43,7 @@ impl Default for PlayerBundle {
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Event, Serialize, Deserialize, Default, Clone, Copy, PartialEq)]
 pub enum InputAction {
     #[default]
     None,
@@ -48,6 +51,7 @@ pub enum InputAction {
     Backward,
     Left,
     Right,
+    Move(f32, f32),
     RotLeft,
     RotRight,
     Fire,
@@ -91,8 +95,7 @@ impl Default for InputMap {
             ]),
             mouse_rot_rate: 0.1,
             pad_buttons: HashMap::from([
-                (GamepadButtonType::LeftTrigger, InputAction::Fire),
-                (GamepadButtonType::RightTrigger, InputAction::Fire),
+                (GamepadButtonType::West, InputAction::Fire),      // X
                 (GamepadButtonType::South, InputAction::Interact), // A
                 (GamepadButtonType::DPadUp, InputAction::Forward),
                 (GamepadButtonType::DPadDown, InputAction::Backward),
@@ -113,7 +116,7 @@ pub struct InputState {
     reader_motion: ManualEventReader<MouseMotion>,
     pitch: f32,
     yaw: f32,
-    gamepad: Option<Gamepad>,
+    pub gamepad: Option<Gamepad>,
 }
 
 impl InputState {
@@ -171,7 +174,8 @@ pub fn get_player_input(
     key_map: Res<InputMap>,
     pad_axes: Res<Axis<GamepadAxis>>,
     pad_buttons: Res<Input<GamepadButton>>,
-) -> tinyvec::TinyVec<[InputAction; 4]> {
+    mut acts: EventWriter<InputAction>,
+) {
     let state = state.as_mut();
 
     for ev in state.reader_motion.iter(&mouse_motion) {
@@ -179,16 +183,15 @@ pub fn get_player_input(
         state.yaw -= (key_map.mouse_rot_rate * ev.delta.x).to_radians();
     }
 
-    let mut acts = tinyvec::tiny_vec!([InputAction; 4]);
     for key in keys.get_pressed() {
         if let Some(act) = key_map.keys.get(key) {
-            acts.push(*act);
+            acts.send(*act);
         }
     }
 
     for button in mouse.get_pressed() {
         if let Some(act) = key_map.mouse_buttons.get(button) {
-            acts.push(*act);
+            acts.send(*act);
         }
     }
 
@@ -211,16 +214,14 @@ pub fn get_player_input(
                 button_type: *button_type,
             };
             if pad_buttons.pressed(button) {
-                acts.push(*action);
+                acts.send(*action);
             }
         }
     };
-
-    acts
 }
 
 pub fn handle_player_input(
-    acts: In<tinyvec::TinyVec<[InputAction; 4]>>,
+    mut acts: EventReader<InputAction>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     mut state: ResMut<InputState>,
     time: Res<Time>,
@@ -234,6 +235,7 @@ pub fn handle_player_input(
         With<Player>,
     >,
     key_map: Res<InputMap>,
+    mut menu_info: ResMut<MenuInfo>,
 ) {
     let delta_time = time.delta_seconds();
     let state_delta = state.as_mut();
@@ -244,7 +246,7 @@ pub fn handle_player_input(
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
         let right = Vec3::new(local_z.z, 0., -local_z.x);
 
-        for act in &acts.0 {
+        for act in acts.iter() {
             match act {
                 InputAction::None => {}
                 InputAction::Forward => velocity += forward,
@@ -258,14 +260,18 @@ pub fn handle_player_input(
                     // TODO: Do interaction
                 }
                 InputAction::Pause => {
-                    game_state.set(crate::game::GameState::Paused);
+                    game_state.set(crate::game::GameState::GameMenu);
+                    menu_info.set(MenuType::Paused);
+                }
+                InputAction::Move(forward_perc, right_perc) => {
+                    velocity += forward * (*forward_perc) + right * (*right_perc);
                 }
             };
         }
 
         state_delta.clamp_mouse();
         transform.rotation = state_delta.to_quat();
-        movable.velocity = velocity.normalize() * stats.speed;
+        movable.velocity = velocity.normalize() * stats.speed; // TODO: Only normalize if the distance is above one.
         weapon.set_fire_state(firing);
     }
 }
