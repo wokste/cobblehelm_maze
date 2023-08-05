@@ -1,7 +1,7 @@
 use bevy::{
     ecs::event::ManualEventReader,
     input::{
-        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent},
+        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadSettings},
         mouse::MouseMotion,
     },
     prelude::*,
@@ -73,6 +73,7 @@ pub struct InputMap {
     pub pad_move_x: GamepadAxisType,
     pub pad_move_y: GamepadAxisType,
     pub pad_rot_rate: f32,
+    pub pad_deadzone: f32,
 }
 
 impl Default for InputMap {
@@ -97,19 +98,23 @@ impl Default for InputMap {
             ]),
             mouse_rot_rate: 0.1,
             pad_buttons: HashMap::from([
-                (GamepadButtonType::West, InputAction::Fire),      // X
+                (GamepadButtonType::LeftTrigger, InputAction::Fire),
+                (GamepadButtonType::RightTrigger, InputAction::Fire),
+                (GamepadButtonType::West, InputAction::Fire), // X
                 (GamepadButtonType::South, InputAction::Interact), // A
                 (GamepadButtonType::DPadUp, InputAction::Forward),
                 (GamepadButtonType::DPadDown, InputAction::Backward),
                 (GamepadButtonType::DPadLeft, InputAction::Left),
                 (GamepadButtonType::DPadRight, InputAction::Right),
                 (GamepadButtonType::Select, InputAction::Pause),
+                (GamepadButtonType::Start, InputAction::Pause),
             ]),
             pad_rot_x: GamepadAxisType::RightStickX,
             pad_rot_y: GamepadAxisType::RightStickY,
             pad_move_x: GamepadAxisType::LeftStickX,
             pad_move_y: GamepadAxisType::LeftStickY,
             pad_rot_rate: 2.0,
+            pad_deadzone: 0.2,
         }
     }
 }
@@ -143,6 +148,8 @@ impl InputState {
 pub fn gamepad_connections(
     mut state: ResMut<InputState>,
     mut gamepad_evr: EventReader<GamepadEvent>,
+    key_map: Res<InputMap>,
+    mut settings: ResMut<GamepadSettings>,
 ) {
     for ev in gamepad_evr.iter() {
         if let GamepadEvent::Connection(GamepadConnectionEvent {
@@ -156,6 +163,13 @@ pub fn gamepad_connections(
 
                     if state.gamepad.is_none() {
                         state.gamepad = Some(*gamepad);
+
+                        settings
+                            .default_axis_settings
+                            .set_deadzone_lowerbound(-key_map.pad_deadzone);
+                        settings
+                            .default_axis_settings
+                            .set_deadzone_upperbound(key_map.pad_deadzone);
                     }
                 }
                 GamepadConnection::Disconnected => {
@@ -207,7 +221,7 @@ pub fn get_player_input(
 
         // TODO: Configurable sticks
         if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_rot_x)) {
-            state.pitch += dx * time.delta_seconds();
+            state.yaw += dx * time.delta_seconds();
         }
         if let Some(dy) = pad_axes.get(axis(gamepad, key_map.pad_rot_y)) {
             state.pitch += dy * time.delta_seconds();
@@ -274,8 +288,8 @@ pub fn handle_player_input(
                     game_state.set(crate::game::GameState::GameMenu);
                     menu_info.set(MenuType::Paused);
                 }
-                InputAction::Move(forward_perc, right_perc) => {
-                    velocity += forward * (*forward_perc) + right * (*right_perc);
+                InputAction::Move(right_perc, forward_perc) => {
+                    velocity += forward * (*forward_perc) + right * -(*right_perc);
                 }
             };
         }

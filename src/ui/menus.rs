@@ -44,6 +44,7 @@ pub struct Button {
     action: ButtonAction,
 }
 
+#[derive(Event, Clone, Copy)]
 pub enum ButtonAction {
     Play,
     PlayDaily,
@@ -51,11 +52,6 @@ pub enum ButtonAction {
     ToMainMenu,
     NextLevel,
     Quit,
-}
-
-#[derive(Event)]
-pub struct ButtonActionEvent {
-    entity: Entity,
 }
 
 pub fn spawn_menu(mut commands: Commands, asset_server: Res<AssetServer>, menu: Res<MenuInfo>) {
@@ -161,35 +157,35 @@ pub fn despawn_menu(mut commands: Commands, query: Query<Entity, With<MenuMarker
 
 pub fn button_mouse(
     mut mouse_query: Query<(Entity, &Interaction), (With<Button>, Changed<Interaction>)>,
-    mut button_query: Query<&mut BackgroundColor, With<Button>>,
+    mut button_query: Query<(&mut BackgroundColor, &Button)>,
     mut menu: ResMut<MenuInfo>,
-    mut events: EventWriter<ButtonActionEvent>,
+    mut events: EventWriter<ButtonAction>,
 ) {
     let mut last_button = None;
 
     for (entity, interaction) in &mut mouse_query {
-        if let Ok(mut background_color) = button_query.get_mut(entity) {
+        if let Ok((mut background_color, button)) = button_query.get_mut(entity) {
             *background_color = match interaction {
                 Interaction::Pressed => BT_PRESS_COLOR.into(),
                 Interaction::Hovered => BT_HOVER_COLOR.into(),
                 Interaction::None => BT_BASIC_COLOR.into(),
             };
-        }
 
-        if let Interaction::Hovered = interaction {
-            if menu.selected != Some(entity) {
-                last_button = menu.selected;
-                menu.selected = Some(entity);
+            if let Interaction::Hovered = interaction {
+                if menu.selected != Some(entity) {
+                    last_button = menu.selected;
+                    menu.selected = Some(entity);
+                }
             }
-        }
 
-        if let Interaction::Pressed = interaction {
-            events.send(ButtonActionEvent { entity })
+            if let Interaction::Pressed = interaction {
+                events.send(button.action)
+            }
         }
     }
 
     if let Some(last_button) = last_button {
-        if let Ok(mut background_color) = button_query.get_mut(last_button) {
+        if let Ok((mut background_color, _)) = button_query.get_mut(last_button) {
             *background_color = BT_BASIC_COLOR.into();
         }
     }
@@ -199,7 +195,7 @@ fn cycle_buttons(
     forward: bool,
     menu: &mut ResMut<MenuInfo>,
     menu_query: &Query<&Children, With<MenuMarker>>,
-    button_query: &mut Query<&mut BackgroundColor>,
+    button_query: &mut Query<(&mut BackgroundColor, &Button)>,
 ) {
     let children = menu_query.get_single().unwrap(); // TODO: No unwrap
     let children: Vec<_> = children.iter().skip(1).copied().collect(); // TODO: Only cycle through buttons instead of this quirk
@@ -214,13 +210,13 @@ fn cycle_buttons(
     };
 
     if let Some(old_entity) = menu.selected {
-        let mut bg_color = button_query.get_mut(old_entity).unwrap();
+        let (mut bg_color, _) = button_query.get_mut(old_entity).unwrap();
         *bg_color = BT_BASIC_COLOR.into();
     }
 
     let new_entity = children[new_index];
     menu.selected = Some(new_entity);
-    let mut bg_color = button_query.get_mut(new_entity).unwrap();
+    let (mut bg_color, _) = button_query.get_mut(new_entity).unwrap();
     *bg_color = BT_HOVER_COLOR.into();
 }
 
@@ -228,10 +224,10 @@ pub fn button_keys(
     keys: Res<Input<KeyCode>>,
     state: Res<crate::combat::player::InputState>,
     pad_buttons: Res<Input<GamepadButton>>,
-    mut out_events: EventWriter<ButtonActionEvent>,
+    mut out_events: EventWriter<ButtonAction>,
     mut menu: ResMut<MenuInfo>,
     menu_query: Query<&Children, With<MenuMarker>>,
-    mut button_query: Query<&mut BackgroundColor>,
+    mut button_query: Query<(&mut BackgroundColor, &Button)>,
 ) {
     for key in keys.get_just_pressed() {
         match key {
@@ -243,9 +239,14 @@ pub fn button_keys(
             }
             KeyCode::Space | KeyCode::Return => {
                 if let Some(entity) = menu.selected {
-                    out_events.send(ButtonActionEvent { entity });
+                    let (_, button) = button_query.get(entity).unwrap();
+                    out_events.send(button.action);
                 }
             }
+            // TODO: If the button press to enter menu is changed into just_pressed, this would work
+            //KeyCode::Escape => {
+            //    out_events.send(ButtonAction::Resume);
+            //}
             _ => {}
         }
     }
@@ -253,7 +254,8 @@ pub fn button_keys(
     if let Some(gamepad) = state.gamepad {
         let up_button = GamepadButton::new(gamepad, GamepadButtonType::DPadUp);
         let down_button = GamepadButton::new(gamepad, GamepadButtonType::DPadDown);
-        let x_button = GamepadButton::new(gamepad, GamepadButtonType::West);
+        let a_button = GamepadButton::new(gamepad, GamepadButtonType::South);
+        let b_button = GamepadButton::new(gamepad, GamepadButtonType::East);
 
         if pad_buttons.just_pressed(up_button) {
             cycle_buttons(true, &mut menu, &menu_query, &mut button_query);
@@ -261,17 +263,20 @@ pub fn button_keys(
         if pad_buttons.just_pressed(down_button) {
             cycle_buttons(false, &mut menu, &menu_query, &mut button_query);
         }
-        if pad_buttons.just_pressed(x_button) {
+        if pad_buttons.just_pressed(a_button) {
             if let Some(entity) = menu.selected {
-                out_events.send(ButtonActionEvent { entity });
+                let (_, button) = button_query.get(entity).unwrap();
+                out_events.send(button.action);
             }
+        }
+        if pad_buttons.just_pressed(b_button) {
+            out_events.send(ButtonAction::Resume);
         }
     };
 }
 
 pub fn button_press(
-    mut events: EventReader<ButtonActionEvent>,
-    button_query: Query<&Button>,
+    mut events: EventReader<ButtonAction>,
     mut game_state: ResMut<NextState<GameState>>,
     mut game_data: ResMut<crate::GameInfo>,
     mut exit: EventWriter<AppExit>,
@@ -279,12 +284,8 @@ pub fn button_press(
     cl_args: Res<crate::CommandLineArgs>,
     mut menu_info: ResMut<MenuInfo>,
 ) {
-    for event in events.iter() {
-        let Ok(button) = button_query.get(event.entity)
-        else {
-            continue;
-        };
-        match button.action {
+    for action in events.iter() {
+        match action {
             ButtonAction::Play => {
                 *game_settings = GameSettings::from_cl(&cl_args);
                 game_state.set(GameState::InGame);
