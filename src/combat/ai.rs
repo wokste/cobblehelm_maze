@@ -8,7 +8,7 @@ use crate::{
     grid::{Coords, Grid},
     map::MapData,
     physics::MapCollisionEvent,
-    rendering::{SpriteResource, TexCoords},
+    render::{tilemap::TileSeq, SpriteResource},
 };
 
 const SIGHT_RADIUS: f32 = 16.0;
@@ -87,17 +87,9 @@ impl MonsterType {
         }
     }
 
-    fn make_uv(&self) -> TexCoords {
+    fn make_tile_seq(&self) -> TileSeq {
         use MonsterType as MT;
-        match self {
-            MT::Imp => TexCoords::basic(0..4, 7),
-            MT::EyeMonster1 => TexCoords::basic(4..6, 7),
-            MT::Goliath => TexCoords::basic(8..10, 7),
-            MT::Laima => TexCoords::basic(12..15, 7),
-            MT::IronGolem => TexCoords::basic(16..18, 7),
-            MT::EyeMonster2 => TexCoords::basic(6..8, 7),
-            MT::Demon => TexCoords::basic(10..12, 7),
-        }
+        match self {}
     }
 
     pub fn spawn(
@@ -109,14 +101,11 @@ impl MonsterType {
         rng: &mut fastrand::Rng,
     ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
-        let uv = self.make_uv();
+        let uv = self.make_tile_seq();
 
         commands
             .spawn(uv.to_sprite_bundle(pos.to_vec(self.jumps(), 0.0), meshes, render_res))
-            .insert(crate::rendering::Animation::new(
-                uv.x_range(),
-                rng.f32() * 0.04 + 0.16,
-            ))
+            .insert(crate::render::Animation::new(uv, rng.f32() * 0.04 + 0.16))
             .insert(self.make_ai())
             .insert(pos)
             .insert(self.make_stats())

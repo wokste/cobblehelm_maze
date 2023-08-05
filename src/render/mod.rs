@@ -1,14 +1,15 @@
+pub mod modelgen;
+pub mod tilemap;
+
 use std::collections::HashMap;
 use std::default::Default;
-use std::ops::Range;
 
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::time::{Time, Timer, TimerMode};
 
-const TILE_X: usize = 32;
-const TILE_Y: usize = 8;
+use self::tilemap::TileSeq;
 
 #[derive(Resource, Default)]
 pub struct SpriteResource {
@@ -30,19 +31,16 @@ impl SpriteResource {
     }
 
     fn make_mesh(key: Sprite3d) -> Mesh {
-        let (x, y, flipped, size) = match key {
-            Sprite3d::Basic { x, y, flipped } => (x, y, flipped, 1.0),
-            Sprite3d::Half { x, y, flipped } => (x, y, flipped, 0.5),
-            Sprite3d::Quarter { x, y, flipped } => (x, y, flipped, 0.25),
-        };
+        let scale = key.tile.scale;
 
-        let x0 = x as f32 / TILE_X as f32 * size;
-        let x1 = (x + 1) as f32 / TILE_X as f32 * size;
-        let y0 = (y) as f32 / TILE_Y as f32 * size;
-        let y1 = (y + 1) as f32 / TILE_Y as f32 * size;
+        let x0 = scale.scale(key.tile.x);
+        let x1 = scale.scale(key.tile.x + 1);
+        let y0 = scale.scale(key.tile.y);
+        let y1 = scale.scale(key.tile.y + 1);
 
-        let w2 = size / 2.0;
-        let h2 = size / 2.0;
+        let game_size = scale.game_size();
+        let w2 = game_size / 2.0;
+        let h2 = game_size / 2.0;
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         let vertices = vec![
             [-w2, -h2, 0.0],
@@ -62,7 +60,7 @@ impl SpriteResource {
             ],
         );
 
-        if flipped {
+        if key.tile.flipped {
             mesh.insert_attribute(
                 Mesh::ATTRIBUTE_UV_0,
                 vec![[x0, y1], [x1, y1], [x1, y0], [x0, y0]],
@@ -79,79 +77,8 @@ impl SpriteResource {
     }
 }
 
-#[derive(Clone)]
-pub enum TexCoords {
-    Basic { x: std::ops::Range<u8>, y: u8 },
-    Half { x: std::ops::Range<u8>, y: u8 },
-}
-
-impl TexCoords {
-    pub const fn basic(x: std::ops::Range<u8>, y: u8) -> Self {
-        Self::Basic { x, y }
-    }
-
-    pub const fn half(x: std::ops::Range<u8>, y: u8) -> Self {
-        Self::Half { x, y }
-    }
-
-    pub fn to_uv(&self, rng: &mut fastrand::Rng) -> (Vec2, f32) {
-        let (x, y, scale) = match self {
-            TexCoords::Basic { x, y } => (x, y, 1.0),
-            TexCoords::Half { x, y } => (x, y, 0.5),
-        };
-
-        let x = rng.u8(x.clone());
-        (
-            Vec2::new(
-                x as f32 / TILE_X as f32 * scale,
-                *y as f32 / TILE_Y as f32 * scale,
-            ),
-            scale,
-        )
-    }
-
-    pub fn x_range(&self) -> Range<u8> {
-        match self {
-            TexCoords::Basic { x, .. } => x.clone(),
-            TexCoords::Half { x, .. } => x.clone(),
-        }
-    }
-
-    pub fn to_sprite_bundle(
-        &self,
-        pos: Vec3,
-        meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
-    ) -> SpriteBundle {
-        let sprite = match self {
-            TexCoords::Basic { x, y } => Sprite3d::Basic {
-                x: x.start,
-                y: *y,
-                flipped: false,
-            },
-            TexCoords::Half { x, y } => Sprite3d::Half {
-                x: x.start,
-                y: *y,
-                flipped: false,
-            },
-        };
-
-        SpriteBundle {
-            in_level: crate::lifecycle::LevelObject,
-            face_camera: FaceCamera,
-            sprite,
-            pbr: PbrBundle {
-                mesh: render_res.get_mesh(sprite, meshes),
-                material: render_res.material.clone(),
-                transform: Transform::from_translation(pos).looking_at(Vec3::ZERO, Vec3::Y),
-                ..Default::default()
-            },
-        }
-    }
-}
-
 #[derive(Bundle)]
-pub struct SpriteBundle {
+pub struct Sprite3dBundle {
     pub in_level: crate::lifecycle::LevelObject,
     pub face_camera: FaceCamera,
     pub sprite: Sprite3d,
@@ -176,12 +103,12 @@ pub fn face_camera(
 
 #[derive(Component)]
 pub struct Animation {
-    frames: Range<u8>, // indices of all the frames in the animation
+    frames: TileSeq, // indices of all the frames in the animation
     timer: Timer,
 }
 
 impl Animation {
-    pub fn new(frames: Range<u8>, anim_speed: f32) -> Self {
+    pub fn new(frames: TileSeq, anim_speed: f32) -> Self {
         Self {
             frames,
             timer: Timer::from_seconds(anim_speed, TimerMode::Repeating),
@@ -189,21 +116,22 @@ impl Animation {
     }
 
     pub fn next_sprite(&mut self, sprite: Sprite3d) -> Sprite3d {
-        let mut x = match sprite {
-            Sprite3d::Basic { x, .. } => x,
-            Sprite3d::Half { x, .. } => x,
-            Sprite3d::Quarter { x, .. } => x,
-        };
+        let mut x = sprite.tile.x;
 
         x += 1;
-        if x == self.frames.end {
-            x = self.frames.start;
+        if x == self.frames.x.end {
+            x = self.frames.x.start;
         };
 
-        match sprite {
-            Sprite3d::Basic { y, flipped, .. } => Sprite3d::Basic { x, y, flipped },
-            Sprite3d::Half { y, flipped, .. } => Sprite3d::Half { x, y, flipped },
-            Sprite3d::Quarter { y, flipped, .. } => Sprite3d::Quarter { x, y, flipped },
+        let tile = tilemap::Tile {
+            x,
+            y: self.frames.y,
+            scale: self.frames.scale,
+        };
+
+        Sprite3d {
+            flipped: false,
+            tile,
         }
     }
 }
@@ -212,38 +140,25 @@ impl Animation {
 // Yes, I know some of these values are unused but I think they will be useful when implementing pickups.
 // TODO: Check this again after pickups are implemented
 #[derive(Component, Hash, PartialEq, Eq, Clone, Copy)]
-pub enum Sprite3d {
-    Basic { x: u8, y: u8, flipped: bool },
-    Half { x: u8, y: u8, flipped: bool },
-    Quarter { x: u8, y: u8, flipped: bool },
+pub struct Sprite3d {
+    tile: tilemap::Tile,
+    flipped: bool,
 }
 
 impl Sprite3d {
-    pub const fn basic(x: u8, y: u8) -> Self {
-        Self::Basic {
-            x,
-            y,
-            flipped: false,
-        }
-    }
-    pub const fn half(x: u8, y: u8) -> Self {
-        Self::Half {
-            x,
-            y,
-            flipped: false,
-        }
-    }
-
     pub fn to_sprite_bundle(
         self,
         pos: Vec3,
         meshes: &mut ResMut<Assets<Mesh>>,
         render_res: &mut ResMut<SpriteResource>,
-    ) -> SpriteBundle {
-        SpriteBundle {
+    ) -> Sprite3dBundle {
+        Sprite3dBundle {
             in_level: crate::lifecycle::LevelObject,
             face_camera: FaceCamera,
-            sprite: self,
+            sprite: Sprite3d {
+                tile: self.tile,
+                flipped: false,
+            },
             pbr: PbrBundle {
                 mesh: render_res.get_mesh(self, meshes),
                 material: render_res.material.clone(),

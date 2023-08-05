@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
-    rendering::{SpriteResource, TexCoords},
+    render::{tilemap::TileSeq, SpriteResource},
 };
 
 use super::{ai::AiMover, CreatureStats, DamageEvent, DamageType, Team};
@@ -41,15 +41,8 @@ impl ProjectileType {
         }
     }
 
-    pub fn make_uv(&self) -> TexCoords {
-        match self {
-            ProjectileType::RedSpikes => TexCoords::half(0..1, 12),
-            ProjectileType::BlueBlob => TexCoords::half(1..2, 12),
-            ProjectileType::Shock => TexCoords::basic(2..5, 6),
-            ProjectileType::RockLarge => TexCoords::half(0..1, 13),
-            ProjectileType::RockSmall => TexCoords::half(1..2, 13),
-            ProjectileType::Fire => TexCoords::half(2..4, 12),
-        }
+    pub fn make_uv(&self) -> TileSeq {
+        match self {}
     }
 
     fn make_projectile(&self, team: Team) -> Projectile {
@@ -84,7 +77,7 @@ pub fn spawn_projectile(
     let uv = ptype.make_uv();
 
     let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(pos, meshes, render_res));
-    proto_projectile.insert(crate::rendering::Animation::new(uv.x_range(), 0.1));
+    proto_projectile.insert(crate::render::Animation::new(uv, 0.1));
     proto_projectile.insert(ptype.make_projectile(team));
     proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
     proto_projectile.insert(PhysicsMovable::new(velocity, false));

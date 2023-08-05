@@ -99,7 +99,7 @@ pub fn fire_weapons(
     mut query: Query<(Entity, &mut Weapon, &CreatureStats, &Transform, Option<&AI>)>,
     melee_target_query: Query<(Entity, &CreatureStats, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<crate::rendering::SpriteResource>,
+    mut render_res: ResMut<crate::render::SpriteResource>,
     asset_server: Res<AssetServer>,
     mut ev_damage: EventWriter<DamageEvent>,
 ) {

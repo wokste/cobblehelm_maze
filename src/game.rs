@@ -19,7 +19,7 @@ impl Plugin for GamePlugin {
             .add_systems(OnEnter(GameState::InGame), (start_level, capture_mouse))
             .add_systems(OnExit(GameState::InGame), release_mouse)
             .insert_resource(crate::map::MapData::default())
-            .insert_resource(crate::rendering::SpriteResource::default())
+            .insert_resource(crate::render::SpriteResource::default())
             .insert_resource(crate::GameInfo::default())
             .insert_resource(crate::GameSettings::default())
             .add_systems(
@@ -27,8 +27,8 @@ impl Plugin for GamePlugin {
                 (
                     crate::physics::do_physics.after(crate::combat::player::get_player_input),
                     crate::pickup::check_pickups.after(crate::physics::do_physics),
-                    crate::rendering::face_camera.after(crate::physics::do_physics),
-                    crate::rendering::animate_sprites,
+                    crate::render::face_camera.after(crate::physics::do_physics),
+                    crate::render::animate_sprites,
                     crate::lifecycle::check_ttl,
                 )
                     .run_if(in_state(GameState::InGame)),
@@ -74,7 +74,7 @@ fn start_level(
     mut game_data: ResMut<crate::GameInfo>,
     mut map_data: ResMut<MapData>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<crate::rendering::SpriteResource>,
+    mut render_res: ResMut<crate::render::SpriteResource>,
     mut level_query: Query<Entity, With<LevelObject>>,
     mut player_query: Query<&mut Transform, With<Player>>,
     game_settings: Res<crate::GameSettings>,
@@ -113,7 +113,7 @@ fn start_level(
     // Spawn the map mesh
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(crate::modelgen::map_to_mesh(
+            mesh: meshes.add(crate::render::modelgen::map_to_mesh(
                 &map_gen_result.tilemap,
                 &mut rng,
             )),

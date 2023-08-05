@@ -4,7 +4,7 @@ use crate::{
     combat::{player::Player, CreatureStats},
     grid::Coords,
     physics::{MapCollisionEvent, PhysicsBody},
-    rendering::{Sprite3d, SpriteResource},
+    render::{Sprite3d, SpriteResource},
     ui::menus::{MenuInfo, MenuType},
     GameInfo,
 };
@@ -103,19 +103,7 @@ impl Pickup {
     }
 
     fn make_sprite(&self) -> Sprite3d {
-        match self {
-            Pickup::NextLevel => Sprite3d::basic(1, 5),
-
-            Pickup::Coin => Sprite3d::half(6, 10),
-            Pickup::CoinPile => Sprite3d::half(7, 10),
-            Pickup::MedPack => Sprite3d::half(8, 10),
-            Pickup::Apple => Sprite3d::half(9, 10),
-
-            Pickup::SilverKey => Sprite3d::half(6, 11),
-            Pickup::GoldKey => Sprite3d::half(7, 11),
-            Pickup::RedKey => Sprite3d::half(8, 11),
-            Pickup::GreenKey => Sprite3d::half(9, 11),
-        }
+        match self {}
     }
 
     pub fn spawn(
@@ -142,7 +130,7 @@ impl Pickup {
 
         commands
             .spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))
-            .insert(crate::rendering::FaceCamera)
+            .insert(crate::render::FaceCamera)
             .insert(*self)
             .insert(crate::physics::PhysicsBody::new(
                 0.5,

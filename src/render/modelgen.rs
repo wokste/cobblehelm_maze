@@ -1,12 +1,13 @@
 use crate::{
     grid::Grid,
     map::{FloorTile, Tile, WallTile},
-    rendering::TexCoords,
 };
 use bevy::{
     prelude::{Mesh, Vec2, Vec3},
     render::{mesh, render_resource::PrimitiveTopology},
 };
+
+use super::tilemap::TileSeq;
 
 #[derive(Default, Clone)]
 struct MeshBuilder {
@@ -95,35 +96,10 @@ pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
     builder.build()
 }
 
-pub fn floor_tex_id(tile: FloorTile) -> TexCoords {
-    match tile {
-        FloorTile::Sand => TexCoords::basic(0..8, 4),
-        FloorTile::BrownFloor => TexCoords::basic(14..18, 4),
-        FloorTile::GrayFloor => TexCoords::basic(22..26, 4),
-        FloorTile::Cave => TexCoords::basic(10..14, 4),
-        FloorTile::Flesh => TexCoords::basic(18..22, 4),
-        FloorTile::Demonic => TexCoords::basic(26..30, 4),
-        FloorTile::BlueTiles => TexCoords::basic(8..10, 4),
-        FloorTile::Chips => TexCoords::basic(29..32, 1),
-        FloorTile::Sewer => TexCoords::basic(7..11, 3),
-    }
+pub fn floor_tex_id(tile: FloorTile) -> TileSeq {
+    match tile {}
 }
 
-pub fn wall_tex_id(tile: WallTile) -> TexCoords {
-    match tile {
-        WallTile::Castle => TexCoords::basic(0..12, 0),
-        WallTile::TempleBrown => TexCoords::basic(12..20, 0),
-        WallTile::TempleGray => TexCoords::basic(20..32, 0),
-        WallTile::TempleGreen => TexCoords::basic(0..10, 2),
-        WallTile::Cave => TexCoords::basic(0..12, 1),
-        WallTile::Beehive => TexCoords::basic(12..22, 1),
-        WallTile::Flesh => TexCoords::basic(22..29, 1),
-        WallTile::Demonic => TexCoords::basic(14..25, 2),
-        WallTile::DemonicCave => TexCoords::basic(25..29, 2),
-        WallTile::MetalIron => TexCoords::basic(29..30, 2),
-        WallTile::MetalBronze => TexCoords::basic(30..31, 2),
-        WallTile::Chips => TexCoords::basic(29..32, 1),
-        WallTile::Sewer => TexCoords::basic(0..7, 3),
-        WallTile::SewerCave => TexCoords::basic(7..11, 3),
-    }
+pub fn wall_tex_id(tile: WallTile) -> TileSeq {
+    match tile {}
 }

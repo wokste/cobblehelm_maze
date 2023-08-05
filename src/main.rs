@@ -4,10 +4,9 @@ mod grid;
 mod lifecycle;
 mod map;
 mod mapgen;
-mod modelgen;
 mod physics;
 mod pickup;
-mod rendering;
+mod render;
 mod ui;
 mod utils;
 
@@ -83,7 +82,7 @@ fn app_setup(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ambient_light: ResMut<AmbientLight>,
-    mut render_res: ResMut<rendering::SpriteResource>,
+    mut render_res: ResMut<render::SpriteResource>,
     mut commands: Commands,
 ) {
     ambient_light.color = Color::WHITE;
