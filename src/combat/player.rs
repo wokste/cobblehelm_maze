@@ -119,6 +119,34 @@ impl Default for InputMap {
     }
 }
 
+impl InputMap {
+    pub fn swap_hands(&mut self) {
+        // Swap the two sticks
+        std::mem::swap(&mut self.pad_move_x, &mut self.pad_rot_x);
+        std::mem::swap(&mut self.pad_move_y, &mut self.pad_rot_y);
+
+        // Swap WASD and arrow keys.
+        type KC = KeyCode;
+        fn swap_keys(map: &mut HashMap<KeyCode, InputAction>, l: KC, r: KC) {
+            let l_action = map.remove(&l);
+            let r_action = map.remove(&r);
+
+            if let Some(r_action) = r_action {
+                map.insert(l, r_action);
+            }
+
+            if let Some(l_action) = l_action {
+                map.insert(r, l_action);
+            }
+        }
+
+        swap_keys(&mut self.keys, KC::W, KC::Up);
+        swap_keys(&mut self.keys, KC::A, KC::Left);
+        swap_keys(&mut self.keys, KC::S, KC::Down);
+        swap_keys(&mut self.keys, KC::D, KC::Right);
+    }
+}
+
 /// Keeps track of mouse motion events, pitch, and yaw
 #[derive(Resource, Default)]
 pub struct InputState {

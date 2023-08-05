@@ -51,6 +51,7 @@ pub enum ButtonAction {
     Resume,
     ToMainMenu,
     NextLevel,
+    SwapHands,
     Quit,
 }
 
@@ -103,6 +104,12 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu:
                         TextAlignment::Center,
                     ));
                     make_button(parent, asset_server, "Resume", ButtonAction::Resume);
+                    make_button(
+                        parent,
+                        asset_server,
+                        "Set/unset left-hand mode",
+                        ButtonAction::SwapHands,
+                    );
                     make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
                 }
                 MenuType::NextLevel => {
@@ -281,6 +288,7 @@ pub fn button_press(
     mut game_data: ResMut<crate::GameInfo>,
     mut exit: EventWriter<AppExit>,
     mut game_settings: ResMut<GameSettings>,
+    mut input_map: ResMut<crate::combat::player::InputMap>,
     cl_args: Res<crate::CommandLineArgs>,
     mut menu_info: ResMut<MenuInfo>,
 ) {
@@ -312,6 +320,9 @@ pub fn button_press(
             }
             ButtonAction::Quit => {
                 exit.send(AppExit);
+            }
+            ButtonAction::SwapHands => {
+                input_map.swap_hands();
             }
         }
     }
