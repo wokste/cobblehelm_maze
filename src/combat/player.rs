@@ -51,7 +51,10 @@ pub enum InputAction {
     Backward,
     Left,
     Right,
-    Move(f32, f32),
+    Move {
+        forward: f32,
+        right: f32,
+    },
     RotLeft,
     RotRight,
     Fire,
@@ -98,15 +101,14 @@ impl Default for InputMap {
             ]),
             mouse_rot_rate: 0.1,
             pad_buttons: HashMap::from([
-                (GamepadButtonType::LeftTrigger, InputAction::Fire),
-                (GamepadButtonType::RightTrigger, InputAction::Fire),
+                (GamepadButtonType::LeftTrigger2, InputAction::Fire),
+                (GamepadButtonType::RightTrigger2, InputAction::Fire),
                 (GamepadButtonType::West, InputAction::Fire), // X
                 (GamepadButtonType::South, InputAction::Interact), // A
                 (GamepadButtonType::DPadUp, InputAction::Forward),
                 (GamepadButtonType::DPadDown, InputAction::Backward),
                 (GamepadButtonType::DPadLeft, InputAction::Left),
                 (GamepadButtonType::DPadRight, InputAction::Right),
-                (GamepadButtonType::Select, InputAction::Pause),
                 (GamepadButtonType::Start, InputAction::Pause),
             ]),
             pad_rot_x: GamepadAxisType::RightStickX,
@@ -249,7 +251,7 @@ pub fn get_player_input(
 
         // TODO: Configurable sticks
         if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_rot_x)) {
-            state.yaw += dx * time.delta_seconds();
+            state.yaw -= dx * time.delta_seconds();
         }
         if let Some(dy) = pad_axes.get(axis(gamepad, key_map.pad_rot_y)) {
             state.pitch += dy * time.delta_seconds();
@@ -257,7 +259,10 @@ pub fn get_player_input(
 
         if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_move_x)) {
             if let Some(dy) = pad_axes.get(axis(gamepad, key_map.pad_move_y)) {
-                acts.send(InputAction::Move(dx, dy));
+                acts.send(InputAction::Move {
+                    right: dx,
+                    forward: dy,
+                });
             }
         }
 
@@ -316,7 +321,10 @@ pub fn handle_player_input(
                     game_state.set(crate::game::GameState::GameMenu);
                     menu_info.set(MenuType::Paused);
                 }
-                InputAction::Move(right_perc, forward_perc) => {
+                InputAction::Move {
+                    right: right_perc,
+                    forward: forward_perc,
+                } => {
                     velocity += forward * (*forward_perc) + right * -(*right_perc);
                 }
             };
