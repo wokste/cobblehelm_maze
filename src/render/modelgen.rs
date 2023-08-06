@@ -58,8 +58,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
         if let Tile::Floor(floor) = map[pos] {
             let p0 = Vec3::new(pos.x as f32, 0.0, pos.z as f32);
             // Floor tiles
-            let (tex_id, _scale) = floor_tex_id(floor, sprite_map).to_uv(rng);
-            assert!(_scale == 1.0);
+            let tex_id = floor_tex_id(floor, sprite_map).to_uv(rng);
             builder.add_rect(p0, Vec3::X, Vec3::Z, tex_id);
 
             // Wall tiles
@@ -68,7 +67,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
                     p0 + Vec3::X,
                     Vec3::NEG_X,
                     Vec3::Y,
-                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng),
                 );
             }
             if let Tile::Wall(wall) = map[pos.right()] {
@@ -76,7 +75,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
                     p0 + Vec3::X + Vec3::Z,
                     Vec3::NEG_Z,
                     Vec3::Y,
-                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng),
                 );
             }
             if let Tile::Wall(wall) = map[pos.bottom()] {
@@ -84,7 +83,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
                     p0 + Vec3::Z,
                     Vec3::X,
                     Vec3::Y,
-                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng),
                 );
             }
             if let Tile::Wall(wall) = map[pos.left()] {
@@ -92,7 +91,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
                     p0,
                     Vec3::Z,
                     Vec3::Y,
-                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng),
                 );
             }
         }

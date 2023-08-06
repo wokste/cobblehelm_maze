@@ -54,11 +54,9 @@ pub struct SpritePos {
 }
 
 impl SpritePos {
-    pub fn to_uv(&self) -> (Vec2, f32) {
-        (
-            Vec2::new(self.scale.scale(self.x), self.scale.scale(self.y)),
-            self.scale.size_float(),
-        )
+    pub fn to_uv(&self) -> Vec2 {
+        assert!(self.scale == SpriteScale::Basic);
+        Vec2::new(self.scale.scale(self.x), self.scale.scale(self.y))
     }
 }
 
@@ -86,7 +84,7 @@ impl SpriteSeq {
         self.tile(rng.u8(self.x.clone()))
     }
 
-    pub fn to_uv(&self, rng: &mut fastrand::Rng) -> (Vec2, f32) {
+    pub fn to_uv(&self, rng: &mut fastrand::Rng) -> Vec2 {
         self.tile_rand(rng).to_uv()
     }
 

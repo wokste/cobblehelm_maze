@@ -1,9 +1,10 @@
-use bevy::utils::default;
+const TEX_FORMAT: TextureFormat = TextureFormat::Rgba8UnormSrgb;
 
 use bevy::{
     prelude::{AssetServer, Assets, Handle, Image, Res, ResMut},
-    render::render_resource::{
-        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+    render::{
+        render_resource::{Extent3d, TextureDimension, TextureFormat},
+        texture::TextureFormatPixelInfo,
     },
     utils::HashMap,
 };
@@ -115,12 +116,16 @@ impl SpriteMapBuilder {
     ) -> Result<HashMap<String, SpriteSeq>, MapBuildError> {
         let mut tiles = HashMap::<String, SpriteSeq>::new();
 
-        let paths =
-            std::fs::read_dir(format!("./assets/{}/", folder)).map_err(|e| MapBuildError::IO)?;
-        for os_path in paths {
+        let path = format!("./assets/{}/", folder);
+        let Ok(dir) = std::fs::read_dir(path) else {
+            return Ok(tiles);
+        };
+        for os_path in dir {
             let os_path = os_path.map_err(|e| MapBuildError::IO)?;
 
             let handle: Handle<Image> = asset_server.load(os_path.path());
+            let key = os_path.file_name().to_str().unwrap().to_string();
+            println!("found sprite {}", key);
             let src_image = images.get(&handle).unwrap();
 
             let (scale, count) = image_properties(src_image)?;
@@ -128,7 +133,6 @@ impl SpriteMapBuilder {
             let seq = self.find_sprites_pos(scale, count)?;
             copy_texture(src_image, dst_image, &seq);
 
-            let key = os_path.file_name().to_str().unwrap().to_string();
             tiles.insert(key, seq);
         }
         Ok(tiles)
@@ -155,10 +159,10 @@ fn image_properties(image: &Image) -> Result<(SpriteScale, u8), MapBuildError> {
 }
 
 fn copy_texture(src: &Image, dest: &mut Image, pos: &SpriteSeq) {
-    assert!(src.texture_descriptor.format == TextureFormat::Rgba8Uint);
-    assert!(src.texture_descriptor.format == TextureFormat::Rgba8Uint);
+    assert!(src.texture_descriptor.format == TEX_FORMAT);
+    assert!(src.texture_descriptor.format == TEX_FORMAT);
 
-    let px_mult = 4; // RGBA has 4 bytes
+    let px_mult = TEX_FORMAT.pixel_size(); // RGBA has 4 bytes
     let mult = pos.scale.size() as usize;
     let x0 = (pos.x.start as usize) * mult;
 
@@ -182,27 +186,19 @@ pub fn make_tilemap(
     asset_server: &Res<AssetServer>,
     images: &mut ResMut<Assets<Image>>,
 ) -> Result<SpriteMap, MapBuildError> {
-    let size = Extent3d {
-        width: super::spritemap::TILESET_SIZE as u32,
-        height: super::spritemap::TILESET_SIZE as u32,
-        ..default()
-    };
+    let width = super::spritemap::TILESET_SIZE as u32;
+    let height = super::spritemap::TILESET_SIZE as u32;
 
-    let mut image = Image {
-        texture_descriptor: TextureDescriptor {
-            label: None,
-            size,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Rgba8Uint,
-            mip_level_count: 1,
-            sample_count: 1,
-            usage: TextureUsages::TEXTURE_BINDING
-                | TextureUsages::COPY_DST
-                | TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
+    let mut image = Image::new(
+        Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
         },
-        ..default()
-    };
+        TextureDimension::D2,
+        vec![0; TEX_FORMAT.pixel_size() * (width * height) as usize],
+        TEX_FORMAT,
+    );
 
     let mut builder = SpriteMapBuilder::new(&image);
 
@@ -216,6 +212,12 @@ pub fn make_tilemap(
     builder.sprites.misc = builder.load_folder("misc", asset_server, images, &mut image)?;
 
     builder.sprites.texture = images.add(image);
+    builder.sprites.no_tile = SpriteSeq {
+        x: 0..1,
+        y: 0,
+        scale: SpriteScale::Basic,
+    };
+    builder.sprites.no_tile = builder.sprites.get_misc("missing.png");
 
     Ok(builder.sprites)
 }
