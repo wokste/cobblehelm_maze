@@ -8,7 +8,7 @@ use crate::{
     grid::{Coords, Grid},
     map::MapData,
     physics::MapCollisionEvent,
-    render::{tilemap::TileSeq, SpriteResource},
+    render::{spritemap::SpriteSeq, RenderResource},
 };
 
 const SIGHT_RADIUS: f32 = 16.0;
@@ -87,9 +87,18 @@ impl MonsterType {
         }
     }
 
-    fn make_tile_seq(&self) -> TileSeq {
+    fn get_tile_seq(&self, tiles: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
         use MonsterType as MT;
-        match self {}
+        let str = match self {
+            MT::Imp => "imp.png",
+            MT::EyeMonster1 => "eye_monster.png",
+            MT::EyeMonster2 => "eye_monster2.png",
+            MT::Goliath => "goliath.png",
+            MT::Laima => "laima.png",
+            MT::IronGolem => "iron_golem.png",
+            MT::Demon => "demon.png",
+        };
+        tiles.get_monster(str)
     }
 
     pub fn spawn(
@@ -97,11 +106,11 @@ impl MonsterType {
         commands: &mut Commands,
         map_data: &mut ResMut<crate::map::MapData>,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
         rng: &mut fastrand::Rng,
     ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
-        let uv = self.make_tile_seq();
+        let uv = self.get_tile_seq(&render_res.sprites);
 
         commands
             .spawn(uv.to_sprite_bundle(pos.to_vec(self.jumps(), 0.0), meshes, render_res))

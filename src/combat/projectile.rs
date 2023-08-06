@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
-    render::{tilemap::TileSeq, SpriteResource},
+    render::{spritemap::SpriteSeq, RenderResource},
 };
 
 use super::{ai::AiMover, CreatureStats, DamageEvent, DamageType, Team};
@@ -41,8 +41,16 @@ impl ProjectileType {
         }
     }
 
-    pub fn make_uv(&self) -> TileSeq {
-        match self {}
+    pub fn make_uv(&self, tiles: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
+        let str = match self {
+            ProjectileType::RedSpikes => "red_spikes.png",
+            ProjectileType::BlueBlob => "blue_blob.png",
+            ProjectileType::Shock => "shock.png",
+            ProjectileType::RockLarge => "rock.png",
+            ProjectileType::RockSmall => "rock_small.png",
+            ProjectileType::Fire => "fire.png",
+        };
+        tiles.get_projectile(str)
     }
 
     fn make_projectile(&self, team: Team) -> Projectile {
@@ -70,11 +78,11 @@ pub fn spawn_projectile(
     max_dist: f32,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    render_res: &mut ResMut<SpriteResource>,
+    render_res: &mut ResMut<RenderResource>,
 ) {
     let velocity = dir * ptype.speed();
 
-    let uv = ptype.make_uv();
+    let uv = ptype.make_uv(&render_res.sprites);
 
     let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(pos, meshes, render_res));
     proto_projectile.insert(crate::render::Animation::new(uv, 0.1));

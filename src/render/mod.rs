@@ -1,5 +1,6 @@
 pub mod modelgen;
-pub mod tilemap;
+pub mod spritemap;
+pub mod spritemapbuilder;
 
 use std::collections::HashMap;
 use std::default::Default;
@@ -9,15 +10,16 @@ use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::time::{Time, Timer, TimerMode};
 
-use self::tilemap::TileSeq;
+use self::spritemap::SpriteSeq;
 
 #[derive(Resource, Default)]
-pub struct SpriteResource {
+pub struct RenderResource {
     pub sprite_cache: HashMap<Sprite3d, Handle<Mesh>>,
     pub material: Handle<StandardMaterial>,
+    pub sprites: spritemap::SpriteMap,
 }
 
-impl SpriteResource {
+impl RenderResource {
     pub fn get_mesh(&mut self, key: Sprite3d, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
         if let Some(handle) = self.sprite_cache.get(&key) {
             return handle.clone();
@@ -60,7 +62,7 @@ impl SpriteResource {
             ],
         );
 
-        if key.tile.flipped {
+        if key.flipped {
             mesh.insert_attribute(
                 Mesh::ATTRIBUTE_UV_0,
                 vec![[x0, y1], [x1, y1], [x1, y0], [x0, y0]],
@@ -103,12 +105,12 @@ pub fn face_camera(
 
 #[derive(Component)]
 pub struct Animation {
-    frames: TileSeq, // indices of all the frames in the animation
+    frames: SpriteSeq, // indices of all the frames in the animation
     timer: Timer,
 }
 
 impl Animation {
-    pub fn new(frames: TileSeq, anim_speed: f32) -> Self {
+    pub fn new(frames: SpriteSeq, anim_speed: f32) -> Self {
         Self {
             frames,
             timer: Timer::from_seconds(anim_speed, TimerMode::Repeating),
@@ -123,7 +125,7 @@ impl Animation {
             x = self.frames.x.start;
         };
 
-        let tile = tilemap::Tile {
+        let tile = spritemap::SpritePos {
             x,
             y: self.frames.y,
             scale: self.frames.scale,
@@ -141,8 +143,8 @@ impl Animation {
 // TODO: Check this again after pickups are implemented
 #[derive(Component, Hash, PartialEq, Eq, Clone, Copy)]
 pub struct Sprite3d {
-    tile: tilemap::Tile,
-    flipped: bool,
+    pub tile: spritemap::SpritePos,
+    pub flipped: bool,
 }
 
 impl Sprite3d {
@@ -150,7 +152,7 @@ impl Sprite3d {
         self,
         pos: Vec3,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
     ) -> Sprite3dBundle {
         Sprite3dBundle {
             in_level: crate::lifecycle::LevelObject,
@@ -173,7 +175,7 @@ pub fn animate_sprites(
     time: Res<Time>,
     mut query: Query<(&mut Animation, &mut Sprite3d, &mut Handle<Mesh>)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<SpriteResource>,
+    mut render_res: ResMut<RenderResource>,
 ) {
     for (mut animation, mut sprite, mut mesh) in query.iter_mut() {
         animation.timer.tick(time.delta());

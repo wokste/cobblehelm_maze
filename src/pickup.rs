@@ -4,7 +4,7 @@ use crate::{
     combat::{player::Player, CreatureStats},
     grid::Coords,
     physics::{MapCollisionEvent, PhysicsBody},
-    render::{Sprite3d, SpriteResource},
+    render::{RenderResource, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
     GameInfo,
 };
@@ -102,8 +102,22 @@ impl Pickup {
         }
     }
 
-    fn make_sprite(&self) -> Sprite3d {
-        match self {}
+    fn make_sprite(&self, tiles: &crate::render::spritemap::SpriteMap) -> Sprite3d {
+        let str = match self {
+            Pickup::Apple => "apple.png",
+            Pickup::MedPack => "medpack.png",
+            Pickup::NextLevel => "portal.png",
+            Pickup::Coin => "coin.png",
+            Pickup::CoinPile => "coins.png",
+            Pickup::SilverKey => "key_silver.png",
+            Pickup::GoldKey => "key_gold.png",
+            Pickup::RedKey => "key_red.png",
+            Pickup::GreenKey => "key_green.png",
+        };
+        Sprite3d {
+            tile: tiles.get_item(str).tile_start(),
+            flipped: false,
+        }
     }
 
     pub fn spawn(
@@ -111,7 +125,7 @@ impl Pickup {
         commands: &mut Commands,
         map_data: &ResMut<crate::map::MapData>,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
         rng: &mut fastrand::Rng,
     ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
@@ -124,9 +138,9 @@ impl Pickup {
         pos: Coords,
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
     ) {
-        let uv = self.make_sprite();
+        let uv = self.make_sprite(&render_res.sprites);
 
         commands
             .spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))

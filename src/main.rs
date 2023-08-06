@@ -82,16 +82,18 @@ fn app_setup(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut ambient_light: ResMut<AmbientLight>,
-    mut render_res: ResMut<render::SpriteResource>,
+    mut render_res: ResMut<render::RenderResource>,
     mut commands: Commands,
+    mut images: ResMut<Assets<Image>>,
 ) {
     ambient_light.color = Color::WHITE;
     ambient_light.brightness = 0.5;
 
-    let texture = asset_server.load("sprites/sprites.png");
+    render_res.sprites =
+        render::spritemapbuilder::make_tilemap(&asset_server, &mut images).unwrap();
 
     render_res.material = materials.add(StandardMaterial {
-        base_color_texture: Some(texture),
+        base_color_texture: Some(render_res.sprites.texture.clone()),
         alpha_mode: AlphaMode::Mask(0.5),
         unlit: true,
         ..default() //Color::WHITE.into()

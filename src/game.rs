@@ -19,7 +19,7 @@ impl Plugin for GamePlugin {
             .add_systems(OnEnter(GameState::InGame), (start_level, capture_mouse))
             .add_systems(OnExit(GameState::InGame), release_mouse)
             .insert_resource(crate::map::MapData::default())
-            .insert_resource(crate::render::SpriteResource::default())
+            .insert_resource(crate::render::RenderResource::default())
             .insert_resource(crate::GameInfo::default())
             .insert_resource(crate::GameSettings::default())
             .add_systems(
@@ -74,7 +74,7 @@ fn start_level(
     mut game_data: ResMut<crate::GameInfo>,
     mut map_data: ResMut<MapData>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<crate::render::SpriteResource>,
+    mut render_res: ResMut<crate::render::RenderResource>,
     mut level_query: Query<Entity, With<LevelObject>>,
     mut player_query: Query<&mut Transform, With<Player>>,
     game_settings: Res<crate::GameSettings>,
@@ -115,6 +115,7 @@ fn start_level(
         .spawn(PbrBundle {
             mesh: meshes.add(crate::render::modelgen::map_to_mesh(
                 &map_gen_result.tilemap,
+                &render_res.sprites,
                 &mut rng,
             )),
             material: render_res.material.clone(),

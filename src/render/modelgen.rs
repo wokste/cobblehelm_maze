@@ -7,7 +7,7 @@ use bevy::{
     render::{mesh, render_resource::PrimitiveTopology},
 };
 
-use super::tilemap::TileSeq;
+use super::spritemap::{SpriteMap, SpriteSeq};
 
 #[derive(Default, Clone)]
 struct MeshBuilder {
@@ -51,14 +51,14 @@ impl MeshBuilder {
     }
 }
 
-pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
+pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand::Rng) -> Mesh {
     let mut builder = MeshBuilder::default();
 
     for pos in map.size().shrink(1).iter() {
         if let Tile::Floor(floor) = map[pos] {
             let p0 = Vec3::new(pos.x as f32, 0.0, pos.z as f32);
             // Floor tiles
-            let (tex_id, _scale) = floor_tex_id(floor).to_uv(rng);
+            let (tex_id, _scale) = floor_tex_id(floor, sprite_map).to_uv(rng);
             assert!(_scale == 1.0);
             builder.add_rect(p0, Vec3::X, Vec3::Z, tex_id);
 
@@ -68,7 +68,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
                     p0 + Vec3::X,
                     Vec3::NEG_X,
                     Vec3::Y,
-                    wall_tex_id(wall).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
                 );
             }
             if let Tile::Wall(wall) = map[pos.right()] {
@@ -76,7 +76,7 @@ pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
                     p0 + Vec3::X + Vec3::Z,
                     Vec3::NEG_Z,
                     Vec3::Y,
-                    wall_tex_id(wall).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
                 );
             }
             if let Tile::Wall(wall) = map[pos.bottom()] {
@@ -84,11 +84,16 @@ pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
                     p0 + Vec3::Z,
                     Vec3::X,
                     Vec3::Y,
-                    wall_tex_id(wall).to_uv(rng).0,
+                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
                 );
             }
             if let Tile::Wall(wall) = map[pos.left()] {
-                builder.add_rect(p0, Vec3::Z, Vec3::Y, wall_tex_id(wall).to_uv(rng).0);
+                builder.add_rect(
+                    p0,
+                    Vec3::Z,
+                    Vec3::Y,
+                    wall_tex_id(wall, sprite_map).to_uv(rng).0,
+                );
             }
         }
     }
@@ -96,10 +101,37 @@ pub fn map_to_mesh(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Mesh {
     builder.build()
 }
 
-pub fn floor_tex_id(tile: FloorTile) -> TileSeq {
-    match tile {}
+pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
+    let str = match tile {
+        FloorTile::Sand => "sand.png",
+        FloorTile::BlueTiles => "blue_tiles.png",
+        FloorTile::BrownFloor => "brown.png",
+        FloorTile::GrayFloor => "gray.png",
+        FloorTile::Cave => "cave.png",
+        FloorTile::Flesh => "flesh.png",
+        FloorTile::Demonic => "demonic.png",
+        FloorTile::Chips => "chips.png",
+        FloorTile::Sewer => "sewer.png",
+    };
+    sprite_map.get_floor(str)
 }
 
-pub fn wall_tex_id(tile: WallTile) -> TileSeq {
-    match tile {}
+pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
+    let str = match tile {
+        WallTile::Castle => "castle.png",
+        WallTile::TempleBrown => "temple_brown.png",
+        WallTile::TempleGray => "temple_gray.png",
+        WallTile::TempleGreen => "temple_green.png",
+        WallTile::Cave => "cave.png",
+        WallTile::Beehive => "beehive.png",
+        WallTile::Flesh => "flesh.png",
+        WallTile::Demonic => "demonic.png",
+        WallTile::DemonicCave => "demonic_cave.png",
+        WallTile::MetalIron => "metal_iron.png",
+        WallTile::MetalBronze => "metal_bronze.png",
+        WallTile::Chips => "chips.png",
+        WallTile::Sewer => "sewer.png",
+        WallTile::SewerCave => "sewer_cave.png",
+    };
+    sprite_map.get_wall(str)
 }
