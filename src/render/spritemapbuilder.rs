@@ -1,12 +1,13 @@
 const TEX_FORMAT: TextureFormat = TextureFormat::Rgba8UnormSrgb;
 
+use std::path::{Path, PathBuf};
+
 use bevy::{
-    prelude::{AssetServer, Assets, Handle, Image, Res, ResMut},
+    prelude::{AssetServer, Assets, Handle, Image, Res, ResMut, Resource},
     render::{
         render_resource::{Extent3d, TextureDimension, TextureFormat},
         texture::TextureFormatPixelInfo,
     },
-    utils::HashMap,
 };
 
 use super::spritemap::*;
@@ -19,6 +20,8 @@ trait Splitter {
 
 impl Splitter for SpriteSeq {
     fn try_split(&mut self, scale: SpriteScale, count: USprite) -> Option<SpriteSeq> {
+        assert!(count > 0);
+
         if self.scale != scale {
             return None;
         }
@@ -42,26 +45,30 @@ impl Splitter for SpriteSeq {
 
 #[derive(Debug)]
 pub enum MapBuildError {
-    IO,
+    IO(std::io::Error),
     NoMoreRows,
     SequenceTooLong,
     BadSpriteHeight,
     BadSpriteRatio,
 }
 
-struct SpriteMapBuilder {
-    sprites: SpriteMap,
+#[derive(Resource)]
+pub struct SpriteMapBuilder {
+    loaded: bool,
+    loading: Vec<(String, Handle<Image>, SpriteGroup)>,
     buckets: Vec<SpriteSeq>,
     next_row: u32,
     max_rows: u32,
 }
 
 impl SpriteMapBuilder {
-    pub fn new(image: &Image) -> Self {
-        let max_rows = (image.size().y as u32) / 64;
+    pub fn new() -> Self {
+        const HEIGHT: u32 = super::spritemap::TILESET_SIZE as u32;
+        let max_rows = HEIGHT / 64;
 
         Self {
-            sprites: SpriteMap::default(),
+            loaded: false,
+            loading: vec![],
             buckets: vec![],
             next_row: 0,
             max_rows,
@@ -110,32 +117,112 @@ impl SpriteMapBuilder {
     pub fn load_folder(
         &mut self,
         folder: &str,
+        group: SpriteGroup,
         asset_server: &Res<AssetServer>,
-        images: &mut ResMut<Assets<Image>>,
-        dst_image: &mut Image,
-    ) -> Result<HashMap<String, SpriteSeq>, MapBuildError> {
-        let mut tiles = HashMap::<String, SpriteSeq>::new();
-
+    ) -> Result<(), MapBuildError> {
         let path = format!("./assets/{}/", folder);
         let Ok(dir) = std::fs::read_dir(path) else {
-            return Ok(tiles);
+            return Ok(());
         };
         for os_path in dir {
-            let os_path = os_path.map_err(|e| MapBuildError::IO)?;
-
-            let handle: Handle<Image> = asset_server.load(os_path.path());
+            let os_path = os_path.map_err(|e| MapBuildError::IO(e))?;
             let key = os_path.file_name().to_str().unwrap().to_string();
-            println!("found sprite {}", key);
+            let os_path: PathBuf = Path::new(".").join(folder).join(os_path.file_name());
+
+            println!("PATH: {:?}", os_path);
+            let handle: Handle<Image> = asset_server.load(os_path);
+
+            self.loading.push((key, handle, group));
+        }
+        Ok(())
+    }
+
+    pub fn should_build(&self, images: &ResMut<Assets<Image>>) -> bool {
+        if self.loaded == true {
+            return false;
+        }
+
+        for (_str, handle, _) in self.loading.iter() {
+            if !images.contains(handle) {
+                println!("Image not loaded: {}", _str);
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn build_done(&self) -> bool {
+        self.loaded
+    }
+
+    pub fn build(
+        &mut self,
+        images: &mut ResMut<Assets<Image>>,
+    ) -> Result<SpriteMap, MapBuildError> {
+        assert!(self.should_build(images));
+        println!("Build started");
+        // Create the texture map image
+        let width = super::spritemap::TILESET_SIZE as u32;
+        let height = super::spritemap::TILESET_SIZE as u32;
+        let mut dst_image = Image::new(
+            Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            TextureDimension::D2,
+            vec![0; TEX_FORMAT.pixel_size() * (width * height) as usize],
+            TEX_FORMAT,
+        );
+
+        // Copy the loaded images to said image
+        let mut map = SpriteMap::default();
+
+        let loaded: Vec<_> = self.loading.drain(0..self.loading.len()).collect();
+        for (key, handle, group) in loaded {
             let src_image = images.get(&handle).unwrap();
 
             let (scale, count) = image_properties(src_image)?;
+            assert!(count > 0);
 
             let seq = self.find_sprites_pos(scale, count)?;
-            copy_texture(src_image, dst_image, &seq);
+            assert!(seq.x.len() == count as usize);
+            copy_texture(src_image, &mut dst_image, &seq);
 
-            tiles.insert(key, seq);
+            map.find_map_mut(group).insert(key, seq);
         }
-        Ok(tiles)
+
+        // Bind image
+        map.texture = images.add(dst_image);
+
+        // Make sure there is a no_tile image
+        map.no_tile = SpriteSeq {
+            x: 0..1,
+            y: 0,
+            scale: SpriteScale::Basic,
+        };
+        assert!(map.no_tile.x.len() == 1);
+        map.no_tile = map.get_misc("missing.png");
+        assert!(map.no_tile.x.len() >= 1);
+
+        self.loaded = true;
+        println!("Build done");
+
+        // Return it
+        Ok(map)
+    }
+
+    pub fn start_load(&mut self, asset_server: &Res<AssetServer>) -> Result<(), MapBuildError> {
+        type SG = super::spritemap::SpriteGroup;
+        self.load_folder("floors", SG::Floor, asset_server)?;
+        self.load_folder("walls", SG::Wall, asset_server)?;
+        self.load_folder("ceilings", SG::Ceiling, asset_server)?;
+        self.load_folder("doors", SG::Door, asset_server)?;
+        self.load_folder("monsters", SG::Monster, asset_server)?;
+        self.load_folder("items", SG::Item, asset_server)?;
+        self.load_folder("projectiles", SG::Projectile, asset_server)?;
+        self.load_folder("misc", SG::Misc, asset_server)?;
+        Ok(())
     }
 }
 
@@ -180,44 +267,4 @@ fn copy_texture(src: &Image, dest: &mut Image, pos: &SpriteSeq) {
 
         dest_slice.copy_from_slice(src_slice);
     }
-}
-
-pub fn make_tilemap(
-    asset_server: &Res<AssetServer>,
-    images: &mut ResMut<Assets<Image>>,
-) -> Result<SpriteMap, MapBuildError> {
-    let width = super::spritemap::TILESET_SIZE as u32;
-    let height = super::spritemap::TILESET_SIZE as u32;
-
-    let mut image = Image::new(
-        Extent3d {
-            width,
-            height,
-            depth_or_array_layers: 1,
-        },
-        TextureDimension::D2,
-        vec![0; TEX_FORMAT.pixel_size() * (width * height) as usize],
-        TEX_FORMAT,
-    );
-
-    let mut builder = SpriteMapBuilder::new(&image);
-
-    builder.sprites.floors = builder.load_folder("floors", asset_server, images, &mut image)?;
-    builder.sprites.walls = builder.load_folder("walls", asset_server, images, &mut image)?;
-    builder.sprites.ceilings = builder.load_folder("ceilings", asset_server, images, &mut image)?;
-    builder.sprites.monsters = builder.load_folder("monsters", asset_server, images, &mut image)?;
-    builder.sprites.items = builder.load_folder("items", asset_server, images, &mut image)?;
-    builder.sprites.projectiles =
-        builder.load_folder("projectiles", asset_server, images, &mut image)?;
-    builder.sprites.misc = builder.load_folder("misc", asset_server, images, &mut image)?;
-
-    builder.sprites.texture = images.add(image);
-    builder.sprites.no_tile = SpriteSeq {
-        x: 0..1,
-        y: 0,
-        scale: SpriteScale::Basic,
-    };
-    builder.sprites.no_tile = builder.sprites.get_misc("missing.png");
-
-    Ok(builder.sprites)
 }

@@ -118,6 +118,7 @@ impl SpriteSeq {
 pub struct SpriteMap {
     pub texture: Handle<Image>,
     pub ceilings: HashMap<String, SpriteSeq>,
+    pub doors: HashMap<String, SpriteSeq>,
     pub floors: HashMap<String, SpriteSeq>,
     pub items: HashMap<String, SpriteSeq>,
     pub misc: HashMap<String, SpriteSeq>,
@@ -126,12 +127,29 @@ pub struct SpriteMap {
     pub walls: HashMap<String, SpriteSeq>,
     pub no_tile: SpriteSeq,
 }
-impl SpriteMap {
+impl<'a> SpriteMap {
+    pub fn find_map_mut(&'a mut self, group: SpriteGroup) -> &'a mut HashMap<String, SpriteSeq> {
+        match group {
+            SpriteGroup::Ceiling => &mut self.floors,
+            SpriteGroup::Door => &mut self.doors,
+            SpriteGroup::Floor => &mut self.floors,
+            SpriteGroup::Item => &mut self.items,
+            SpriteGroup::Misc => &mut self.misc,
+            SpriteGroup::Monster => &mut self.monsters,
+            SpriteGroup::Projectile => &mut self.projectiles,
+            SpriteGroup::Wall => &mut self.walls,
+        }
+    }
+
     pub fn get_ceiling(&self, str: &str) -> SpriteSeq {
         self.ceilings
             .get(str)
             .cloned()
             .unwrap_or(self.no_tile.clone())
+    }
+
+    pub fn get_door(&self, str: &str) -> SpriteSeq {
+        self.doors.get(str).cloned().unwrap_or(self.no_tile.clone())
     }
 
     pub fn get_floor(&self, str: &str) -> SpriteSeq {
@@ -166,4 +184,16 @@ impl SpriteMap {
     pub fn get_wall(&self, str: &str) -> SpriteSeq {
         self.walls.get(str).cloned().unwrap_or(self.no_tile.clone())
     }
+}
+
+#[derive(Clone, Copy)]
+pub enum SpriteGroup {
+    Ceiling,
+    Door,
+    Floor,
+    Item,
+    Misc,
+    Monster,
+    Projectile,
+    Wall,
 }
