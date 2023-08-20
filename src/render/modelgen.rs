@@ -7,7 +7,7 @@ use bevy::{
     render::{mesh, render_resource::PrimitiveTopology},
 };
 
-use super::spritemap::{SpriteMap, SpriteSeq};
+use super::spritemap::{SpriteMap, SpriteSeq, TILESET_SIZE};
 
 #[derive(Default, Clone)]
 struct MeshBuilder {
@@ -38,8 +38,10 @@ impl MeshBuilder {
     fn add_rect(&mut self, p: Vec3, dir0: Vec3, dir1: Vec3, uv: Vec2) {
         let normal = dir0.cross(dir1);
 
-        let uv0 = Vec2::new(1.0 / 32.0, 0.0);
-        let uv1 = Vec2::new(0.0, 1.0 / 8.0);
+        let scale = 64 as f32 / TILESET_SIZE as f32;
+
+        let uv0 = Vec2::new(scale, 0.0);
+        let uv1 = Vec2::new(0.0, scale);
 
         let id0 = self.add_vertex(p, normal, uv + uv0 + uv1);
         let id1 = self.add_vertex(p + dir0, normal, uv + uv1);

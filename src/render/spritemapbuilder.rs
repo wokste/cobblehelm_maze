@@ -245,25 +245,27 @@ fn image_properties(image: &Image) -> Result<(SpriteScale, u8), MapBuildError> {
     Ok((scale, (w / h) as u8))
 }
 
-fn copy_texture(src: &Image, dest: &mut Image, pos: &SpriteSeq) {
-    assert!(src.texture_descriptor.format == TEX_FORMAT);
-    assert!(src.texture_descriptor.format == TEX_FORMAT);
+fn copy_texture(src_img: &Image, dest_img: &mut Image, sequence: &SpriteSeq) {
+    assert!(src_img.texture_descriptor.format == TEX_FORMAT);
+    assert!(src_img.texture_descriptor.format == TEX_FORMAT);
 
-    let px_mult = TEX_FORMAT.pixel_size(); // RGBA has 4 bytes
-    let mult = pos.scale.size() as usize;
-    let x0 = (pos.x.start as usize) * mult;
+    let bytes_per_px = TEX_FORMAT.pixel_size(); // RGBA has 4 bytes
+    let scale_px = sequence.scale.size() as usize;
+    let dst_offset_bytes_x = (sequence.x.start as usize) * scale_px * bytes_per_px;
 
-    let src_row = src.size().x as usize * px_mult;
-    let dst_row = (TILESET_SIZE as usize) * px_mult;
-    let y0 = (pos.y as usize) * mult;
-    let y1 = ((pos.y + 1) as usize) * mult;
+    let src_row_bytes = src_img.size().x as usize * bytes_per_px;
+    let dst_row_bytes = (TILESET_SIZE as usize) * bytes_per_px;
 
-    for y in y0..y1 {
-        let src_start = y * src_row;
-        let dest_start = y * dst_row + x0;
+    let y0_px = (sequence.y as usize) * scale_px;
+    let y1_px = ((sequence.y + 1) as usize) * scale_px;
 
-        let src_slice = &src.data.as_slice()[src_start..src_start + src_row];
-        let dest_slice = &mut dest.data.as_mut_slice()[dest_start..dest_start + src_row];
+    for y_px in y0_px..y1_px {
+        let src_start_bytes = y_px * src_row_bytes;
+        let dest_start_bytes = y_px * dst_row_bytes + dst_offset_bytes_x;
+
+        let src_slice = &src_img.data.as_slice()[src_start_bytes..src_start_bytes + src_row_bytes];
+        let dest_slice =
+            &mut dest_img.data.as_mut_slice()[dest_start_bytes..dest_start_bytes + src_row_bytes];
 
         dest_slice.copy_from_slice(src_slice);
     }
