@@ -1,6 +1,6 @@
 use crate::{
     combat::MonsterType,
-    map::{DoorType, FloorTile, WallTile},
+    map::{CeilingTile, DoorType, FloorTile, WallTile},
 };
 
 use super::randitem::RandItem;
@@ -146,6 +146,13 @@ pub fn choose_floor(tile: WallTile, rng: &mut fastrand::Rng) -> FloorTile {
         WallTile::SewerCave => &[FloorTile::Sewer],
         WallTile::MetalIron => &[FloorTile::BlueTiles, FloorTile::Chips],
         WallTile::MetalBronze => &[FloorTile::BlueTiles, FloorTile::Chips],
+    };
+    *slice.rand_front_loaded(rng)
+}
+
+pub fn choose_ceiling(tile: WallTile, rng: &mut fastrand::Rng) -> CeilingTile {
+    let slice: &[CeilingTile] = match tile {
+        _ => &[CeilingTile::White],
     };
     *slice.rand_front_loaded(rng)
 }

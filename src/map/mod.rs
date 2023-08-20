@@ -6,7 +6,7 @@ pub enum Tile {
     #[default]
     Void,
     Wall(WallTile),
-    Floor(FloorTile),
+    Open(FloorTile, CeilingTile),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -41,6 +41,11 @@ pub enum FloorTile {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+pub enum CeilingTile {
+    White,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DoorType {
     Chips,
 }
@@ -49,7 +54,7 @@ impl Tile {
     pub fn is_solid(&self) -> bool {
         match self {
             Tile::Wall(_) => true,
-            Tile::Floor(_) => false,
+            Tile::Open(_, _) => false,
             Tile::Void => true,
         }
     }

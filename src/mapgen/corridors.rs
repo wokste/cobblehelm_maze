@@ -23,7 +23,10 @@ fn connect_rooms_constructed(
     wall: WallTile,
     p: (Coords, Coords),
 ) {
-    let floor_tile = Tile::Floor(super::style::choose_floor(wall, rng));
+    let tile = Tile::Open(
+        super::style::choose_floor(wall, rng),
+        super::style::choose_ceiling(wall, rng),
+    );
     let _door_tile = if level_style.doors.is_empty() {
         None
     } else {
@@ -41,7 +44,7 @@ fn connect_rooms_constructed(
     for x in x0..=x1 {
         let c = Coords::new(x, p.1.z);
         if map[c].is_solid() {
-            map[c] = floor_tile;
+            map[c] = tile;
             added_floors.push(c);
         }
     }
@@ -50,7 +53,7 @@ fn connect_rooms_constructed(
     for z in z0..=z1 {
         let c = Coords::new(p.0.x, z);
         if map[c].is_solid() {
-            map[c] = floor_tile;
+            map[c] = tile;
             added_floors.push(c);
         }
     }
@@ -64,13 +67,16 @@ pub fn connect_rooms_organic(
     wall: WallTile,
     p: (Coords, Coords),
 ) {
-    let floor_tile = Tile::Floor(super::style::choose_floor(wall, rng));
+    let tile = Tile::Open(
+        super::style::choose_floor(wall, rng),
+        super::style::choose_ceiling(wall, rng),
+    );
     let (mut cur_pos, end_pos) = p;
 
     let mut added_floors = vec![];
     loop {
         if map[cur_pos].is_solid() {
-            map[cur_pos] = floor_tile;
+            map[cur_pos] = tile;
             added_floors.push(cur_pos);
         }
 
@@ -91,7 +97,7 @@ pub fn connect_rooms_organic(
 fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, add_doors: bool) {
     for floor_pos in added_floors {
         // Add walls
-        let Tile::Floor(_) = map[floor_pos] else {continue;};
+        let Tile::Open(_,_) = map[floor_pos] else {continue;};
 
         let l = floor_pos.left();
         let r = floor_pos.right();

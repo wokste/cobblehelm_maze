@@ -1,6 +1,6 @@
 use crate::{
     grid::Grid,
-    map::{FloorTile, Tile, WallTile},
+    map::{CeilingTile, FloorTile, Tile, WallTile},
 };
 use bevy::{
     prelude::{Mesh, Vec2, Vec3},
@@ -57,11 +57,23 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
     let mut builder = MeshBuilder::default();
 
     for pos in map.size().shrink(1).iter() {
-        if let Tile::Floor(floor) = map[pos] {
+        if let Tile::Open(floor, ceiling) = map[pos] {
             let p0 = Vec3::new(pos.x as f32, 0.0, pos.z as f32);
             // Floor tiles
-            let tex_id = floor_tex_id(floor, sprite_map).to_uv(rng);
-            builder.add_rect(p0, Vec3::X, Vec3::Z, tex_id);
+            builder.add_rect(
+                p0,
+                Vec3::X,
+                Vec3::Z,
+                floor_tex_id(floor, sprite_map).to_uv(rng),
+            );
+
+            // Ceiling Tiles
+            builder.add_rect(
+                p0 + Vec3::Y,
+                Vec3::Z,
+                Vec3::X,
+                ceiling_tex_id(ceiling, sprite_map).to_uv(rng),
+            );
 
             // Wall tiles
             if let Tile::Wall(wall) = map[pos.top()] {
@@ -102,19 +114,26 @@ pub fn map_to_mesh(map: &Grid<Tile>, sprite_map: &SpriteMap, rng: &mut fastrand:
     builder.build()
 }
 
+pub fn ceiling_tex_id(tile: CeilingTile, sprite_map: &SpriteMap) -> SpriteSeq {
+    let str = match tile {
+        CeilingTile::White => "ceiling_white.png",
+    };
+    sprite_map.get_block(str)
+}
+
 pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
     let str = match tile {
-        FloorTile::Sand => "sand.png",
-        FloorTile::BlueTiles => "blue_tiles.png",
-        FloorTile::BrownFloor => "brown.png",
-        FloorTile::GrayFloor => "gray.png",
-        FloorTile::Cave => "cave.png",
-        FloorTile::Flesh => "flesh.png",
-        FloorTile::Demonic => "demonic.png",
-        FloorTile::Chips => "chips.png",
-        FloorTile::Sewer => "sewer.png",
+        FloorTile::Sand => "floor_sand.png",
+        FloorTile::BlueTiles => "floor_blue_tiles.png",
+        FloorTile::BrownFloor => "floor_brown.png",
+        FloorTile::GrayFloor => "floor_gray.png",
+        FloorTile::Cave => "floor_cave.png",
+        FloorTile::Flesh => "floor_flesh.png",
+        FloorTile::Demonic => "floor_demonic.png",
+        FloorTile::Chips => "floor_chips.png",
+        FloorTile::Sewer => "floor_sewer.png",
     };
-    sprite_map.get_floor(str)
+    sprite_map.get_block(str)
 }
 
 pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
@@ -134,5 +153,5 @@ pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
         WallTile::Sewer => "sewer.png",
         WallTile::SewerCave => "sewer_cave.png",
     };
-    sprite_map.get_wall(str)
+    sprite_map.get_block(str)
 }

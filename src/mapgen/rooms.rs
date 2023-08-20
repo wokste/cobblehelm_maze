@@ -4,19 +4,22 @@ use std::ops::Range;
 use bevy::prelude::Vec2;
 
 use crate::grid::{Coords, Grid, Rect};
-use crate::map::{FloorTile, Tile, WallTile};
+use crate::map::{CeilingTile, FloorTile, Tile, WallTile};
 
 pub fn make_room(wall: WallTile, rng: &mut fastrand::Rng) -> Grid<Tile> {
     let shape = super::style::choose_shape(wall, rng);
     let floor = super::style::choose_floor(wall, rng);
+    let ceil = super::style::choose_ceiling(wall, rng);
 
     let mut map = match shape {
-        super::RoomShape::Organic => make_organic_floor(floor, rng.i32(8..16), rng.i32(8..16), rng),
-        super::RoomShape::Constructed => {
-            make_constructed_floor(floor, rng.i32(5..14), rng.i32(4..12), rng)
+        super::RoomShape::Organic => {
+            make_organic_floor(floor, ceil, rng.i32(8..16), rng.i32(8..16), rng)
         }
-        super::RoomShape::Mirror => make_mirror_floor(floor, rng, 10..20),
-        super::RoomShape::DoubleRect => make_doublerect_floor(floor, rng, 5..14),
+        super::RoomShape::Constructed => {
+            make_constructed_floor(floor, ceil, rng.i32(5..14), rng.i32(4..12), rng)
+        }
+        super::RoomShape::Mirror => make_mirror_floor(floor, ceil, rng, 10..20),
+        super::RoomShape::DoubleRect => make_doublerect_floor(floor, ceil, rng, 5..14),
     };
 
     add_walls(&mut map, wall);
@@ -26,6 +29,7 @@ pub fn make_room(wall: WallTile, rng: &mut fastrand::Rng) -> Grid<Tile> {
 
 fn make_organic_floor(
     floor: FloorTile,
+    ceil: CeilingTile,
     x_max: i32,
     z_max: i32,
     rng: &mut fastrand::Rng,
@@ -48,7 +52,7 @@ fn make_organic_floor(
         let len_max = (angle * ang_spikes + ang_offset).sin() * 0.25 + 0.75;
 
         if angle.is_nan() || len < len_max {
-            map[c] = Tile::Floor(floor);
+            map[c] = Tile::Open(floor, ceil);
         }
     }
     map
@@ -56,6 +60,7 @@ fn make_organic_floor(
 
 fn make_constructed_floor(
     floor: FloorTile,
+    ceil: CeilingTile,
     mut x_max: i32,
     z_max: i32,
     rng: &mut fastrand::Rng,
@@ -66,7 +71,7 @@ fn make_constructed_floor(
 
     let mut map = Grid::<Tile>::new(x_max + 2, z_max + 2);
     for c in map.size().shrink(1).iter() {
-        map[c] = Tile::Floor(floor);
+        map[c] = Tile::Open(floor, ceil);
     }
 
     let column_pos = rng.i32(0..3);
@@ -82,7 +87,12 @@ fn make_constructed_floor(
     map
 }
 
-fn make_mirror_floor(floor: FloorTile, rng: &mut fastrand::Rng, range: Range<i32>) -> Grid<Tile> {
+fn make_mirror_floor(
+    floor: FloorTile,
+    ceil: CeilingTile,
+    rng: &mut fastrand::Rng,
+    range: Range<i32>,
+) -> Grid<Tile> {
     let x_max = rng.i32(range) + 2;
     let z_max = rng.i32((x_max * 3 / 8)..(x_max * 6 / 8)) + 2;
 
@@ -91,7 +101,7 @@ fn make_mirror_floor(floor: FloorTile, rng: &mut fastrand::Rng, range: Range<i32
     for x in 1..x_max - 1 {
         let dz = rng.i32(1..(z_max / 2));
         for z in dz..z_max - dz {
-            map[(x, z)] = Tile::Floor(floor);
+            map[(x, z)] = Tile::Open(floor, ceil);
         }
     }
 
@@ -101,6 +111,7 @@ fn make_mirror_floor(floor: FloorTile, rng: &mut fastrand::Rng, range: Range<i32
 
 fn make_doublerect_floor(
     floor: FloorTile,
+    ceil: CeilingTile,
     rng: &mut fastrand::Rng,
     range: Range<i32>,
 ) -> Grid<Tile> {
@@ -134,7 +145,7 @@ fn make_doublerect_floor(
 
     for rect in rects {
         for c in rect.shrink(1).iter() {
-            map[c] = Tile::Floor(floor);
+            map[c] = Tile::Open(floor, ceil);
         }
     }
 
@@ -146,7 +157,7 @@ fn add_walls(map: &mut Grid<Tile>, wall: WallTile) {
     let wall = Tile::Wall(wall);
     for z in 0..map.z_max() {
         for x in 0..map.x_max() {
-            let Tile::Floor(_) = map[(x,z)] else {continue;};
+            let Tile::Open(_,_) = map[(x,z)] else {continue;};
 
             for c in [(x - 1, z), (x + 1, z), (x, z - 1), (x, z + 1)] {
                 if map[c] == Tile::Void {

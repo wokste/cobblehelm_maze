@@ -129,7 +129,7 @@ impl SpriteMapBuilder {
             let key = os_path.file_name().to_str().unwrap().to_string();
             let os_path: PathBuf = Path::new(".").join(folder).join(os_path.file_name());
 
-            println!("PATH: {:?}", os_path);
+            println!("Loading image: {:?}", os_path);
             let handle: Handle<Image> = asset_server.load(os_path);
 
             self.loading.push((key, handle, group));
@@ -144,7 +144,6 @@ impl SpriteMapBuilder {
 
         for (_str, handle, _) in self.loading.iter() {
             if !images.contains(handle) {
-                println!("Image not loaded: {}", _str);
                 return false;
             }
         }
@@ -183,10 +182,7 @@ impl SpriteMapBuilder {
             let src_image = images.get(&handle).unwrap();
 
             let (scale, count) = image_properties(src_image)?;
-            assert!(count > 0);
-
             let seq = self.find_sprites_pos(scale, count)?;
-            assert!(seq.x.len() == count as usize);
             copy_texture(src_image, &mut dst_image, &seq);
 
             map.find_map_mut(group).insert(key, seq);
@@ -194,16 +190,6 @@ impl SpriteMapBuilder {
 
         // Bind image
         map.texture = images.add(dst_image);
-
-        // Make sure there is a no_tile image
-        map.no_tile = SpriteSeq {
-            x: 0..1,
-            y: 0,
-            scale: SpriteScale::Basic,
-        };
-        assert!(map.no_tile.x.len() == 1);
-        map.no_tile = map.get_misc("missing.png");
-        assert!(map.no_tile.x.len() >= 1);
 
         self.loaded = true;
         println!("Build done");
@@ -214,10 +200,7 @@ impl SpriteMapBuilder {
 
     pub fn start_load(&mut self, asset_server: &Res<AssetServer>) -> Result<(), MapBuildError> {
         type SG = super::spritemap::SpriteGroup;
-        self.load_folder("floors", SG::Floor, asset_server)?;
-        self.load_folder("walls", SG::Wall, asset_server)?;
-        self.load_folder("ceilings", SG::Ceiling, asset_server)?;
-        self.load_folder("doors", SG::Door, asset_server)?;
+        self.load_folder("blocks", SG::Block, asset_server)?;
         self.load_folder("monsters", SG::Monster, asset_server)?;
         self.load_folder("items", SG::Item, asset_server)?;
         self.load_folder("projectiles", SG::Projectile, asset_server)?;

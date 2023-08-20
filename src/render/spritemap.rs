@@ -117,83 +117,69 @@ impl SpriteSeq {
 #[derive(Resource, Default)]
 pub struct SpriteMap {
     pub texture: Handle<Image>,
-    pub ceilings: HashMap<String, SpriteSeq>,
-    pub doors: HashMap<String, SpriteSeq>,
-    pub floors: HashMap<String, SpriteSeq>,
+    pub blocks: HashMap<String, SpriteSeq>,
     pub items: HashMap<String, SpriteSeq>,
     pub misc: HashMap<String, SpriteSeq>,
     pub monsters: HashMap<String, SpriteSeq>,
     pub projectiles: HashMap<String, SpriteSeq>,
-    pub walls: HashMap<String, SpriteSeq>,
-    pub no_tile: SpriteSeq,
 }
 impl<'a> SpriteMap {
     pub fn find_map_mut(&'a mut self, group: SpriteGroup) -> &'a mut HashMap<String, SpriteSeq> {
         match group {
-            SpriteGroup::Ceiling => &mut self.floors,
-            SpriteGroup::Door => &mut self.doors,
-            SpriteGroup::Floor => &mut self.floors,
+            SpriteGroup::Block => &mut self.blocks,
             SpriteGroup::Item => &mut self.items,
             SpriteGroup::Misc => &mut self.misc,
             SpriteGroup::Monster => &mut self.monsters,
             SpriteGroup::Projectile => &mut self.projectiles,
-            SpriteGroup::Wall => &mut self.walls,
         }
     }
 
-    pub fn get_ceiling(&self, str: &str) -> SpriteSeq {
-        self.ceilings
-            .get(str)
-            .cloned()
-            .unwrap_or(self.no_tile.clone())
-    }
-
-    pub fn get_door(&self, str: &str) -> SpriteSeq {
-        self.doors.get(str).cloned().unwrap_or(self.no_tile.clone())
-    }
-
-    pub fn get_floor(&self, str: &str) -> SpriteSeq {
-        self.floors
-            .get(str)
-            .cloned()
-            .unwrap_or(self.no_tile.clone())
+    pub fn get_block(&self, str: &str) -> SpriteSeq {
+        if let Some(block) = self.blocks.get(str) {
+            block.clone()
+        } else if let Some(missing) = self.misc.get("no_block.png") {
+            missing.clone()
+        } else {
+            panic!("Could not find block {}", str);
+        }
     }
 
     pub fn get_item(&self, str: &str) -> SpriteSeq {
-        self.items.get(str).cloned().unwrap_or(self.no_tile.clone())
-    }
-
-    pub fn get_misc(&self, str: &str) -> SpriteSeq {
-        self.misc.get(str).cloned().unwrap_or(self.no_tile.clone())
+        if let Some(item) = self.items.get(str) {
+            item.clone()
+        } else if let Some(missing) = self.misc.get("no_item.png") {
+            missing.clone()
+        } else {
+            panic!("Could not find item {}", str);
+        }
     }
 
     pub fn get_monster(&self, str: &str) -> SpriteSeq {
-        self.monsters
-            .get(str)
-            .cloned()
-            .unwrap_or(self.no_tile.clone())
+        if let Some(monster) = self.monsters.get(str) {
+            monster.clone()
+        } else if let Some(missing) = self.misc.get("no_monster.png") {
+            missing.clone()
+        } else {
+            panic!("Could not find monster {}", str);
+        }
     }
 
     pub fn get_projectile(&self, str: &str) -> SpriteSeq {
-        self.projectiles
-            .get(str)
-            .cloned()
-            .unwrap_or(self.no_tile.clone())
-    }
-
-    pub fn get_wall(&self, str: &str) -> SpriteSeq {
-        self.walls.get(str).cloned().unwrap_or(self.no_tile.clone())
+        if let Some(projectile) = self.projectiles.get(str) {
+            projectile.clone()
+        } else if let Some(missing) = self.misc.get("no_projectile.png") {
+            missing.clone()
+        } else {
+            panic!("Could not find item {}", str);
+        }
     }
 }
 
 #[derive(Clone, Copy)]
 pub enum SpriteGroup {
-    Ceiling,
-    Door,
-    Floor,
+    Block,
     Item,
     Misc,
     Monster,
     Projectile,
-    Wall,
 }
