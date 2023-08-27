@@ -232,23 +232,22 @@ fn copy_texture(src_img: &Image, dest_img: &mut Image, sequence: &SpriteSeq) {
     assert!(src_img.texture_descriptor.format == TEX_FORMAT);
     assert!(src_img.texture_descriptor.format == TEX_FORMAT);
 
-    let bytes_per_px = TEX_FORMAT.pixel_size(); // RGBA has 4 bytes
+    let bytes_per_px = TEX_FORMAT.pixel_size();
     let scale_px = sequence.scale.size() as usize;
     let dst_offset_bytes_x = (sequence.x.start as usize) * scale_px * bytes_per_px;
 
     let src_row_bytes = src_img.size().x as usize * bytes_per_px;
     let dst_row_bytes = (TILESET_SIZE as usize) * bytes_per_px;
 
-    let y0_px = (sequence.y as usize) * scale_px;
-    let y1_px = ((sequence.y + 1) as usize) * scale_px;
+    //println!("bytes_per_px: {}, scale_px: {}, dst_offset_bytes_x: {}, src_row_bytes: {}, dst_row_bytes: {}, y_px: {}..{}", bytes_per_px, scale_px, dst_offset_bytes_x, src_row_bytes, dst_row_bytes, y0_px, y1_px);
 
-    for y_px in y0_px..y1_px {
-        let src_start_bytes = y_px * src_row_bytes;
-        let dest_start_bytes = y_px * dst_row_bytes + dst_offset_bytes_x;
+    for src_y in 0..scale_px {
+        let dest_y = src_y + (sequence.y as usize) * scale_px;
+        let src_start_bytes = src_y * src_row_bytes;
+        let dest_start_bytes = dest_y * dst_row_bytes + dst_offset_bytes_x;
 
-        let src_slice = &src_img.data.as_slice()[src_start_bytes..src_start_bytes + src_row_bytes];
-        let dest_slice =
-            &mut dest_img.data.as_mut_slice()[dest_start_bytes..dest_start_bytes + src_row_bytes];
+        let src_slice = &src_img.data[src_start_bytes..src_start_bytes + src_row_bytes];
+        let dest_slice = &mut dest_img.data[dest_start_bytes..dest_start_bytes + src_row_bytes];
 
         dest_slice.copy_from_slice(src_slice);
     }

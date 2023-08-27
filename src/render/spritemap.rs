@@ -68,7 +68,7 @@ pub struct SpriteSeq {
 }
 
 impl SpriteSeq {
-    fn tile(&self, x: USprite) -> SpritePos {
+    pub fn tile(&self, x: USprite) -> SpritePos {
         SpritePos {
             x,
             y: self.y,
@@ -134,43 +134,47 @@ impl<'a> SpriteMap {
         }
     }
 
-    pub fn get_block(&self, str: &str) -> SpriteSeq {
-        if let Some(block) = self.blocks.get(str) {
+    pub fn get_block(&self, name: &str) -> SpriteSeq {
+        if let Some(block) = self.blocks.get(name) {
             block.clone()
         } else if let Some(missing) = self.misc.get("no_block.png") {
+            warn!("Could not find block sprite {}", name);
             missing.clone()
         } else {
-            panic!("Could not find block {}", str);
+            panic!("Could not find block {}", name);
         }
     }
 
-    pub fn get_item(&self, str: &str) -> SpriteSeq {
-        if let Some(item) = self.items.get(str) {
+    pub fn get_item(&self, name: &str) -> SpriteSeq {
+        if let Some(item) = self.items.get(name) {
             item.clone()
         } else if let Some(missing) = self.misc.get("no_item.png") {
+            warn!("Could not find item sprite {}", name);
             missing.clone()
         } else {
-            panic!("Could not find item {}", str);
+            panic!("Could not find item {}", name);
         }
     }
 
-    pub fn get_monster(&self, str: &str) -> SpriteSeq {
-        if let Some(monster) = self.monsters.get(str) {
+    pub fn get_monster(&self, name: &str) -> SpriteSeq {
+        if let Some(monster) = self.monsters.get(name) {
             monster.clone()
         } else if let Some(missing) = self.misc.get("no_monster.png") {
+            warn!("Could not find monster sprite {}", name);
             missing.clone()
         } else {
-            panic!("Could not find monster {}", str);
+            panic!("Could not find monster {}", name);
         }
     }
 
-    pub fn get_projectile(&self, str: &str) -> SpriteSeq {
-        if let Some(projectile) = self.projectiles.get(str) {
+    pub fn get_projectile(&self, name: &str) -> SpriteSeq {
+        if let Some(projectile) = self.projectiles.get(name) {
             projectile.clone()
         } else if let Some(missing) = self.misc.get("no_projectile.png") {
+            warn!("Could not find projectile sprite {}", name);
             missing.clone()
         } else {
-            panic!("Could not find item {}", str);
+            panic!("Could not find projectile {}", name);
         }
     }
 }

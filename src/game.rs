@@ -189,7 +189,7 @@ fn start_level(
     // Add key pickups
     {
         use crate::pickup::Pickup as K;
-        let mut keys = [K::SilverKey, K::GoldKey, K::RedKey, K::GreenKey];
+        let mut keys = [K::Key(0), K::Key(1), K::Key(2), K::Key(3)];
         rng.shuffle(&mut keys);
 
         for key in keys.iter().take(2) {

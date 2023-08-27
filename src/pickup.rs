@@ -4,7 +4,7 @@ use crate::{
     combat::{player::Player, CreatureStats},
     grid::Coords,
     physics::{MapCollisionEvent, PhysicsBody},
-    render::{RenderResource, Sprite3d},
+    render::{spritemap::USprite, RenderResource, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
     GameInfo,
 };
@@ -16,10 +16,7 @@ pub enum Pickup {
     NextLevel,
     Coin,
     CoinPile,
-    SilverKey,
-    GoldKey,
-    RedKey,
-    GreenKey,
+    Key(u8),
 }
 
 enum StatGain {
@@ -38,10 +35,7 @@ impl Pickup {
             Pickup::NextLevel => StatGain::NextLevel,
             Pickup::Coin => StatGain::Coins(1),
             Pickup::CoinPile => StatGain::Coins(5),
-            Pickup::SilverKey => StatGain::Key(0x1),
-            Pickup::GoldKey => StatGain::Key(0x2),
-            Pickup::RedKey => StatGain::Key(0x4),
-            Pickup::GreenKey => StatGain::Key(0x8),
+            Pickup::Key(id) => StatGain::Key(1 << id),
         }
     }
 
@@ -103,19 +97,16 @@ impl Pickup {
     }
 
     fn make_sprite(&self, tiles: &crate::render::spritemap::SpriteMap) -> Sprite3d {
-        let str = match self {
-            Pickup::Apple => "apple.png",
-            Pickup::MedPack => "medpack.png",
-            Pickup::NextLevel => "portal.png",
-            Pickup::Coin => "coin.png",
-            Pickup::CoinPile => "coins.png",
-            Pickup::SilverKey => "key_silver.png",
-            Pickup::GoldKey => "key_gold.png",
-            Pickup::RedKey => "key_red.png",
-            Pickup::GreenKey => "key_green.png",
+        let (str, id) = match self {
+            Pickup::Apple => ("apple.png", 0),
+            Pickup::MedPack => ("medpack.png", 0),
+            Pickup::NextLevel => ("portal.png", 0),
+            Pickup::Coin => ("coin.png", 0),
+            Pickup::CoinPile => ("coins.png", 0),
+            Pickup::Key(id) => ("key.png", *id as USprite),
         };
         Sprite3d {
-            tile: tiles.get_item(str).tile_start(),
+            tile: tiles.get_item(str).tile(id),
             flipped: false,
         }
     }
