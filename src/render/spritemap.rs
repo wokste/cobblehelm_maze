@@ -70,18 +70,31 @@ pub struct SpriteSeq {
 impl SpriteSeq {
     pub fn tile(&self, x: USprite) -> SpritePos {
         SpritePos {
-            x,
+            x: self.x.start + x,
             y: self.y,
             scale: self.scale,
         }
     }
 
     pub fn tile_start(&self) -> SpritePos {
-        self.tile(self.x.start)
+        SpritePos {
+            x: self.x.start,
+            y: self.y,
+            scale: self.scale,
+        }
     }
 
     pub fn tile_rand(&self, rng: &mut fastrand::Rng) -> SpritePos {
-        self.tile(rng.u8(self.x.clone()))
+        let x = if rng.u8(1..=2) < 2 {
+            self.x.start
+        } else {
+            rng.u8(self.x.clone())
+        };
+        SpritePos {
+            x,
+            y: self.y,
+            scale: self.scale,
+        }
     }
 
     pub fn to_uv(&self, rng: &mut fastrand::Rng) -> Vec2 {

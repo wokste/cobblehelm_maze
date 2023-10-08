@@ -68,7 +68,7 @@ impl MonsterType {
             MT::Goliath => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
-                    ptype: ProjectileType::RockLarge,
+                    ptype: ProjectileType::Rock,
                     max_dist: 9.0,
                     accuracy: 0.1,
                 },

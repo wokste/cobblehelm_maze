@@ -12,8 +12,7 @@ pub enum ProjectileType {
     RedSpikes,
     BlueBlob,
     Shock,
-    RockLarge,
-    RockSmall,
+    Rock,
     Fire,
 }
 
@@ -23,8 +22,7 @@ impl ProjectileType {
         match self {
             ProjectileType::BlueBlob => (15, DT::Normal),
             ProjectileType::RedSpikes => (10, DT::Normal),
-            ProjectileType::RockLarge => (12, DT::Normal),
-            ProjectileType::RockSmall => (3, DT::Normal),
+            ProjectileType::Rock => (12, DT::Normal),
             ProjectileType::Fire => (7, DT::Normal),
             ProjectileType::Shock => (20, DT::Normal),
         }
@@ -34,8 +32,7 @@ impl ProjectileType {
         match self {
             ProjectileType::BlueBlob => 8.0,
             ProjectileType::RedSpikes => 6.0,
-            ProjectileType::RockLarge => 6.0,
-            ProjectileType::RockSmall => 6.0,
+            ProjectileType::Rock => 6.0,
             ProjectileType::Fire => 6.0,
             ProjectileType::Shock => 2.0,
         }
@@ -46,8 +43,7 @@ impl ProjectileType {
             ProjectileType::RedSpikes => "red_spikes.png",
             ProjectileType::BlueBlob => "blue_blob.png",
             ProjectileType::Shock => "shock.png",
-            ProjectileType::RockLarge => "rock.png",
-            ProjectileType::RockSmall => "rock_small.png",
+            ProjectileType::Rock => "rock.png",
             ProjectileType::Fire => "fire.png",
         };
         tiles.get_projectile(str)

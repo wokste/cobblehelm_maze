@@ -78,8 +78,7 @@ impl Weapon {
             match ptype {
                 ProjectileType::RedSpikes => "audio/shoot_redspikes.ogg",
                 ProjectileType::Fire => "audio/shoot_fire.ogg",
-                ProjectileType::RockLarge => "audio/shoot_rock.ogg",
-                ProjectileType::RockSmall => "audio/shoot_rock.ogg",
+                ProjectileType::Rock => "audio/shoot_rock.ogg",
                 ProjectileType::BlueBlob => "audio/shoot_blueblob.ogg",
                 ProjectileType::Shock => "audio/shoot_shock.ogg",
             }

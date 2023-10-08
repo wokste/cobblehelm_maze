@@ -239,8 +239,6 @@ fn copy_texture(src_img: &Image, dest_img: &mut Image, sequence: &SpriteSeq) {
     let src_row_bytes = src_img.size().x as usize * bytes_per_px;
     let dst_row_bytes = (TILESET_SIZE as usize) * bytes_per_px;
 
-    //println!("bytes_per_px: {}, scale_px: {}, dst_offset_bytes_x: {}, src_row_bytes: {}, dst_row_bytes: {}, y_px: {}..{}", bytes_per_px, scale_px, dst_offset_bytes_x, src_row_bytes, dst_row_bytes, y0_px, y1_px);
-
     for src_y in 0..scale_px {
         let dest_y = src_y + (sequence.y as usize) * scale_px;
         let src_start_bytes = src_y * src_row_bytes;

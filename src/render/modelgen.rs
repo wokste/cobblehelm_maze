@@ -126,7 +126,7 @@ pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
         FloorTile::Sand => "floor_sand.png",
         FloorTile::BlueTiles => "floor_blue_tiles.png",
         FloorTile::BrownFloor => "floor_brown.png",
-        FloorTile::GrayFloor => "floor_gray.png",
+        FloorTile::GrayFloor => "temple_gray_floor.png",
         FloorTile::Cave => "floor_cave.png",
         FloorTile::Flesh => "floor_flesh.png",
         FloorTile::Demonic => "floor_demonic.png",
@@ -140,7 +140,7 @@ pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
     let str = match tile {
         WallTile::Castle => "castle.png",
         WallTile::TempleBrown => "temple_brown.png",
-        WallTile::TempleGray => "temple_gray.png",
+        WallTile::TempleGray => "temple_gray_wall.png",
         WallTile::TempleGreen => "temple_green.png",
         WallTile::Cave => "cave.png",
         WallTile::Beehive => "hive.png",
