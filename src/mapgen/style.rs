@@ -50,7 +50,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             monsters: &[
                 MonsterType::EyeMonster1,
                 MonsterType::Laima,
-                MonsterType::Goliath,
+                MonsterType::Ettin,
                 MonsterType::EyeMonster2,
             ],
         },
@@ -85,7 +85,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
                 MonsterType::Imp,
                 MonsterType::EyeMonster2,
                 MonsterType::Demon,
-                MonsterType::Goliath,
+                MonsterType::Ettin,
             ],
         },
         _ => LevelStyle {
@@ -102,7 +102,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             monsters: &[
                 MonsterType::IronGolem,
                 MonsterType::EyeMonster2,
-                MonsterType::Goliath,
+                MonsterType::Ettin,
                 MonsterType::Demon,
             ],
         },

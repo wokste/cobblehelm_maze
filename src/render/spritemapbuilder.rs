@@ -3,7 +3,7 @@ const TEX_FORMAT: TextureFormat = TextureFormat::Rgba8UnormSrgb;
 use std::path::{Path, PathBuf};
 
 use bevy::{
-    prelude::{AssetServer, Assets, Handle, Image, Res, ResMut, Resource},
+    prelude::{warn, AssetServer, Assets, Handle, Image, Res, ResMut, Resource},
     render::{
         render_resource::{Extent3d, TextureDimension, TextureFormat},
         texture::TextureFormatPixelInfo,
@@ -48,7 +48,7 @@ pub enum MapBuildError {
     IO(std::io::Error),
     NoMoreRows,
     SequenceTooLong,
-    BadSpriteHeight,
+    BadSpriteHeight(u16),
     BadSpriteRatio,
 }
 
@@ -212,17 +212,30 @@ impl SpriteMapBuilder {
 fn image_properties(image: &Image) -> Result<(SpriteScale, u8), MapBuildError> {
     let w = image.size().x as u16;
     let h = image.size().y as u16;
+    let label = image.texture_descriptor.label;
 
     let scale = match h {
         64 => SpriteScale::Basic,
         32 => SpriteScale::Half,
         16 => SpriteScale::Quarter,
         _ => {
-            return Err(MapBuildError::BadSpriteHeight);
+            warn!(
+                "Sprite {:?} has a wrong height {}!",
+                label.unwrap_or("???"),
+                h
+            );
+            return Err(MapBuildError::BadSpriteHeight(h));
         }
     };
 
     if w == 0 || (w % h) != 0 {
+        warn!(
+            "Sprite {:?} has a wrong sprite ratio w={}, h={}!",
+            label.unwrap_or("???"),
+            w,
+            h
+        );
+
         return Err(MapBuildError::BadSpriteRatio);
     }
     Ok((scale, (w / h) as u8))

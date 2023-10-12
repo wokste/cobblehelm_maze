@@ -106,7 +106,7 @@ fn make_tileset_async(
         return;
     }
 
-    render_res.sprites = builder.build(&mut images).unwrap();
+    render_res.sprites = builder.build(&mut images).expect("");
 
     render_res.material = materials.add(StandardMaterial {
         base_color_texture: Some(render_res.sprites.texture.clone()),

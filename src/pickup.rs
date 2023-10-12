@@ -102,7 +102,7 @@ impl Pickup {
             Pickup::MedPack => ("medpack.png", 0),
             Pickup::NextLevel => ("portal.png", 0),
             Pickup::Coin => ("coin.png", 0),
-            Pickup::CoinPile => ("coins.png", 0),
+            Pickup::CoinPile => ("gem.png", 0),
             Pickup::Key(id) => ("key.png", *id as USprite),
         };
         Sprite3d {
@@ -133,12 +133,14 @@ impl Pickup {
     ) {
         let uv = self.make_sprite(&render_res.sprites);
 
+        let size = uv.tile.scale.game_size();
+
         commands
-            .spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))
+            .spawn(uv.to_sprite_bundle(pos.to_vec(size * 0.5), meshes, render_res))
             .insert(crate::render::FaceCamera)
             .insert(*self)
             .insert(crate::physics::PhysicsBody::new(
-                0.5,
+                0.5, // TODO: Size
                 MapCollisionEvent::Stop,
             ));
     }

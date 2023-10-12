@@ -19,7 +19,7 @@ impl MonsterType {
         match self {
             MT::Imp => AI::new(Flags::Approach | Flags::Follow),
             MT::EyeMonster1 => AI::new(Flags::Follow),
-            MT::Goliath => AI::new(Flags::Approach),
+            MT::Ettin => AI::new(Flags::Approach),
             MT::Laima => AI::new(Flags::Approach),
             MT::IronGolem => AI::new(Flags::empty()),
             MT::EyeMonster2 => AI::new(Flags::empty()),
@@ -29,7 +29,7 @@ impl MonsterType {
 
     pub fn jumps(&self) -> bool {
         use MonsterType as MT;
-        matches!(self, MT::Imp | MT::Goliath | MT::IronGolem | MT::Demon)
+        matches!(self, MT::Imp | MT::Ettin | MT::IronGolem | MT::Demon)
     }
 
     pub fn make_stats(&self) -> CreatureStats {
@@ -38,7 +38,7 @@ impl MonsterType {
             MT::Imp => (3.0, 5),
             MT::EyeMonster1 => (0.0, 10),
             MT::EyeMonster2 => (2.0, 10),
-            MT::Goliath => (2.0, 20),
+            MT::Ettin => (2.0, 20),
             MT::Laima => (1.0, 15),
             MT::IronGolem => (1.0, 40),
             MT::Demon => (1.0, 20),
@@ -65,7 +65,7 @@ impl MonsterType {
                 },
             ),
             MT::EyeMonster2 => Weapon::new_ranged(0.6, ProjectileType::RedSpikes, f32::INFINITY),
-            MT::Goliath => Weapon::new(
+            MT::Ettin => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
                     ptype: ProjectileType::Rock,
@@ -93,7 +93,7 @@ impl MonsterType {
             MT::Imp => "imp.png",
             MT::EyeMonster1 => "eye_monster.png",
             MT::EyeMonster2 => "eye_monster2.png",
-            MT::Goliath => "goliath.png",
+            MT::Ettin => "ettin.png",
             MT::Laima => "laima.png",
             MT::IronGolem => "iron_golem.png",
             MT::Demon => "demon.png",
@@ -132,7 +132,7 @@ impl MonsterType {
             MonsterType::Imp => 20,
             MonsterType::EyeMonster1 => 50,
             MonsterType::EyeMonster2 => 70,
-            MonsterType::Goliath => 100,
+            MonsterType::Ettin => 100,
             MonsterType::Laima => 30,
             MonsterType::IronGolem => 140,
             MonsterType::Demon => 170,
