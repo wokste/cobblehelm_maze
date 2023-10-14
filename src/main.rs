@@ -4,10 +4,9 @@ mod grid;
 mod lifecycle;
 mod map;
 mod mapgen;
-mod modelgen;
 mod physics;
 mod pickup;
-mod rendering;
+mod render;
 mod ui;
 mod utils;
 
@@ -76,29 +75,45 @@ fn main() {
         .add_state::<game::GameState>()
         .add_plugins((ui::UIPlugin, game::GamePlugin, combat::CombatPlugin))
         .add_systems(Startup, app_setup)
+        .add_systems(Update, make_tileset_async)
         .run();
 }
 
 fn app_setup(
     asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut ambient_light: ResMut<AmbientLight>,
-    mut render_res: ResMut<rendering::SpriteResource>,
     mut commands: Commands,
 ) {
     ambient_light.color = Color::WHITE;
     ambient_light.brightness = 0.5;
 
-    let texture = asset_server.load("sprites/sprites.png");
+    let mut builder = render::spritemapbuilder::SpriteMapBuilder::new();
+    builder
+        .start_load(&asset_server)
+        .expect("Loading tilemap failed");
+    commands.insert_resource(builder);
+
+    commands.spawn(Camera3dBundle { ..default() });
+}
+
+fn make_tileset_async(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut render_res: ResMut<render::RenderResource>,
+    mut images: ResMut<Assets<Image>>,
+    mut builder: ResMut<render::spritemapbuilder::SpriteMapBuilder>,
+) {
+    if !builder.should_build(&images) {
+        return;
+    }
+
+    render_res.sprites = builder.build(&mut images).expect("");
 
     render_res.material = materials.add(StandardMaterial {
-        base_color_texture: Some(texture),
+        base_color_texture: Some(render_res.sprites.texture.clone()),
         alpha_mode: AlphaMode::Mask(0.5),
         unlit: true,
         ..default() //Color::WHITE.into()
     });
-
-    commands.spawn(Camera3dBundle { ..default() });
 }
 
 // This resource tracks the game's score

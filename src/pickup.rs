@@ -4,7 +4,7 @@ use crate::{
     combat::{player::Player, CreatureStats},
     grid::Coords,
     physics::{MapCollisionEvent, PhysicsBody},
-    rendering::{Sprite3d, SpriteResource},
+    render::{spritemap::USprite, RenderResource, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
     GameInfo,
 };
@@ -16,10 +16,7 @@ pub enum Pickup {
     NextLevel,
     Coin,
     CoinPile,
-    SilverKey,
-    GoldKey,
-    RedKey,
-    GreenKey,
+    Key(u8),
 }
 
 enum StatGain {
@@ -38,10 +35,7 @@ impl Pickup {
             Pickup::NextLevel => StatGain::NextLevel,
             Pickup::Coin => StatGain::Coins(1),
             Pickup::CoinPile => StatGain::Coins(5),
-            Pickup::SilverKey => StatGain::Key(0x1),
-            Pickup::GoldKey => StatGain::Key(0x2),
-            Pickup::RedKey => StatGain::Key(0x4),
-            Pickup::GreenKey => StatGain::Key(0x8),
+            Pickup::Key(id) => StatGain::Key(1 << id),
         }
     }
 
@@ -102,19 +96,18 @@ impl Pickup {
         }
     }
 
-    fn make_sprite(&self) -> Sprite3d {
-        match self {
-            Pickup::NextLevel => Sprite3d::basic(1, 5),
-
-            Pickup::Coin => Sprite3d::half(6, 10),
-            Pickup::CoinPile => Sprite3d::half(7, 10),
-            Pickup::MedPack => Sprite3d::half(8, 10),
-            Pickup::Apple => Sprite3d::half(9, 10),
-
-            Pickup::SilverKey => Sprite3d::half(6, 11),
-            Pickup::GoldKey => Sprite3d::half(7, 11),
-            Pickup::RedKey => Sprite3d::half(8, 11),
-            Pickup::GreenKey => Sprite3d::half(9, 11),
+    fn make_sprite(&self, tiles: &crate::render::spritemap::SpriteMap) -> Sprite3d {
+        let (str, id) = match self {
+            Pickup::Apple => ("apple.png", 0),
+            Pickup::MedPack => ("medpack.png", 0),
+            Pickup::NextLevel => ("portal.png", 0),
+            Pickup::Coin => ("coin.png", 0),
+            Pickup::CoinPile => ("gem.png", 0),
+            Pickup::Key(id) => ("key.png", *id as USprite),
+        };
+        Sprite3d {
+            tile: tiles.get_item(str).tile(id),
+            flipped: false,
         }
     }
 
@@ -123,7 +116,7 @@ impl Pickup {
         commands: &mut Commands,
         map_data: &ResMut<crate::map::MapData>,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
         rng: &mut fastrand::Rng,
     ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
@@ -136,16 +129,18 @@ impl Pickup {
         pos: Coords,
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
     ) {
-        let uv = self.make_sprite();
+        let uv = self.make_sprite(&render_res.sprites);
+
+        let size = uv.tile.scale.game_size();
 
         commands
-            .spawn(uv.to_sprite_bundle(pos.to_vec(0.25), meshes, render_res))
-            .insert(crate::rendering::FaceCamera)
+            .spawn(uv.to_sprite_bundle(pos.to_vec(size * 0.5), meshes, render_res))
+            .insert(crate::render::FaceCamera)
             .insert(*self)
             .insert(crate::physics::PhysicsBody::new(
-                0.5,
+                0.5, // TODO: Size
                 MapCollisionEvent::Stop,
             ));
     }

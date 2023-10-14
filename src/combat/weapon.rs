@@ -78,8 +78,7 @@ impl Weapon {
             match ptype {
                 ProjectileType::RedSpikes => "audio/shoot_redspikes.ogg",
                 ProjectileType::Fire => "audio/shoot_fire.ogg",
-                ProjectileType::RockLarge => "audio/shoot_rock.ogg",
-                ProjectileType::RockSmall => "audio/shoot_rock.ogg",
+                ProjectileType::Rock => "audio/shoot_rock.ogg",
                 ProjectileType::BlueBlob => "audio/shoot_blueblob.ogg",
                 ProjectileType::Shock => "audio/shoot_shock.ogg",
             }
@@ -99,7 +98,7 @@ pub fn fire_weapons(
     mut query: Query<(Entity, &mut Weapon, &CreatureStats, &Transform, Option<&AI>)>,
     melee_target_query: Query<(Entity, &CreatureStats, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<crate::rendering::SpriteResource>,
+    mut render_res: ResMut<crate::render::RenderResource>,
     asset_server: Res<AssetServer>,
     mut ev_damage: EventWriter<DamageEvent>,
 ) {

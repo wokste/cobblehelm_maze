@@ -6,7 +6,7 @@ pub enum Tile {
     #[default]
     Void,
     Wall(WallTile),
-    Floor(FloorTile),
+    Open(FloorTile, CeilingTile),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -16,28 +16,24 @@ pub enum WallTile {
     TempleGray,
     TempleGreen,
     Cave,
+    Sewer,
     Beehive,
-    Flesh,
     Demonic,
-    DemonicCave,
     MetalIron,
     MetalBronze,
-    Chips,
-    Sewer,
-    SewerCave,
+    MetalCorrugated,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FloorTile {
     Sand,
-    BlueTiles,
     BrownFloor,
     GrayFloor,
-    Cave,
-    Flesh,
-    Demonic,
-    Chips,
-    Sewer,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum CeilingTile {
+    White,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -49,7 +45,7 @@ impl Tile {
     pub fn is_solid(&self) -> bool {
         match self {
             Tile::Wall(_) => true,
-            Tile::Floor(_) => false,
+            Tile::Open(_, _) => false,
             Tile::Void => true,
         }
     }

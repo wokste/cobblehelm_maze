@@ -8,7 +8,7 @@ use crate::{
     grid::{Coords, Grid},
     map::MapData,
     physics::MapCollisionEvent,
-    rendering::{SpriteResource, TexCoords},
+    render::{spritemap::SpriteSeq, RenderResource},
 };
 
 const SIGHT_RADIUS: f32 = 16.0;
@@ -19,7 +19,7 @@ impl MonsterType {
         match self {
             MT::Imp => AI::new(Flags::Approach | Flags::Follow),
             MT::EyeMonster1 => AI::new(Flags::Follow),
-            MT::Goliath => AI::new(Flags::Approach),
+            MT::Ettin => AI::new(Flags::Approach),
             MT::Laima => AI::new(Flags::Approach),
             MT::IronGolem => AI::new(Flags::empty()),
             MT::EyeMonster2 => AI::new(Flags::empty()),
@@ -29,7 +29,7 @@ impl MonsterType {
 
     pub fn jumps(&self) -> bool {
         use MonsterType as MT;
-        matches!(self, MT::Imp | MT::Goliath | MT::IronGolem | MT::Demon)
+        matches!(self, MT::Imp | MT::Ettin | MT::IronGolem | MT::Demon)
     }
 
     pub fn make_stats(&self) -> CreatureStats {
@@ -38,8 +38,8 @@ impl MonsterType {
             MT::Imp => (3.0, 5),
             MT::EyeMonster1 => (0.0, 10),
             MT::EyeMonster2 => (2.0, 10),
-            MT::Goliath => (2.0, 20),
-            MT::Laima => (1.0, 15),
+            MT::Ettin => (2.0, 20),
+            MT::Laima => (1.0, 18),
             MT::IronGolem => (1.0, 40),
             MT::Demon => (1.0, 20),
         };
@@ -55,7 +55,7 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => Weapon::new_melee(0.5, 4, DamageType::Normal),
+            MT::Imp => Weapon::new_melee(0.5, 3, DamageType::Normal),
             MT::EyeMonster1 => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
@@ -65,10 +65,10 @@ impl MonsterType {
                 },
             ),
             MT::EyeMonster2 => Weapon::new_ranged(0.6, ProjectileType::RedSpikes, f32::INFINITY),
-            MT::Goliath => Weapon::new(
+            MT::Ettin => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
-                    ptype: ProjectileType::RockLarge,
+                    ptype: ProjectileType::Rock,
                     max_dist: 9.0,
                     accuracy: 0.1,
                 },
@@ -87,17 +87,18 @@ impl MonsterType {
         }
     }
 
-    fn make_uv(&self) -> TexCoords {
+    fn get_tile_seq(&self, tiles: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
         use MonsterType as MT;
-        match self {
-            MT::Imp => TexCoords::basic(0..4, 7),
-            MT::EyeMonster1 => TexCoords::basic(4..6, 7),
-            MT::Goliath => TexCoords::basic(8..10, 7),
-            MT::Laima => TexCoords::basic(12..15, 7),
-            MT::IronGolem => TexCoords::basic(16..18, 7),
-            MT::EyeMonster2 => TexCoords::basic(6..8, 7),
-            MT::Demon => TexCoords::basic(10..12, 7),
-        }
+        let str = match self {
+            MT::Imp => "imp.png",
+            MT::EyeMonster1 => "eye_monster.png",
+            MT::EyeMonster2 => "eye_monster2.png",
+            MT::Ettin => "ettin.png",
+            MT::Laima => "laima.png",
+            MT::IronGolem => "iron_golem.png",
+            MT::Demon => "demon_fire.png",
+        };
+        tiles.get_monster(str)
     }
 
     pub fn spawn(
@@ -105,18 +106,15 @@ impl MonsterType {
         commands: &mut Commands,
         map_data: &mut ResMut<crate::map::MapData>,
         meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<SpriteResource>,
+        render_res: &mut ResMut<RenderResource>,
         rng: &mut fastrand::Rng,
     ) -> Result<(), &'static str> {
         let pos = choose_spawn_pos(map_data, rng)?;
-        let uv = self.make_uv();
+        let uv = self.get_tile_seq(&render_res.sprites);
 
         commands
             .spawn(uv.to_sprite_bundle(pos.to_vec(self.jumps(), 0.0), meshes, render_res))
-            .insert(crate::rendering::Animation::new(
-                uv.x_range(),
-                rng.f32() * 0.04 + 0.16,
-            ))
+            .insert(crate::render::Animation::new(uv, rng.f32() * 0.04 + 0.16))
             .insert(self.make_ai())
             .insert(pos)
             .insert(self.make_stats())
@@ -134,7 +132,7 @@ impl MonsterType {
             MonsterType::Imp => 20,
             MonsterType::EyeMonster1 => 50,
             MonsterType::EyeMonster2 => 70,
-            MonsterType::Goliath => 100,
+            MonsterType::Ettin => 100,
             MonsterType::Laima => 30,
             MonsterType::IronGolem => 140,
             MonsterType::Demon => 170,

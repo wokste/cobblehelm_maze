@@ -47,7 +47,7 @@ pub enum MonsterType {
     Imp = 1,
     EyeMonster1,
     EyeMonster2,
-    Goliath,
+    Ettin,
     Laima,
     IronGolem,
     Demon,

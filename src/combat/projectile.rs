@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
-    rendering::{SpriteResource, TexCoords},
+    render::{spritemap::SpriteSeq, RenderResource},
 };
 
 use super::{ai::AiMover, CreatureStats, DamageEvent, DamageType, Team};
@@ -12,8 +12,7 @@ pub enum ProjectileType {
     RedSpikes,
     BlueBlob,
     Shock,
-    RockLarge,
-    RockSmall,
+    Rock,
     Fire,
 }
 
@@ -23,8 +22,7 @@ impl ProjectileType {
         match self {
             ProjectileType::BlueBlob => (15, DT::Normal),
             ProjectileType::RedSpikes => (10, DT::Normal),
-            ProjectileType::RockLarge => (12, DT::Normal),
-            ProjectileType::RockSmall => (3, DT::Normal),
+            ProjectileType::Rock => (12, DT::Normal),
             ProjectileType::Fire => (7, DT::Normal),
             ProjectileType::Shock => (20, DT::Normal),
         }
@@ -34,22 +32,21 @@ impl ProjectileType {
         match self {
             ProjectileType::BlueBlob => 8.0,
             ProjectileType::RedSpikes => 6.0,
-            ProjectileType::RockLarge => 6.0,
-            ProjectileType::RockSmall => 6.0,
+            ProjectileType::Rock => 6.0,
             ProjectileType::Fire => 6.0,
             ProjectileType::Shock => 2.0,
         }
     }
 
-    pub fn make_uv(&self) -> TexCoords {
-        match self {
-            ProjectileType::RedSpikes => TexCoords::half(0..1, 12),
-            ProjectileType::BlueBlob => TexCoords::half(1..2, 12),
-            ProjectileType::Shock => TexCoords::basic(2..5, 6),
-            ProjectileType::RockLarge => TexCoords::half(0..1, 13),
-            ProjectileType::RockSmall => TexCoords::half(1..2, 13),
-            ProjectileType::Fire => TexCoords::half(2..4, 12),
-        }
+    pub fn make_uv(&self, tiles: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
+        let str = match self {
+            ProjectileType::RedSpikes => "red_spikes.png",
+            ProjectileType::BlueBlob => "blue_blob.png",
+            ProjectileType::Shock => "shock.png",
+            ProjectileType::Rock => "rock.png",
+            ProjectileType::Fire => "fire.png",
+        };
+        tiles.get_projectile(str)
     }
 
     fn make_projectile(&self, team: Team) -> Projectile {
@@ -77,14 +74,14 @@ pub fn spawn_projectile(
     max_dist: f32,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    render_res: &mut ResMut<SpriteResource>,
+    render_res: &mut ResMut<RenderResource>,
 ) {
     let velocity = dir * ptype.speed();
 
-    let uv = ptype.make_uv();
+    let uv = ptype.make_uv(&render_res.sprites);
 
     let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(pos, meshes, render_res));
-    proto_projectile.insert(crate::rendering::Animation::new(uv.x_range(), 0.1));
+    proto_projectile.insert(crate::render::Animation::new(uv, 0.1));
     proto_projectile.insert(ptype.make_projectile(team));
     proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
     proto_projectile.insert(PhysicsMovable::new(velocity, false));
