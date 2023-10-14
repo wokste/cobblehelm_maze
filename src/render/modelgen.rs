@@ -124,14 +124,8 @@ pub fn ceiling_tex_id(tile: CeilingTile, sprite_map: &SpriteMap) -> SpriteSeq {
 pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
     let str = match tile {
         FloorTile::Sand => "floor_sand.png",
-        FloorTile::BlueTiles => "floor_blue_tiles.png",
         FloorTile::BrownFloor => "floor_brown.png",
         FloorTile::GrayFloor => "temple_gray_floor.png",
-        FloorTile::Cave => "floor_cave.png",
-        FloorTile::Flesh => "floor_flesh.png",
-        FloorTile::Demonic => "floor_demonic.png",
-        FloorTile::Chips => "floor_chips.png",
-        FloorTile::Sewer => "floor_sewer.png",
     };
     sprite_map.get_block(str)
 }
@@ -141,17 +135,14 @@ pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
         WallTile::Castle => "castle.png",
         WallTile::TempleBrown => "temple_brown.png",
         WallTile::TempleGray => "temple_gray_wall.png",
-        WallTile::TempleGreen => "temple_green.png",
-        WallTile::Cave => "cave.png",
+        WallTile::TempleGreen => "temple_gray_wall.png",
+        WallTile::Cave => "cave_wall.png",
         WallTile::Beehive => "hive.png",
-        WallTile::Flesh => "flesh.png",
-        WallTile::Demonic => "demonic.png",
-        WallTile::DemonicCave => "demonic_cave.png",
+        WallTile::Demonic => "demonic_wall.png", // TODO: Asset
         WallTile::MetalIron => "plates_iron.png",
         WallTile::MetalBronze => "plates_bronze.png",
-        WallTile::Chips => "chips.png",
-        WallTile::Sewer => "sewer.png",
-        WallTile::SewerCave => "sewer_cave.png",
+        WallTile::Sewer => "sewer_wall.png",
+        WallTile::MetalCorrugated => "plates_corrugated.png",
     };
     sprite_map.get_block(str)
 }

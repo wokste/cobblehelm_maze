@@ -39,7 +39,7 @@ impl MonsterType {
             MT::EyeMonster1 => (0.0, 10),
             MT::EyeMonster2 => (2.0, 10),
             MT::Ettin => (2.0, 20),
-            MT::Laima => (1.0, 15),
+            MT::Laima => (1.0, 18),
             MT::IronGolem => (1.0, 40),
             MT::Demon => (1.0, 20),
         };
@@ -55,7 +55,7 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => Weapon::new_melee(0.5, 4, DamageType::Normal),
+            MT::Imp => Weapon::new_melee(0.5, 3, DamageType::Normal),
             MT::EyeMonster1 => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
@@ -96,7 +96,7 @@ impl MonsterType {
             MT::Ettin => "ettin.png",
             MT::Laima => "laima.png",
             MT::IronGolem => "iron_golem.png",
-            MT::Demon => "demon.png",
+            MT::Demon => "demon_fire.png",
         };
         tiles.get_monster(str)
     }

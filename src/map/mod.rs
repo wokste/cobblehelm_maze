@@ -16,28 +16,19 @@ pub enum WallTile {
     TempleGray,
     TempleGreen,
     Cave,
+    Sewer,
     Beehive,
-    Flesh,
     Demonic,
-    DemonicCave,
     MetalIron,
     MetalBronze,
-    Chips,
-    Sewer,
-    SewerCave,
+    MetalCorrugated,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum FloorTile {
     Sand,
-    BlueTiles,
     BrownFloor,
     GrayFloor,
-    Cave,
-    Flesh,
-    Demonic,
-    Chips,
-    Sewer,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
