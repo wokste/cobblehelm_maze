@@ -34,13 +34,14 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
 
     for _ in 0..50 {
         let style = *styles.rooms.rand_front_loaded(rng);
-        let room = rooms::make_room(style, rng);
+        let metadata = rooms::RoomMetaData::new(style, rng);
+        let room = metadata.make_room(rng);
 
         for _ in 0..5 {
             let transform = GridTransform::make_rand(map.size(), room.size(), rng);
 
             if check_place_room(&mut map, &room, &transform).is_ok() {
-                graph.add_node(transform.map(room.size().rand_center(rng)));
+                graph.add_node(transform.map(room.size().rand_center(rng)), metadata);
                 break;
             }
         }
@@ -50,7 +51,7 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
     graph.add_more_edges(rng, 0.5);
 
     for edge in graph.to_edges() {
-        corridors::connect_rooms(&mut map, rng, &styles, edge);
+        corridors::connect_rooms(&mut map, rng, edge);
     }
 
     let (player_pos, stair_pos) = choose_start_and_end(&map, rng);

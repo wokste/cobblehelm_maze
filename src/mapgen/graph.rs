@@ -1,8 +1,9 @@
 use crate::grid::Coords;
 
-struct Node {
+struct Node<T> {
     coords: Coords,
     edges: Vec<usize>,
+    data: T,
 }
 
 #[derive(Copy, Clone)]
@@ -12,13 +13,12 @@ struct Edge {
     dist_sq: i32,
 }
 
-#[derive(Default)]
-pub struct Graph {
-    nodes: Vec<Node>,
+pub struct Graph<T> {
+    nodes: Vec<Node<T>>,
 }
 
 impl Edge {
-    fn new(graph: &Graph, from: usize, to: usize) -> Self {
+    fn new<T>(graph: &Graph<T>, from: usize, to: usize) -> Self {
         let dist_sq = graph.nodes[from]
             .coords
             .eucledian_dist_sq(graph.nodes[to].coords);
@@ -26,11 +26,25 @@ impl Edge {
     }
 }
 
-impl Graph {
-    pub fn add_node(&mut self, coords: Coords) {
-        self.nodes.push(Node {
+impl<T> Default for Graph<T> {
+    fn default() -> Self {
+        Self { nodes: vec![] }
+    }
+}
+
+pub struct EdgeData<'a, T> {
+    pub c0: Coords,
+    pub c1: Coords,
+    pub data0: &'a T,
+    pub data1: &'a T,
+}
+
+impl<T> Graph<T> {
+    pub fn add_node(&mut self, coords: Coords, data: T) {
+        self.nodes.push(Node::<T> {
             coords,
             edges: vec![],
+            data,
         })
     }
 
@@ -97,7 +111,7 @@ impl Graph {
         }
     }
 
-    pub fn to_edges(&self) -> Vec<(Coords, Coords)> {
+    pub fn to_edges<'a>(&'a self) -> Vec<EdgeData<'_, T>> {
         let mut ret = vec![];
         for (id0, n0) in self.nodes.iter().enumerate() {
             for id1 in n0.edges.iter() {
@@ -105,7 +119,13 @@ impl Graph {
                     continue;
                 } // Don't need to print connections twice.
 
-                ret.push((n0.coords, self.nodes[*id1].coords));
+                let n1 = &self.nodes[*id1];
+                ret.push(EdgeData::<'a, T> {
+                    c0: n0.coords,
+                    c1: n1.coords,
+                    data0: &n0.data,
+                    data1: &n1.data,
+                });
             }
         }
         ret

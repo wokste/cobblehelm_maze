@@ -1,48 +1,38 @@
 use crate::grid::{Coords, Grid};
 use crate::map::{Tile, WallTile};
 
-use super::{randitem::RandItem, style::LevelStyle};
+use super::graph::EdgeData;
+use super::rooms::RoomMetaData;
 
-pub fn connect_rooms(
+pub fn connect_rooms<'a>(
     map: &mut Grid<Tile>,
     rng: &mut fastrand::Rng,
-    level_style: &LevelStyle,
-    p: (Coords, Coords),
+    e: EdgeData<'a, RoomMetaData>,
 ) {
-    let tile = *level_style.corridors.rand_front_loaded(rng);
-    match super::style::choose_shape(tile, rng) {
-        super::RoomShape::Organic => connect_rooms_organic(map, rng, tile, p),
-        _ => connect_rooms_constructed(map, rng, level_style, tile, p),
+    match e.data0.shape {
+        super::RoomShape::Organic => connect_rooms_organic(map, rng, e),
+        _ => connect_rooms_constructed(map, e),
     }
 }
 
-fn connect_rooms_constructed(
-    map: &mut Grid<Tile>,
-    rng: &mut fastrand::Rng,
-    level_style: &LevelStyle,
-    wall: WallTile,
-    p: (Coords, Coords),
-) {
-    let tile = Tile::Open(
-        super::style::choose_floor(wall, rng),
-        super::style::choose_ceiling(wall, rng),
-    );
-    let _door_tile = if level_style.doors.is_empty() {
+fn connect_rooms_constructed<'a>(map: &mut Grid<Tile>, e: EdgeData<'a, RoomMetaData>) {
+    let tile = Tile::Open(e.data0.floor, e.data0.ceil);
+    /*let _door_tile = if level_style.doors.is_empty() {
         None
     } else {
         Some(*level_style.doors.rand_front_loaded(rng))
-    };
+    };*/
 
-    let x0 = std::cmp::min(p.0.x, p.1.x);
-    let x1 = std::cmp::max(p.0.x, p.1.x);
-    let z0 = std::cmp::min(p.0.z, p.1.z);
-    let z1 = std::cmp::max(p.0.z, p.1.z);
+    let x0 = std::cmp::min(e.c0.x, e.c1.x);
+    let x1 = std::cmp::max(e.c0.x, e.c1.x);
+    let z0 = std::cmp::min(e.c0.z, e.c1.z);
+    let z1 = std::cmp::max(e.c0.z, e.c1.z);
 
     let mut added_floors = vec![];
 
     // X axis
     for x in x0..=x1 {
-        let c = Coords::new(x, p.1.z);
+        let c = Coords::new(x, e.c1.z);
         if map[c].is_solid() {
             map[c] = tile;
             added_floors.push(c);
@@ -51,27 +41,24 @@ fn connect_rooms_constructed(
 
     // Y axis
     for z in z0..=z1 {
-        let c = Coords::new(p.0.x, z);
+        let c = Coords::new(e.c0.x, z);
         if map[c].is_solid() {
             map[c] = tile;
             added_floors.push(c);
         }
     }
 
-    add_walls(map, added_floors, wall, true);
+    add_walls(map, added_floors, e.data0.wall, true);
 }
 
-pub fn connect_rooms_organic(
+pub fn connect_rooms_organic<'a>(
     map: &mut Grid<Tile>,
     rng: &mut fastrand::Rng,
-    wall: WallTile,
-    p: (Coords, Coords),
+    e: EdgeData<'a, RoomMetaData>,
 ) {
-    let tile = Tile::Open(
-        super::style::choose_floor(wall, rng),
-        super::style::choose_ceiling(wall, rng),
-    );
-    let (mut cur_pos, end_pos) = p;
+    let tile = Tile::Open(e.data0.floor, e.data0.ceil);
+    let mut cur_pos = e.c0;
+    let end_pos = e.c1;
 
     let mut added_floors = vec![];
     loop {
@@ -91,7 +78,7 @@ pub fn connect_rooms_organic(
             cur_pos.z += delta.z.signum()
         }
     }
-    add_walls(map, added_floors, wall, false);
+    add_walls(map, added_floors, e.data0.wall, false);
 }
 
 fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, add_doors: bool) {

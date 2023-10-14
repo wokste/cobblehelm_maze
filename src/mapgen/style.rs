@@ -6,7 +6,6 @@ use crate::{
 use super::randitem::RandItem;
 
 pub struct LevelStyle {
-    pub corridors: &'static [WallTile],
     pub rooms: &'static [WallTile],
     pub doors: &'static [DoorType],
     pub monsters: &'static [MonsterType],
@@ -16,11 +15,6 @@ pub fn make_by_level(level: u8) -> LevelStyle {
     match level {
         1 => LevelStyle {
             // The castle
-            corridors: &[
-                WallTile::Castle,
-                WallTile::TempleBrown,
-                WallTile::TempleGray,
-            ],
             rooms: &[
                 WallTile::Castle,
                 WallTile::TempleBrown,
@@ -37,7 +31,6 @@ pub fn make_by_level(level: u8) -> LevelStyle {
         },
         2 => LevelStyle {
             // Caves below the castle
-            corridors: &[WallTile::TempleBrown, WallTile::Castle],
             rooms: &[
                 WallTile::Castle,
                 WallTile::Cave,
@@ -57,7 +50,6 @@ pub fn make_by_level(level: u8) -> LevelStyle {
         },
         3 => LevelStyle {
             // The sewers
-            corridors: &[WallTile::TempleGreen, WallTile::Sewer],
             rooms: &[
                 WallTile::Sewer,
                 WallTile::TempleGreen,
@@ -74,7 +66,6 @@ pub fn make_by_level(level: u8) -> LevelStyle {
         },
         4 => LevelStyle {
             // In hell
-            corridors: &[WallTile::TempleGray, WallTile::Demonic],
             rooms: &[WallTile::Demonic, WallTile::TempleGray],
             doors: &[DoorType::Chips],
             monsters: &[
@@ -86,11 +77,6 @@ pub fn make_by_level(level: u8) -> LevelStyle {
         },
         _ => LevelStyle {
             // Welcome to the machine
-            corridors: &[
-                WallTile::MetalBronze,
-                WallTile::MetalIron,
-                WallTile::MetalCorrugated,
-            ],
             rooms: &[
                 WallTile::MetalIron,
                 WallTile::MetalBronze,
