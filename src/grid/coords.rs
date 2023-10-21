@@ -67,10 +67,19 @@ impl Coords {
             z: self.z - 1,
         }
     }
+
     pub const fn bottom(self) -> Self {
         Self {
             x: self.x,
             z: self.z + 1,
+        }
+    }
+
+    pub const fn split(self) -> Option<(Self, Self)> {
+        if self.x == 0 || self.z == 0 {
+            None
+        } else {
+            Some((Self::new(self.x, 0), Self::new(0, self.z)))
         }
     }
 
@@ -81,9 +90,21 @@ impl Coords {
     }
     */
 
+    pub const fn eucledian_sq(self) -> i32 {
+        self.x * self.x + self.z * self.z
+    }
     pub fn eucledian_dist_sq(self, other: Self) -> i32 {
-        let d = self - other;
-        d.x * d.x + d.z * d.z
+        (self - other).eucledian_sq()
+    }
+
+    pub const fn dot(self, other: Self) -> i32 {
+        self.x * other.x + self.z * other.z
+    }
+
+    pub fn dot_norm(self, other: Self) -> f32 {
+        let dot = self.dot(other);
+        let len_sq = self.eucledian_sq() * other.eucledian_sq();
+        (dot as f32) / (len_sq as f32).sqrt()
     }
 }
 

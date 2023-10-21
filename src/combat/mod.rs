@@ -45,6 +45,7 @@ impl Plugin for CombatPlugin {
 #[derive(Copy, Clone)]
 pub enum MonsterType {
     Imp = 1,
+    Goblin,
     EyeMonster1,
     EyeMonster2,
     Ettin,

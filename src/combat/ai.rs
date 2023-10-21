@@ -11,6 +11,12 @@ use crate::{
     render::{spritemap::SpriteSeq, RenderResource},
 };
 
+type RealF32 = ordered_float::NotNan<f32>;
+
+fn rf32(f: f32) -> RealF32 {
+    RealF32::new(f).expect("Don't use this function on anything that could be NAN")
+}
+
 const SIGHT_RADIUS: f32 = 16.0;
 
 impl MonsterType {
@@ -18,6 +24,7 @@ impl MonsterType {
         use MonsterType as MT;
         match self {
             MT::Imp => AI::new(Flags::Approach | Flags::Follow),
+            MT::Goblin => AI::new(Flags::Approach | Flags::Follow),
             MT::EyeMonster1 => AI::new(Flags::Follow),
             MT::Ettin => AI::new(Flags::Approach),
             MT::Laima => AI::new(Flags::Approach),
@@ -29,17 +36,21 @@ impl MonsterType {
 
     pub fn jumps(&self) -> bool {
         use MonsterType as MT;
-        matches!(self, MT::Imp | MT::Ettin | MT::IronGolem | MT::Demon)
+        matches!(
+            self,
+            MT::Imp | MT::Goblin | MT::Ettin | MT::IronGolem | MT::Demon
+        )
     }
 
     pub fn make_stats(&self) -> CreatureStats {
         use MonsterType as MT;
         let (speed, hp) = match self {
-            MT::Imp => (3.0, 5),
+            MT::Imp => (2.5, 5),
+            MT::Goblin => (3.0, 5),
             MT::EyeMonster1 => (0.0, 10),
             MT::EyeMonster2 => (2.0, 10),
             MT::Ettin => (2.0, 20),
-            MT::Laima => (1.0, 18),
+            MT::Laima => (1.5, 18),
             MT::IronGolem => (1.0, 40),
             MT::Demon => (1.0, 20),
         };
@@ -56,6 +67,7 @@ impl MonsterType {
         use MonsterType as MT;
         match self {
             MT::Imp => Weapon::new_melee(0.5, 3, DamageType::Normal),
+            MT::Goblin => Weapon::new_melee(0.5, 3, DamageType::Normal),
             MT::EyeMonster1 => Weapon::new(
                 0.9,
                 WeaponEffect::Ranged {
@@ -91,6 +103,7 @@ impl MonsterType {
         use MonsterType as MT;
         let str = match self {
             MT::Imp => "imp.png",
+            MT::Goblin => "goblin.png",
             MT::EyeMonster1 => "eye_monster.png",
             MT::EyeMonster2 => "eye_monster2.png",
             MT::Ettin => "ettin.png",
@@ -130,6 +143,7 @@ impl MonsterType {
     pub fn get_score(&self) -> i32 {
         match self {
             MonsterType::Imp => 20,
+            MonsterType::Goblin => 20,
             MonsterType::EyeMonster1 => 50,
             MonsterType::EyeMonster2 => 70,
             MonsterType::Ettin => 100,
@@ -143,7 +157,7 @@ impl MonsterType {
 pub enum AIState {
     PlayerUnknown,
     SeePlayer(Vec3),
-    FollowPlayer(Coords),
+    SawPlayer(Coords),
 }
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -278,7 +292,7 @@ pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transf
             ai.state = AIState::SeePlayer(map_data.player_pos.translation);
         } else if let AIState::SeePlayer(pos) = ai.state {
             if ai.flags.contains(Flags::Follow) {
-                ai.state = AIState::FollowPlayer(Coords::from_vec(pos))
+                ai.state = AIState::SawPlayer(Coords::from_vec(pos))
             } else {
                 ai.state = AIState::PlayerUnknown
             }
@@ -286,41 +300,63 @@ pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transf
     }
 }
 
-enum Movement {
-    Random,
-    To(Coords, bool),
+struct FuzzyPath {
+    dirs: ArrayVec<[(Coords, RealF32); 8]>,
+    src: Coords,
 }
 
-fn choose_pos(map_data: &MapData, src: Coords, movement: Movement) -> Option<Coords> {
-    // Do fuzzy path
-    let mut options = ArrayVec::<[Coords; 4]>::new();
+impl FuzzyPath {
+    fn init(map_data: &MapData, src: Coords) -> Self {
+        let zero: RealF32 = RealF32::new(0.0).unwrap();
+        let mut dirs = ArrayVec::<[(Coords, RealF32); 8]>::new();
 
-    for option in [src.left(), src.right(), src.top(), src.bottom()] {
-        if !map_data.solid_map[option] && !map_data.monster_map[option] {
-            options.push(option);
+        // Find all directions the creature can move towards
+        for dz in -1..=1 {
+            for dx in -1..=1 {
+                let dir = Coords::new(dx, dz);
+                if dir == Coords::ZERO {
+                    continue; // No move at all
+                }
+
+                let dest = src + dir;
+                if map_data.solid_map[dest] || map_data.monster_map[dest] {
+                    continue; // Tile is blocked
+                }
+
+                if let Some((h, v)) = dir.split() {
+                    if map_data.solid_map[src + h] || map_data.solid_map[src + v] {
+                        continue; // Tile would require corner cutting
+                    }
+                }
+
+                // Tile is free
+                dirs.push((dir, zero));
+            }
+        }
+        Self { dirs, src }
+    }
+
+    fn choose(&self) -> Option<Coords> {
+        self.dirs
+            .iter()
+            .max_by_key(|(_, weight)| weight)
+            .map(|(dir, _)| self.src + *dir)
+    }
+
+    fn add_random(&mut self, weight: RealF32) {
+        for (_, val) in &mut self.dirs {
+            *val += weight * rf32(fastrand::f32());
         }
     }
 
-    match movement {
-        Movement::Random => {
-            if options.is_empty() {
-                None
-            } else {
-                Some(options[fastrand::usize(0..options.len())])
-            }
-        }
-        Movement::To(dest_pos, do_last_step) => {
-            let res = options
-                .as_slice()
-                .iter()
-                .min_by_key(|p| Coords::eucledian_dist_sq(**p, dest_pos))
-                .copied();
+    fn add_approach(&mut self, weight: RealF32, to: Coords, on_end: RealF32) {
+        let delta_to = to - self.src;
 
-            if !do_last_step && res == Some(dest_pos) {
-                return None;
-            }
+        for (dir, val) in &mut self.dirs {
+            let dot = dir.dot_norm(delta_to);
+            let dot = RealF32::new(dot).unwrap_or(on_end);
 
-            res
+            *val += weight * dot;
         }
     }
 }
@@ -337,19 +373,30 @@ pub fn ai_move(
         }
 
         if ai_mover.add_dist(stats.speed * time) {
-            let target_pos = match ai_state.state {
-                AIState::PlayerUnknown => Movement::Random,
+            let ai_pos = ai_mover.to;
+            let mut fuzzy_path = FuzzyPath::init(&map_data, ai_pos);
+
+            match ai_state.state {
+                AIState::PlayerUnknown => {
+                    fuzzy_path.add_random(rf32(1.0));
+                }
                 AIState::SeePlayer(player_pos) => {
                     if ai_state.flags.contains(Flags::Approach) {
-                        Movement::To(Coords::from_vec(player_pos), false)
+                        fuzzy_path.add_approach(
+                            rf32(1.0),
+                            Coords::from_vec(player_pos),
+                            rf32(f32::NEG_INFINITY),
+                        );
                     } else {
-                        Movement::Random
+                        fuzzy_path.add_random(rf32(1.0));
                     }
                 }
-                AIState::FollowPlayer(player_pos) => Movement::To(player_pos, true),
+                AIState::SawPlayer(last_seen_pos) => {
+                    fuzzy_path.add_approach(rf32(1.0), last_seen_pos, rf32(1.0));
+                }
             };
 
-            let dest_pos = choose_pos(&map_data, ai_mover.to, target_pos);
+            let dest_pos = fuzzy_path.choose();
 
             if let Some(dest_pos) = dest_pos {
                 ai_mover.set_next_square(dest_pos, &mut map_data.monster_map);
@@ -358,7 +405,7 @@ pub fn ai_move(
             }
 
             // Cleanup
-            if let AIState::FollowPlayer(pos) = ai_state.state {
+            if let AIState::SawPlayer(pos) = ai_state.state {
                 if Some(pos) == dest_pos {
                     ai_state.state = AIState::PlayerUnknown;
                 }

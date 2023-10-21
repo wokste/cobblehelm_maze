@@ -20,7 +20,8 @@ derive_more = "*"
 fastrand = "*"
 serde = { version = "*", features = ["derive"] }
 tinyvec = "1.6"
-vergen = { version = "*", features = [ "build", "git", "gitcl" ]}
+vergen = { version = "*", features = ["build", "git", "gitcl"] }
+ordered-float = "*"
 
 [build-dependencies]
-vergen = { version = "*", features = [ "build", "git", "gitcl" ]}
+vergen = { version = "*", features = ["build", "git", "gitcl"] }
