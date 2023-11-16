@@ -175,11 +175,8 @@ pub struct AI {
 }
 
 impl AI {
-    pub fn get_fire_dir(&self, self_pos: &Vec3) -> Option<Vec3> {
-        match self.state {
-            AIState::SeePlayer(pos) => Some((pos - *self_pos).normalize()),
-            _ => None,
-        }
+    pub fn state(&self) -> &AIState {
+        &self.state
     }
 
     fn new(flags: Flags) -> Self {

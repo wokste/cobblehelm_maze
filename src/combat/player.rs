@@ -330,9 +330,20 @@ pub fn handle_player_input(
             };
         }
 
+        // == Movement ==
+        // Only normalize if the distance is above one
+        movable.velocity = if velocity.length_squared() > 1.0 {
+            velocity.normalize()
+        } else {
+            velocity
+        } * stats.speed;
+
+        // == Rotation ==
         state_delta.clamp_mouse();
+        state_delta.pitch = 0.0;
         transform.rotation = state_delta.to_quat();
-        movable.velocity = velocity.normalize() * stats.speed; // TODO: Only normalize if the distance is above one.
+
+        // == Fire ==
         weapon.set_fire_state(firing);
     }
 }

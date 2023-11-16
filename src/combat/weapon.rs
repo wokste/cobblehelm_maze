@@ -112,11 +112,14 @@ pub fn fire_weapons(
 
         let pos = transform.translation;
         let dir = match ai {
-            Some(ai) => ai.get_fire_dir(&pos),
-            None => Some(transform.rotation * Vec3::NEG_Z),
+            Some(ai) => match ai.state() {
+                super::ai::AIState::SeePlayer(player_pos) => (*player_pos - pos).normalize(),
+                _ => {
+                    continue;
+                }
+            },
+            None => transform.rotation * Vec3::NEG_Z,
         };
-
-        let Some(dir) = dir else {continue;};
 
         match weapon.effect {
             WeaponEffect::Melee {
