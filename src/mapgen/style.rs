@@ -20,6 +20,8 @@ pub fn make_by_level(level: u8) -> LevelStyle {
                 WallTile::TempleBrown,
                 WallTile::TempleGray,
                 WallTile::TempleGreen,
+                WallTile::GoldBrickWall,
+                WallTile::WoodWall,
                 WallTile::Cave,
             ],
             doors: &[DoorType::Chips],
@@ -35,10 +37,12 @@ pub fn make_by_level(level: u8) -> LevelStyle {
             rooms: &[
                 WallTile::Castle,
                 WallTile::Cave,
+                WallTile::GrayBlueTiles,
                 WallTile::TempleBrown,
                 WallTile::TempleGray,
                 WallTile::Beehive,
                 WallTile::TempleGreen,
+                WallTile::GoldBrickWall,
                 WallTile::Sewer,
             ],
             doors: &[],
@@ -57,6 +61,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
                 WallTile::TempleGreen,
                 WallTile::TempleGray,
                 WallTile::Cave,
+                WallTile::GrayBlueTiles,
             ],
             doors: &[DoorType::Chips],
             monsters: &[
@@ -68,7 +73,7 @@ pub fn make_by_level(level: u8) -> LevelStyle {
         },
         4 => LevelStyle {
             // In hell
-            rooms: &[WallTile::Demonic, WallTile::TempleGray],
+            rooms: &[WallTile::Demonic, WallTile::TempleGray, WallTile::WoodWall],
             doors: &[DoorType::Chips],
             monsters: &[
                 MonsterType::Imp,
@@ -83,7 +88,8 @@ pub fn make_by_level(level: u8) -> LevelStyle {
                 WallTile::MetalIron,
                 WallTile::MetalBronze,
                 WallTile::MetalCorrugated,
-                WallTile::Castle,
+                WallTile::GoldBrickWall,
+                WallTile::GrayBlueTiles,
             ],
             doors: &[],
             monsters: &[
@@ -110,6 +116,9 @@ pub fn choose_shape(tile: WallTile, rng: &mut fastrand::Rng) -> super::RoomShape
         WallTile::Beehive => &[Organic],
         WallTile::Sewer => &[DoubleRect],
         WallTile::MetalCorrugated => &[DoubleRect, Constructed],
+        WallTile::GoldBrickWall => &[DoubleRect, Constructed],
+        WallTile::GrayBlueTiles => &[DoubleRect, Constructed],
+        WallTile::WoodWall => &[DoubleRect, Mirror],
     };
     *slice.rand_front_loaded(rng)
 }
@@ -118,15 +127,22 @@ pub fn choose_floor(tile: WallTile, rng: &mut fastrand::Rng) -> FloorTile {
     let slice: &[FloorTile] = match tile {
         WallTile::Castle => &[FloorTile::Sand, FloorTile::BrownFloor, FloorTile::GrayFloor],
         WallTile::TempleBrown => &[FloorTile::BrownFloor, FloorTile::Sand],
-        WallTile::TempleGray => &[FloorTile::GrayFloor, FloorTile::Sand],
+        WallTile::TempleGray => &[
+            FloorTile::GrayFloor,
+            FloorTile::RainbowTiles,
+            FloorTile::Sand,
+        ],
         WallTile::TempleGreen => &[FloorTile::Sand],
         WallTile::Cave => &[FloorTile::Sand],
         WallTile::Beehive => &[FloorTile::Sand],
         WallTile::Demonic => &[FloorTile::Sand],
-        WallTile::MetalIron => &[FloorTile::GrayFloor],
-        WallTile::MetalBronze => &[FloorTile::GrayFloor],
+        WallTile::MetalIron => &[FloorTile::GrayFloor, FloorTile::RainbowTiles],
+        WallTile::MetalBronze => &[FloorTile::GrayFloor, FloorTile::RainbowTiles],
         WallTile::Sewer => &[FloorTile::Sand],
-        WallTile::MetalCorrugated => &[FloorTile::Sand],
+        WallTile::MetalCorrugated => &[FloorTile::Sand, FloorTile::GrayFloor],
+        WallTile::GoldBrickWall => &[FloorTile::Sand],
+        WallTile::GrayBlueTiles => &[FloorTile::GrayFloor, FloorTile::RainbowTiles],
+        WallTile::WoodWall => &[FloorTile::Sand],
     };
     *slice.rand_front_loaded(rng)
 }

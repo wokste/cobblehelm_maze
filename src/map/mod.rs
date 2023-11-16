@@ -22,6 +22,9 @@ pub enum WallTile {
     MetalIron,
     MetalBronze,
     MetalCorrugated,
+    GoldBrickWall,
+    GrayBlueTiles,
+    WoodWall,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -29,6 +32,7 @@ pub enum FloorTile {
     Sand,
     BrownFloor,
     GrayFloor,
+    RainbowTiles,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

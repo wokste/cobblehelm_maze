@@ -126,6 +126,7 @@ pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
         FloorTile::Sand => "floor_sand.png",
         FloorTile::BrownFloor => "floor_brown.png",
         FloorTile::GrayFloor => "temple_gray_floor.png",
+        FloorTile::RainbowTiles => "rainbow_tiles.png",
     };
     sprite_map.get_block(str)
 }
@@ -143,6 +144,9 @@ pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
         WallTile::MetalBronze => "plates_bronze.png",
         WallTile::Sewer => "sewer_wall.png",
         WallTile::MetalCorrugated => "plates_corrugated.png",
+        WallTile::GoldBrickWall => "gold_brick_wall.png",
+        WallTile::GrayBlueTiles => "gray_blue_tiles.png",
+        WallTile::WoodWall => "wood_wall.png",
     };
     sprite_map.get_block(str)
 }
