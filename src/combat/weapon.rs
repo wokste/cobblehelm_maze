@@ -10,26 +10,26 @@ use super::{
 pub struct Weapon {
     firing: bool,
     cooldown: Timer,
-    effect: WeaponEffect,
+    pub effect: WeaponEffect,
+    pub damage: i16,
+    pub dam_type: DamageType,
+
+    /// For melee, this is the reach, for range weapons, it is the max distance that projectiles can fly
+    pub range: f32,
 }
 
 pub enum WeaponEffect {
     Ranged {
-        max_dist: f32,
-        accuracy: f32,
         ptype: ProjectileType,
+        accuracy: f32,
     },
     RangedArc {
-        max_dist: f32,
-        arc: f32,
         ptype: ProjectileType,
+        arc: f32,
         count: u8,
     },
     Melee {
         arc: f32,
-        reach: f32,
-        damage: i16,
-        dam_type: DamageType,
     },
 }
 
@@ -42,32 +42,49 @@ impl Weapon {
         }
     }
 
-    pub fn new(fire_speed: f32, effect: WeaponEffect) -> Self {
+    pub fn new(
+        fire_speed: f32,
+        damage: i16,
+        dam_type: DamageType,
+        range: f32,
+        effect: WeaponEffect,
+    ) -> Self {
         Self {
             cooldown: Timer::from_seconds(fire_speed, TimerMode::Once),
             firing: true,
             effect,
+            damage,
+            range,
+            dam_type,
         }
     }
 
     pub fn new_melee(fire_speed: f32, damage: i16, dam_type: DamageType) -> Self {
         Self::new(
             fire_speed,
+            damage,
+            dam_type,
+            1.5, // TODO
             WeaponEffect::Melee {
-                damage,
-                dam_type,
                 arc: 1.0,   // TODO
-                reach: 1.5, // TODO
             },
         )
     }
 
-    pub fn new_ranged(fire_speed: f32, projectile: ProjectileType, max_distance: f32) -> Self {
+    pub fn new_ranged(
+        fire_speed: f32,
+        projectile: ProjectileType,
+        range: f32,
+        damage: i16,
+        dam_type: DamageType,
+    ) -> Self {
         Self::new(
             fire_speed,
+            damage,
+            dam_type,
+            range,
             WeaponEffect::Ranged {
                 ptype: projectile,
-                max_dist: max_distance,
                 accuracy: 0.0,
             },
         )
@@ -122,12 +139,7 @@ pub fn fire_weapons(
         };
 
         match weapon.effect {
-            WeaponEffect::Melee {
-                damage,
-                dam_type,
-                arc,
-                reach,
-            } => {
+            WeaponEffect::Melee { arc } => {
                 let mut ai_hits = false;
                 for (target, target_stats, target_transform) in melee_target_query.iter() {
                     if stats.team == target_stats.team {
@@ -136,7 +148,7 @@ pub fn fire_weapons(
 
                     let delta = pos - target_transform.translation;
 
-                    if delta.length_squared() > reach * reach {
+                    if delta.length_squared() > weapon.range * weapon.range {
                         continue;
                     }
                     if -delta.angle_between(dir) > arc / 2.0 {
@@ -146,51 +158,44 @@ pub fn fire_weapons(
                     ev_damage.send(DamageEvent {
                         instigator: Some(instigator),
                         target,
-                        damage,
-                        dam_type,
+                        damage: weapon.damage,
+                        dam_type: weapon.dam_type,
                     });
                     ai_hits = true;
                 }
 
                 if ai.is_some() && !ai_hits {
-                    continue; // TODO: Should this be done earlier?
+                    continue; // Ignore the attack since the AI would not have attacked. Safe because no events would have been send.
                 }
             }
-            WeaponEffect::RangedArc {
-                ptype,
-                max_dist,
-                arc,
-                count,
-            } => {
+            WeaponEffect::RangedArc { ptype, arc, count } => {
                 for i in 0..count {
                     let f = (i as f32 + 0.5) / (count as f32) - 0.5;
                     let dir = Quat::from_rotation_y(f * arc) * dir;
 
                     spawn_projectile(
-                        ptype,
+                        instigator,
                         stats.team,
                         pos,
                         dir,
-                        max_dist,
+                        &weapon,
+                        ptype,
                         &mut commands,
                         &mut meshes,
                         &mut render_res,
                     );
                 }
             }
-            WeaponEffect::Ranged {
-                ptype,
-                max_dist,
-                accuracy,
-            } => {
+            WeaponEffect::Ranged { ptype, accuracy } => {
                 let dir = Quat::from_rotation_y((fastrand::f32() - 0.5) * accuracy) * dir;
 
                 spawn_projectile(
-                    ptype,
+                    instigator,
                     stats.team,
                     pos,
                     dir,
-                    max_dist,
+                    &weapon,
+                    ptype,
                     &mut commands,
                     &mut meshes,
                     &mut render_res,

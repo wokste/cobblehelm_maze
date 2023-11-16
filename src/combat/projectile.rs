@@ -5,9 +5,9 @@ use crate::{
     render::{spritemap::SpriteSeq, RenderResource},
 };
 
-use super::{ai::AiMover, CreatureStats, DamageEvent, DamageType, Team};
+use super::{ai::AiMover, weapon::Weapon, CreatureStats, DamageEvent, DamageType, Team};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ProjectileType {
     RedSpikes,
     BlueBlob,
@@ -17,17 +17,6 @@ pub enum ProjectileType {
 }
 
 impl ProjectileType {
-    pub fn damage(&self) -> (i16, DamageType) {
-        type DT = DamageType;
-        match self {
-            ProjectileType::BlueBlob => (15, DT::Normal),
-            ProjectileType::RedSpikes => (10, DT::Normal),
-            ProjectileType::Rock => (12, DT::Normal),
-            ProjectileType::Fire => (7, DT::Normal),
-            ProjectileType::Shock => (20, DT::Normal),
-        }
-    }
-
     pub fn speed(&self) -> f32 {
         match self {
             ProjectileType::BlueBlob => 8.0,
@@ -49,12 +38,12 @@ impl ProjectileType {
         tiles.get_projectile(str)
     }
 
-    fn make_projectile(&self, team: Team) -> Projectile {
-        let (damage, dam_type) = self.damage();
+    fn make_projectile(&self, team: Team, instigator: Entity, weapon: &Weapon) -> Projectile {
         Projectile {
             team,
-            damage,
-            dam_type,
+            damage: weapon.damage,
+            dam_type: weapon.dam_type,
+            instigator,
         }
     }
 }
@@ -64,14 +53,16 @@ pub struct Projectile {
     pub team: Team,
     pub damage: i16,
     pub dam_type: DamageType,
+    pub instigator: Entity,
 }
 
 pub fn spawn_projectile(
-    ptype: ProjectileType,
+    instigator: Entity,
     team: Team,
     pos: Vec3,
     dir: Vec3,
-    max_dist: f32,
+    weapon: &Weapon,
+    ptype: ProjectileType,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     render_res: &mut ResMut<RenderResource>,
@@ -82,12 +73,12 @@ pub fn spawn_projectile(
 
     let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(pos, meshes, render_res));
     proto_projectile.insert(crate::render::Animation::new(uv, 0.1));
-    proto_projectile.insert(ptype.make_projectile(team));
+    proto_projectile.insert(ptype.make_projectile(team, instigator, weapon));
     proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
-    proto_projectile.insert(PhysicsMovable::new(velocity, false));
+    proto_projectile.insert(PhysicsMovable::new(velocity));
 
-    if max_dist.is_finite() {
-        proto_projectile.insert(crate::lifecycle::Ttl::new(max_dist / ptype.speed()));
+    if weapon.range.is_finite() {
+        proto_projectile.insert(crate::lifecycle::Ttl::new(weapon.range / ptype.speed()));
     }
 }
 
@@ -115,12 +106,11 @@ pub fn check_collisions(
             }
 
             ev_damage.send(DamageEvent {
-                instigator: None, // TODO: Implement
+                instigator: Some(projectile.instigator),
                 target: target_entity,
                 damage: projectile.damage,
                 dam_type: projectile.dam_type,
             });
-            // TODO: Send event
 
             commands.entity(projectile_entity).despawn();
         }

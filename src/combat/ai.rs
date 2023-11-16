@@ -66,32 +66,52 @@ impl MonsterType {
     pub fn make_weapon(&self) -> Weapon {
         use MonsterType as MT;
         match self {
-            MT::Imp => Weapon::new_melee(0.5, 3, DamageType::Normal),
+            MT::Imp => Weapon::new_melee(0.5, 3, DamageType::Fire),
             MT::Goblin => Weapon::new_melee(0.5, 3, DamageType::Normal),
             MT::EyeMonster1 => Weapon::new(
                 0.9,
+                10,
+                DamageType::Normal,
+                f32::INFINITY,
                 WeaponEffect::Ranged {
                     ptype: ProjectileType::RedSpikes,
-                    max_dist: f32::INFINITY,
                     accuracy: 0.1,
                 },
             ),
-            MT::EyeMonster2 => Weapon::new_ranged(0.6, ProjectileType::RedSpikes, f32::INFINITY),
+            MT::EyeMonster2 => Weapon::new_ranged(
+                0.6,
+                ProjectileType::RedSpikes,
+                f32::INFINITY,
+                10,
+                DamageType::Normal,
+            ),
             MT::Ettin => Weapon::new(
                 0.9,
+                12,
+                DamageType::Normal,
+                9.0,
                 WeaponEffect::Ranged {
                     ptype: ProjectileType::Rock,
-                    max_dist: 9.0,
                     accuracy: 0.1,
                 },
             ),
-            MT::Laima => Weapon::new_ranged(1.2, ProjectileType::Shock, 4.0),
-            MT::IronGolem => Weapon::new_ranged(0.7, ProjectileType::RedSpikes, f32::INFINITY),
+            MT::Laima => {
+                Weapon::new_ranged(1.2, ProjectileType::Shock, 4.0, 20, DamageType::Electric)
+            }
+            MT::IronGolem => Weapon::new_ranged(
+                0.7,
+                ProjectileType::RedSpikes,
+                f32::INFINITY,
+                10,
+                DamageType::Normal,
+            ),
             MT::Demon => Weapon::new(
                 0.9,
+                10,
+                DamageType::Fire,
+                f32::INFINITY,
                 WeaponEffect::RangedArc {
                     ptype: ProjectileType::Fire,
-                    max_dist: f32::INFINITY,
                     arc: 0.6,
                     count: 5,
                 },
@@ -409,7 +429,10 @@ pub fn ai_move(
             };
         }
 
-        let ai_jumps = stats.monster_type.unwrap().jumps(); // TODO: No unwrap here
+        let ai_jumps = match stats.monster_type {
+            Some(t) => t.jumps(),
+            None => false,
+        };
         transform.translation = ai_mover.to_vec(ai_jumps, stats.speed);
     }
 }

@@ -28,12 +28,11 @@ impl PhysicsBody {
 #[derive(Component, Default)]
 pub struct PhysicsMovable {
     pub velocity: Vec3,
-    pub gravity: bool, // TODO: Gravity
 }
 
 impl PhysicsMovable {
-    pub fn new(velocity: Vec3, gravity: bool) -> Self {
-        Self { velocity, gravity }
+    pub fn new(velocity: Vec3) -> Self {
+        Self { velocity }
     }
 }
 

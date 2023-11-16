@@ -105,8 +105,6 @@ impl RoomMetaData {
                 map[(x, z)] = Tile::Open(self.floor, self.ceil);
             }
         }
-
-        // TODO: Add more quirks
         map
     }
 
@@ -120,7 +118,6 @@ impl RoomMetaData {
         let z_short = rng.i32(min..z_max);
 
         fn align(short: i32, max: i32, rng: &mut fastrand::Rng) -> i32 {
-            // TODO: Chance to align rooms with top or center
             let space = max - short;
             assert!(space > 0, "Failure in space {}={}-{}", space, max, short);
             rng.i32(0..space)

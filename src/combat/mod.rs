@@ -64,14 +64,16 @@ pub enum Team {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum DamageType {
     Normal,
+    Fire,
+    Electric,
 }
 
 #[derive(Event, Debug, PartialEq, Eq)]
 pub struct DamageEvent {
-    instigator: Option<Entity>,
-    target: Entity,
-    damage: i16,
-    dam_type: DamageType,
+    pub instigator: Option<Entity>,
+    pub target: Entity,
+    pub damage: i16,
+    pub dam_type: DamageType,
 }
 
 #[derive(Component)]

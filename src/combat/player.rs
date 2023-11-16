@@ -27,7 +27,13 @@ pub struct PlayerBundle {
 
 impl Default for PlayerBundle {
     fn default() -> Self {
-        let mut weapon = Weapon::new_ranged(0.3, ProjectileType::BlueBlob, 12.0);
+        let mut weapon = Weapon::new_ranged(
+            0.3,
+            ProjectileType::BlueBlob,
+            12.0,
+            15,
+            super::DamageType::Normal,
+        );
         weapon.set_fire_state(false); // Unlike AI's don't automatically fire.
 
         Self {
@@ -249,7 +255,6 @@ pub fn get_player_input(
             GamepadAxis { gamepad, axis_type }
         }
 
-        // TODO: Configurable sticks
         if let Some(dx) = pad_axes.get(axis(gamepad, key_map.pad_rot_x)) {
             state.yaw -= dx * time.delta_seconds();
         }

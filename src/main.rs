@@ -1,11 +1,11 @@
 mod combat;
 mod game;
 mod grid;
+mod items;
 mod lifecycle;
 mod map;
 mod mapgen;
 mod physics;
-mod pickup;
 mod render;
 mod ui;
 mod utils;

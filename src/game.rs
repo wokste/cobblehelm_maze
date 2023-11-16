@@ -26,7 +26,7 @@ impl Plugin for GamePlugin {
                 Update,
                 (
                     crate::physics::do_physics.after(crate::combat::player::get_player_input),
-                    crate::pickup::check_pickups.after(crate::physics::do_physics),
+                    crate::items::pickup::check_pickups.after(crate::physics::do_physics),
                     crate::render::face_camera.after(crate::physics::do_physics),
                     crate::render::animate_sprites,
                     crate::lifecycle::check_ttl,
@@ -154,7 +154,7 @@ fn start_level(
     }
 
     // Add stairs
-    crate::pickup::Pickup::NextLevel.spawn_at_pos(
+    crate::items::pickup::Pickup::NextLevel.spawn_at_pos(
         map_gen_result.stair_pos,
         &mut commands,
         &mut meshes,
@@ -164,7 +164,7 @@ fn start_level(
     // Add pickups
     {
         let level = level as i32;
-        use crate::pickup::Pickup::*;
+        use crate::items::pickup::Pickup::*;
         for (item_type, count) in [
             (Apple, 5),
             (MedPack, 1),
@@ -188,7 +188,7 @@ fn start_level(
 
     // Add key pickups
     {
-        use crate::pickup::Pickup as K;
+        use crate::items::pickup::Pickup as K;
         let mut keys = [K::Key(0), K::Key(1), K::Key(2), K::Key(3)];
         rng.shuffle(&mut keys);
 
