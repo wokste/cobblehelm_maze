@@ -127,7 +127,7 @@ pub fn take_damage_system(
     mut ev_damage: EventReader<DamageEvent>,
     mut menu_info: ResMut<crate::ui::menus::MenuInfo>,
 ) {
-    for ev in ev_damage.iter() {
+    for ev in ev_damage.read() {
         let Ok((mut stats, mut ai_pos)) =
             target_query.get_mut(ev.target) else {continue;};
 

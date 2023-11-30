@@ -12,13 +12,13 @@ use bevy::{
 
 use super::spritemap::*;
 
-trait Splitter {
+trait Splitable {
     fn try_split(&mut self, scale: SpriteScale, count: USprite) -> Option<Self>
     where
         Self: Sized;
 }
 
-impl Splitter for SpriteSeq {
+impl Splitable for SpriteSeq {
     fn try_split(&mut self, scale: SpriteScale, count: USprite) -> Option<SpriteSeq> {
         assert!(count > 0);
 

@@ -292,7 +292,7 @@ pub fn button_press(
     cl_args: Res<crate::CommandLineArgs>,
     mut menu_info: ResMut<MenuInfo>,
 ) {
-    for action in events.iter() {
+    for action in events.read() {
         match action {
             ButtonAction::Play => {
                 *game_settings = GameSettings::from_cl(&cl_args);

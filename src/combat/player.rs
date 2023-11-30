@@ -187,7 +187,7 @@ pub fn gamepad_connections(
     key_map: Res<InputMap>,
     mut settings: ResMut<GamepadSettings>,
 ) {
-    for ev in gamepad_evr.iter() {
+    for ev in gamepad_evr.read() {
         if let GamepadEvent::Connection(GamepadConnectionEvent {
             gamepad,
             connection,
@@ -233,7 +233,7 @@ pub fn get_player_input(
 ) {
     let state = state.as_mut();
 
-    for ev in state.reader_motion.iter(&mouse_motion) {
+    for ev in state.reader_motion.read(&mouse_motion) {
         state.pitch -= (key_map.mouse_rot_rate * ev.delta.y).to_radians();
         state.yaw -= (key_map.mouse_rot_rate * ev.delta.x).to_radians();
     }
@@ -309,7 +309,7 @@ pub fn handle_player_input(
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
         let right = Vec3::new(local_z.z, 0., -local_z.x);
 
-        for act in acts.iter() {
+        for act in acts.read() {
             match act {
                 InputAction::None => {}
                 InputAction::Forward => velocity += forward,
