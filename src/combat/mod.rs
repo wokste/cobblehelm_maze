@@ -89,8 +89,8 @@ impl CreatureStats {
     pub fn player() -> Self {
         Self {
             speed: 6.0,
-            hp: 100,
-            hp_max: 100,
+            hp: 60,
+            hp_max: 60,
             team: Team::Players,
             monster_type: None,
         }
@@ -111,10 +111,6 @@ impl CreatureStats {
         }
 
         self.hp -= evt.damage;
-        if self.team == Team::Players {
-            game.update_hp(self);
-        }
-
         if !self.alive() {
             if self.team == Team::Players {
                 game_state.set(crate::game::GameState::GameMenu);

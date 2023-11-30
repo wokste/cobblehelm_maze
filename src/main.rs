@@ -119,7 +119,7 @@ fn make_tileset_async(
 // This resource tracks the game's score
 #[derive(Resource)]
 pub struct GameInfo {
-    pub hp_perc: f32,
+    pub player: Option<Entity>,
     pub score: i32,
     pub coins: i32,
     pub level: u8,
@@ -128,16 +128,10 @@ pub struct GameInfo {
     pub key_flags: u8,
 }
 
-impl GameInfo {
-    fn update_hp(&mut self, stats: &combat::CreatureStats) {
-        self.hp_perc = f32::clamp((stats.hp as f32) / (stats.hp_max as f32), 0.0, 1.0);
-    }
-}
-
 impl Default for GameInfo {
     fn default() -> Self {
         Self {
-            hp_perc: 1.0,
+            player: None,
             score: 0,
             coins: 0,
             level: 1,

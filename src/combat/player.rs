@@ -127,6 +127,7 @@ impl Default for InputMap {
     }
 }
 
+/*
 impl InputMap {
     pub fn swap_hands(&mut self) {
         // Swap the two sticks
@@ -154,13 +155,14 @@ impl InputMap {
         swap_keys(&mut self.keys, KC::D, KC::Right);
     }
 }
+*/
 
 /// Keeps track of mouse motion events, pitch, and yaw
 #[derive(Resource, Default)]
 pub struct InputState {
-    reader_motion: ManualEventReader<MouseMotion>,
-    pitch: f32,
-    yaw: f32,
+    pub reader_motion: ManualEventReader<MouseMotion>,
+    pub pitch: f32,
+    pub yaw: f32,
     pub gamepad: Option<Gamepad>,
 }
 

@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 
 use super::styles::*;
-use crate::{game::GameState, GameSettings};
+use crate::{combat::CreatureStats, game::GameState, GameSettings};
 
 #[derive(Component)]
 pub struct MenuMarker;
@@ -51,7 +51,7 @@ pub enum ButtonAction {
     Resume,
     ToMainMenu,
     NextLevel,
-    SwapHands,
+    BuyHealth,
     Quit,
 }
 
@@ -107,8 +107,8 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu:
                     make_button(
                         parent,
                         asset_server,
-                        "Set/unset left-hand mode",
-                        ButtonAction::SwapHands,
+                        "Buy Health Upgrade",
+                        ButtonAction::BuyHealth,
                     );
                     make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
                 }
@@ -288,9 +288,9 @@ pub fn button_press(
     mut game_data: ResMut<crate::GameInfo>,
     mut exit: EventWriter<AppExit>,
     mut game_settings: ResMut<GameSettings>,
-    mut input_map: ResMut<crate::combat::player::InputMap>,
     cl_args: Res<crate::CommandLineArgs>,
     mut menu_info: ResMut<MenuInfo>,
+    mut stats_query: Query<&mut CreatureStats>,
 ) {
     for action in events.read() {
         match action {
@@ -321,8 +321,22 @@ pub fn button_press(
             ButtonAction::Quit => {
                 exit.send(AppExit);
             }
-            ButtonAction::SwapHands => {
-                input_map.swap_hands();
+            ButtonAction::BuyHealth => {
+                // TODO: No unwrap
+                // TODO: Store the level somewhere else
+                // TODO: More upgradable stuff
+                if let Ok(mut stats) = stats_query.get_mut(game_data.player.unwrap()) {
+                    let level = (stats.hp_max / 20 - 2) as i32;
+                    let price = 5 * level * (level + 1) / 2;
+                    if game_data.coins < price {
+                        return;
+                    }
+
+                    game_data.coins -= price;
+
+                    stats.hp += 20;
+                    stats.hp_max += 20;
+                }
             }
         }
     }

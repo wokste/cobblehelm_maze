@@ -1,47 +1,70 @@
 use bevy::prelude::*;
 
+use crate::combat::{player::InputState, CreatureStats};
+
 use super::styles::*;
 
-#[derive(Component)]
-pub struct HudUpdated {
-    value: i32,
-    field: HudField,
-}
-
-enum HudField {
-    HpPerc,
-    Score,
-    Coins,
-    Level,
-    Time,
+#[derive(Component, PartialEq, Clone, Copy)]
+pub enum HudField {
+    Hp(i16, i16),
+    Score(i32),
+    Coins(i32),
+    Level(u8),
+    Time(f32),
+    Dir(f32),
     //    Status,
 }
 
-impl HudUpdated {
-    fn update(&mut self, game: &crate::GameInfo) -> bool {
-        let new_value: i32 = match self.field {
-            HudField::HpPerc => (game.hp_perc * 100.0) as i32,
-            HudField::Score => game.score,
-            HudField::Coins => game.coins,
-            HudField::Level => game.level as i32,
-            HudField::Time => game.time.elapsed_secs() as i32,
+impl HudField {
+    fn update_impl(
+        &mut self,
+        game: &crate::GameInfo,
+        stats_query: &Query<&CreatureStats>,
+        input: &InputState,
+    ) {
+        let Some(player) = game.player else {return;};
+        match self {
+            HudField::Hp(val, max) => {
+                let Ok(stats) = stats_query.get(player) else {return;};
+                *val = stats.hp;
+                *max = stats.hp_max;
+            }
+            HudField::Score(val) => *val = game.score,
+            HudField::Coins(val) => *val = game.coins,
+            HudField::Level(val) => *val = game.level,
+            HudField::Time(val) => *val = game.time.elapsed_secs(),
+            HudField::Dir(val) => *val = input.yaw,
         };
+    }
 
-        if self.value == new_value {
-            false
-        } else {
-            self.value = new_value;
-            true
-        }
+    fn update(
+        &mut self,
+        game: &crate::GameInfo,
+        stats_query: &Query<&CreatureStats>,
+        input: &InputState,
+    ) -> bool {
+        let old = *self;
+        self.update_impl(game, stats_query, input);
+
+        *self == old
     }
 
     fn make_text(&self) -> String {
-        match self.field {
-            HudField::HpPerc => format!("HP: {}%", self.value),
-            HudField::Score => format!("Score: {}", self.value),
-            HudField::Coins => format!("Coins: {}", self.value),
-            HudField::Level => format!("Level: {}", self.value),
-            HudField::Time => format!("Time: {}s", self.value),
+        match self {
+            HudField::Hp(val, max) => format!("HP: {}/{}", val, max),
+            HudField::Score(val) => format!("Score: {}", val),
+            HudField::Coins(val) => format!("Coins: {}", val),
+            HudField::Level(val) => format!("Level: {}", val),
+            HudField::Time(val) => format!("Time: {}s", val),
+            HudField::Dir(val) => {
+                let pi = std::f32::consts::PI;
+                let index = (val * 8.0 / pi).round() as usize;
+                let str_val = [
+                    "N", "NNW", "NW", "WNW", "W", "WSW", "SW", "SSW", "S", "SSE", "SE", "ESE", "E",
+                    "ENE", "NE", "NNE",
+                ][index % 16];
+                format!("Dir: {}", str_val)
+            }
         }
     }
 }
@@ -72,52 +95,43 @@ pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
         .with_children(|parent| {
             parent.spawn((
                 make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudUpdated {
-                    field: HudField::HpPerc,
-                    value: -1,
-                },
+                HudField::Hp(-1, -1),
             ));
             parent.spawn((
                 make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudUpdated {
-                    field: HudField::Score,
-                    value: -1,
-                },
+                HudField::Score(-1),
             ));
             parent.spawn((
                 make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudUpdated {
-                    field: HudField::Coins,
-                    value: -1,
-                },
+                HudField::Coins(-1),
             ));
             parent.spawn((
                 make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudUpdated {
-                    field: HudField::Level,
-                    value: -1,
-                },
+                HudField::Level(u8::MAX),
             ));
             parent.spawn((
                 make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudUpdated {
-                    field: HudField::Time,
-                    value: -1,
-                },
+                HudField::Time(f32::NAN),
+            ));
+            parent.spawn((
+                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                HudField::Dir(0.0),
             ));
         })
         .id();
 }
 
 pub fn update_hud(
-    mut query: Query<(&mut Text, &mut HudUpdated)>,
+    mut query: Query<(&mut Text, &mut HudField)>,
     mut game: ResMut<crate::GameInfo>,
+    stats_query: Query<&CreatureStats>,
+    input: Res<InputState>,
     time: Res<Time>,
 ) {
     game.time.tick(time.delta());
 
     for (mut text, mut updated) in &mut query {
-        if !updated.update(&game) {
+        if !updated.update(&game, &stats_query, &input) {
             continue;
         }
 

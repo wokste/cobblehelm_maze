@@ -127,12 +127,17 @@ fn start_level(
     if let Ok(mut player_transform) = player_query.get_single_mut() {
         *player_transform = player_pos;
     } else {
-        commands
+        let player = commands
             .spawn(crate::combat::player::PlayerBundle::default())
             .insert(PbrBundle {
                 transform: player_pos,
                 ..default()
-            });
+            })
+            .id();
+
+        assert_eq!(game_data.player, None); // TODO: Remove
+
+        game_data.player = Some(player);
     }
 
     // Add the monsters
