@@ -94,27 +94,27 @@ pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .with_children(|parent| {
             parent.spawn((
-                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                make_text(&asset_server, "", FONT_P, TextAlignment::Center),
                 HudField::Hp(-1, -1),
             ));
             parent.spawn((
-                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                make_text(&asset_server, "", FONT_P, TextAlignment::Center),
                 HudField::Score(-1),
             ));
             parent.spawn((
-                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                make_text(&asset_server, "", FONT_P, TextAlignment::Center),
                 HudField::Coins(-1),
             ));
             parent.spawn((
-                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                make_text(&asset_server, "", FONT_P, TextAlignment::Center),
                 HudField::Level(u8::MAX),
             ));
             parent.spawn((
-                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                make_text(&asset_server, "", FONT_P, TextAlignment::Center),
                 HudField::Time(f32::NAN),
             ));
             parent.spawn((
-                make_simple_text(&asset_server, "", FONT_P, TextAlignment::Center),
+                make_text(&asset_server, "", FONT_P, TextAlignment::Center),
                 HudField::Dir(0.0),
             ));
         })

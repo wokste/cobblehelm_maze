@@ -1,6 +1,8 @@
 use bevy::{prelude::*, window::CursorGrabMode};
 
-use crate::{combat::player::Player, lifecycle::LevelObject, map::MapData};
+use crate::{
+    combat::player::Player, lifecycle::LevelObject, map::MapData, mapgen::style::LevelIndex,
+};
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
 
@@ -98,13 +100,13 @@ fn start_level(
     println!("Seed: {}", rng.get_seed());
 
     // Get initial data
-    let map_gen_result = crate::mapgen::make_map(level, &mut rng);
+    let map_gen_result = crate::mapgen::make_map(level, game_data.level_index, &mut rng);
     if cl_args.verbose {
         crate::mapgen::print_map(&map_gen_result.tilemap);
     }
 
     let player_pos = Transform::from_translation(map_gen_result.player_pos.to_vec(0.7))
-        .looking_at(map_gen_result.stair_pos.to_vec(0.7), Vec3::Y);
+        .looking_at(map_gen_result.portal_pos[0].to_vec(0.7), Vec3::Y);
     map_data.solid_map = map_gen_result.tilemap.map(|t| t.is_solid());
     map_data.monster_map = map_gen_result.tilemap.map(|t| t.is_solid());
     map_data.los_map = map_gen_result.tilemap.map(|t| t.is_solid());
@@ -141,8 +143,8 @@ fn start_level(
     }
 
     // Add the monsters
-    let level_style = crate::mapgen::style::make_by_level(level);
-    let monster_count = level * 5 + 15;
+    let level_style = game_data.level_index.to_style();
+    let monster_count = level * 3 + 12;
     for _ in 0..monster_count {
         use crate::mapgen::randitem::RandItem;
         let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
@@ -158,13 +160,17 @@ fn start_level(
         }
     }
 
-    // Add stairs
-    crate::items::pickup::Pickup::NextLevel.spawn_at_pos(
-        map_gen_result.stair_pos,
-        &mut commands,
-        &mut meshes,
-        &mut render_res,
-    );
+    // Add level portal or phylactery
+    for (i, pos) in map_gen_result.portal_pos.iter().enumerate() {
+        let item = if level < 5 {
+            let level_style = choose_level_style(level + 1, i == 0, &mut rng);
+            crate::items::pickup::Pickup::NextLevel(level_style)
+        } else {
+            crate::items::pickup::Pickup::Phylactery
+        };
+
+        item.spawn_at_pos(*pos, &mut commands, &mut meshes, &mut render_res);
+    }
 
     // Add pickups
     {
@@ -174,7 +180,7 @@ fn start_level(
             (Apple, 5),
             (MedPack, 1),
             (Coin, level + 5),
-            (CoinPile, level * (level - 1) / 2),
+            (Gem, level * (level - 1) / 2),
         ] {
             for _ in 0..count {
                 let err = item_type.spawn(
@@ -209,5 +215,21 @@ fn start_level(
                 println!("Failed top spawn item: {}", err);
             }
         }
+    }
+}
+
+fn choose_level_style(level: u8, first: bool, rng: &mut fastrand::Rng) -> LevelIndex {
+    let mut adjusted_level = level as i32;
+    if !first {
+        adjusted_level += rng.i32(-1..=1);
+        adjusted_level = adjusted_level.clamp(1, 5);
+    }
+    match adjusted_level {
+        1 => LevelIndex::Castle,
+        2 => LevelIndex::Caves,
+        3 => LevelIndex::Sewers,
+        4 => LevelIndex::Hell,
+        5 => LevelIndex::Machine,
+        _ => panic!("Map id should be between 1 and 5"),
     }
 }

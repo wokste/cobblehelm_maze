@@ -13,6 +13,7 @@ mod utils;
 use bevy::{prelude::*, time::Stopwatch};
 
 use clap::Parser;
+use mapgen::style::LevelIndex;
 
 #[derive(Parser, Resource, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -123,6 +124,7 @@ pub struct GameInfo {
     pub score: i32,
     pub coins: i32,
     pub level: u8,
+    pub level_index: LevelIndex,
     pub level_spawned: bool,
     pub time: Stopwatch,
     pub key_flags: u8,
@@ -135,6 +137,7 @@ impl Default for GameInfo {
             score: 0,
             coins: 0,
             level: 1,
+            level_index: LevelIndex::Castle,
             level_spawned: false,
             time: Stopwatch::default(),
             key_flags: 0,
@@ -183,8 +186,9 @@ impl GameSettings {
 }
 
 impl GameInfo {
-    fn next_level(&mut self) {
+    fn next_level(&mut self, level_index: LevelIndex) {
         self.level += 1;
+        self.level_index = level_index;
         self.key_flags = 0;
         self.level_spawned = false;
     }

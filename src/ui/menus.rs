@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 
 use super::styles::*;
-use crate::{combat::CreatureStats, game::GameState, GameSettings};
+use crate::{combat::CreatureStats, game::GameState, mapgen::style::LevelIndex, GameSettings};
 
 #[derive(Component)]
 pub struct MenuMarker;
@@ -36,21 +36,22 @@ pub enum MenuType {
     MainMenu,
     GameOver,
     Paused,
-    NextLevel,
+    ToLevel(LevelIndex),
+    Victory,
 }
 
 #[derive(Component)]
 pub struct Button {
-    action: ButtonAction,
+    action: OnClick,
 }
 
 #[derive(Event, Clone, Copy)]
-pub enum ButtonAction {
+pub enum OnClick {
     Play,
     PlayDaily,
     Resume,
     ToMainMenu,
-    NextLevel,
+    ToLevel(LevelIndex),
     BuyHealth,
     Quit,
 }
@@ -77,54 +78,39 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu:
         .with_children(|parent| {
             match menu_type {
                 MenuType::MainMenu => {
-                    parent.spawn(make_simple_text(
-                        asset_server,
-                        "Main Menu",
-                        FONT_H1,
-                        TextAlignment::Center,
-                    ));
-                    make_button(parent, asset_server, "Play", ButtonAction::Play);
-                    make_button(parent, asset_server, "Daily Run", ButtonAction::PlayDaily);
-                    make_button(parent, asset_server, "Quit", ButtonAction::Quit);
+                    parent.spawn(make_menu_head(asset_server, "Main Menu"));
+                    make_button(parent, asset_server, "Play", OnClick::Play);
+                    make_button(parent, asset_server, "Daily Run", OnClick::PlayDaily);
+                    make_button(parent, asset_server, "Quit", OnClick::Quit);
                 }
                 MenuType::GameOver => {
-                    parent.spawn(make_simple_text(
-                        asset_server,
-                        "Game Over",
-                        FONT_H1,
-                        TextAlignment::Center,
-                    ));
-                    make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
+                    parent.spawn(make_menu_head(asset_server, "Game Over"));
+                    make_button(parent, asset_server, "Quit Game", OnClick::ToMainMenu);
                 }
                 MenuType::Paused => {
-                    parent.spawn(make_simple_text(
-                        asset_server,
-                        "Main Menu",
-                        FONT_H1,
-                        TextAlignment::Center,
-                    ));
-                    make_button(parent, asset_server, "Resume", ButtonAction::Resume);
+                    parent.spawn(make_menu_head(asset_server, "Paused"));
+                    make_button(parent, asset_server, "Resume", OnClick::Resume);
                     make_button(
                         parent,
                         asset_server,
                         "Buy Health Upgrade",
-                        ButtonAction::BuyHealth,
+                        OnClick::BuyHealth,
                     );
-                    make_button(parent, asset_server, "Quit Game", ButtonAction::ToMainMenu);
+                    make_button(parent, asset_server, "Quit Game", OnClick::ToMainMenu);
                 }
-                MenuType::NextLevel => {
-                    parent.spawn(make_simple_text(
-                        asset_server,
-                        "Level Complete",
-                        FONT_H1,
-                        TextAlignment::Center,
-                    ));
+                MenuType::ToLevel(index) => {
+                    parent.spawn(make_menu_head(asset_server, "Level Complete"));
                     make_button(
                         parent,
                         asset_server,
                         "Play Next Level",
-                        ButtonAction::NextLevel,
+                        OnClick::ToLevel(index),
                     );
+                }
+                MenuType::Victory => {
+                    parent.spawn(make_menu_head(asset_server, "You win"));
+                    make_button(parent, asset_server, "Continue playing", OnClick::Resume);
+                    make_button(parent, asset_server, "Quit", OnClick::ToMainMenu);
                 }
             };
         })
@@ -135,7 +121,7 @@ fn make_button(
     parent: &mut ChildBuilder,
     asset_server: &Res<AssetServer>,
     text: &str,
-    action: ButtonAction,
+    action: OnClick,
 ) {
     parent
         .spawn((
@@ -147,12 +133,7 @@ fn make_button(
             Button { action },
         ))
         .with_children(|parent| {
-            parent.spawn(make_simple_text(
-                asset_server,
-                text,
-                FONT_P,
-                TextAlignment::Center,
-            ));
+            parent.spawn(make_text(asset_server, text, FONT_P, TextAlignment::Center));
         });
 }
 
@@ -166,7 +147,7 @@ pub fn button_mouse(
     mut mouse_query: Query<(Entity, &Interaction), (With<Button>, Changed<Interaction>)>,
     mut button_query: Query<(&mut BackgroundColor, &Button)>,
     mut menu: ResMut<MenuInfo>,
-    mut events: EventWriter<ButtonAction>,
+    mut events: EventWriter<OnClick>,
 ) {
     let mut last_button = None;
 
@@ -231,7 +212,7 @@ pub fn button_keys(
     keys: Res<Input<KeyCode>>,
     state: Res<crate::combat::player::InputState>,
     pad_buttons: Res<Input<GamepadButton>>,
-    mut out_events: EventWriter<ButtonAction>,
+    mut out_events: EventWriter<OnClick>,
     mut menu: ResMut<MenuInfo>,
     menu_query: Query<&Children, With<MenuMarker>>,
     mut button_query: Query<(&mut BackgroundColor, &Button)>,
@@ -252,7 +233,7 @@ pub fn button_keys(
             }
             // TODO: If the button press to enter menu is changed into just_pressed, this would work
             //KeyCode::Escape => {
-            //    out_events.send(ButtonAction::Resume);
+            //    out_events.send(OnClick::Resume);
             //}
             _ => {}
         }
@@ -277,13 +258,13 @@ pub fn button_keys(
             }
         }
         if pad_buttons.just_pressed(b_button) {
-            out_events.send(ButtonAction::Resume);
+            out_events.send(OnClick::Resume);
         }
     };
 }
 
 pub fn button_press(
-    mut events: EventReader<ButtonAction>,
+    mut events: EventReader<OnClick>,
     mut game_state: ResMut<NextState<GameState>>,
     mut game_data: ResMut<crate::GameInfo>,
     mut exit: EventWriter<AppExit>,
@@ -294,34 +275,34 @@ pub fn button_press(
 ) {
     for action in events.read() {
         match action {
-            ButtonAction::Play => {
+            OnClick::Play => {
                 *game_settings = GameSettings::from_cl(&cl_args);
                 game_state.set(GameState::InGame);
                 menu_info.unset();
             }
-            ButtonAction::PlayDaily => {
+            OnClick::PlayDaily => {
                 *game_settings = GameSettings::from_daily(std::time::SystemTime::now());
                 game_state.set(GameState::InGame);
                 menu_info.unset();
             }
-            ButtonAction::Resume => {
+            OnClick::Resume => {
                 game_state.set(GameState::InGame);
                 menu_info.unset();
             }
-            ButtonAction::NextLevel => {
-                game_data.next_level();
+            OnClick::ToLevel(level_index) => {
+                game_data.next_level(*level_index);
                 game_state.set(GameState::InGame);
                 menu_info.unset();
             }
-            ButtonAction::ToMainMenu => {
+            OnClick::ToMainMenu => {
                 *game_data = Default::default();
                 game_state.set(GameState::MainMenu);
                 menu_info.set(MenuType::MainMenu);
             }
-            ButtonAction::Quit => {
+            OnClick::Quit => {
                 exit.send(AppExit);
             }
-            ButtonAction::BuyHealth => {
+            OnClick::BuyHealth => {
                 // TODO: No unwrap
                 // TODO: Store the level somewhere else
                 // TODO: More upgradable stuff

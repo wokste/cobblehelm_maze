@@ -38,7 +38,11 @@ pub const BUTTON_STYLE: Style = {
 pub const FONT_P: f32 = 30.0;
 pub const FONT_H1: f32 = 60.0;
 
-pub fn make_simple_text(
+pub fn make_menu_head(asset_server: &Res<AssetServer>, text: &str) -> TextBundle {
+    make_text(asset_server, text, FONT_H1, TextAlignment::Center)
+}
+
+pub fn make_text(
     asset_server: &Res<AssetServer>,
     text: &str,
     font_size: f32,

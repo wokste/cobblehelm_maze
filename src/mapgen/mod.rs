@@ -11,10 +11,12 @@ use randitem::RandItem;
 
 use crate::grid::GridTransform;
 
+use self::style::LevelIndex;
+
 pub struct MapGenResult {
     pub tilemap: Grid<Tile>,
     pub player_pos: Coords,
-    pub stair_pos: Coords,
+    pub portal_pos: tinyvec::ArrayVec<[Coords; 4]>,
     // TODO: Stuff like locations for keys and end of level positions.
 }
 #[derive(Copy, Clone)]
@@ -25,10 +27,10 @@ pub enum RoomShape {
     DoubleRect,
 }
 
-pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
-    let mut map = Grid::<Tile>::new(64, 64);
+pub fn make_map(level: u8, level_style: LevelIndex, rng: &mut fastrand::Rng) -> MapGenResult {
+    let mut map = Grid::<Tile>::new(48, 48);
 
-    let styles = style::make_by_level(level);
+    let styles = level_style.to_style();
 
     let mut graph = graph::Graph::default();
 
@@ -54,12 +56,16 @@ pub fn make_map(level: u8, rng: &mut fastrand::Rng) -> MapGenResult {
         corridors::connect_rooms(&mut map, rng, edge);
     }
 
-    let (player_pos, stair_pos) = choose_start_and_end(&map, rng);
+    let player_pos = choose_pos(&map, rng);
+    let (dir_map, dist_map) = crate::grid::find_path4_to(&map, |tile| tile.is_solid(), player_pos);
+
+    let portal_count = if level < 4 { 2 } else { 1 };
+    let portal_pos = choose_portal_pos(&dist_map, rng, portal_count);
 
     MapGenResult {
         tilemap: map,
         player_pos,
-        stair_pos,
+        portal_pos,
     }
 }
 
@@ -102,21 +108,29 @@ pub fn print_map(map: &Grid<Tile>) {
     }
 }
 
-fn choose_start_and_end(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> (Coords, Coords) {
-    let mut pair = (choose_pos(map, rng), choose_pos(map, rng));
-    let mut dist = pair.0.eucledian_dist_sq(pair.1);
+fn choose_portal_pos(
+    dist_map: &Grid<u32>,
+    rng: &mut fastrand::Rng,
+    count: u8,
+) -> tinyvec::ArrayVec<[Coords; 4]> {
+    let mut out = tinyvec::ArrayVec::<[Coords; 4]>::new();
 
-    for _ in 0..4 {
-        let new_pair = (choose_pos(map, rng), choose_pos(map, rng));
-        let new_dist = new_pair.0.eucledian_dist_sq(new_pair.1);
+    let mut positions: Vec<_> = dist_map
+        .iter()
+        .filter(|(_, dist)| *dist != u32::MAX)
+        .collect();
 
-        if dist < new_dist {
-            pair = new_pair;
-            dist = new_dist;
+    if let Some((_, max_dist)) = positions.iter().max_by_key(|(_, d)| d) {
+        let required_dist = max_dist * 8 / 10;
+        positions.retain(|(_, dist)| *dist >= required_dist);
+
+        for _ in 0..count {
+            let index = rng.usize(0..positions.len());
+            out.push(positions[index].0);
+            positions.swap_remove(index);
         }
     }
-
-    pair
+    out
 }
 
 fn choose_pos(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Coords {

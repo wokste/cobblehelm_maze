@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{
     combat::{player::Player, CreatureStats},
     grid::Coords,
+    mapgen::style::LevelIndex,
     physics::{MapCollisionEvent, PhysicsBody},
     render::{spritemap::USprite, RenderResource, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
@@ -13,16 +14,18 @@ use crate::{
 pub enum Pickup {
     Apple,
     MedPack,
-    NextLevel,
+    NextLevel(LevelIndex),
     Coin,
-    CoinPile,
+    Gem,
+    Phylactery,
     Key(u8),
 }
 
 enum StatGain {
     Health(i16),
-    NextLevel,
+    NextLevel(LevelIndex),
     Coins(i32),
+    Phylactery,
     Key(u8),
     //Ammo(u8,i16),
 }
@@ -32,10 +35,11 @@ impl Pickup {
         match self {
             Pickup::Apple => StatGain::Health(15),
             Pickup::MedPack => StatGain::Health(45),
-            Pickup::NextLevel => StatGain::NextLevel,
+            Pickup::NextLevel(level_style) => StatGain::NextLevel(level_style),
             Pickup::Coin => StatGain::Coins(1),
-            Pickup::CoinPile => StatGain::Coins(5),
+            Pickup::Gem => StatGain::Coins(5),
             Pickup::Key(id) => StatGain::Key(1 << id),
+            Pickup::Phylactery => StatGain::Phylactery,
         }
     }
 
@@ -57,15 +61,21 @@ impl Pickup {
             StatGain::Health(gain) => {
                 stats.hp = i16::min(stats.hp + gain, stats.hp_max);
             }
-            StatGain::NextLevel => {
+            StatGain::NextLevel(level_index) => {
                 game_state.set(crate::game::GameState::GameMenu);
-                menu_info.set(MenuType::NextLevel);
+                menu_info.set(MenuType::ToLevel(level_index));
+                // TODO: Next level should have a level id.
             }
             StatGain::Coins(gain) => {
                 game_info.coins += gain;
             }
             StatGain::Key(mask) => {
                 game_info.key_flags |= mask;
+            }
+            StatGain::Phylactery => {
+                game_state.set(crate::game::GameState::GameMenu);
+                menu_info.set(MenuType::Victory);
+                // TODO: Next level should have a level id.
             }
         }
         game_info.score += self.get_score(game_info.level as i32);
@@ -80,18 +90,20 @@ impl Pickup {
                     0
                 }
             }
-            StatGain::NextLevel => level * 250,
+            StatGain::NextLevel(_) => level * 250,
             StatGain::Coins(count) => count * 25,
             StatGain::Key(_) => level * 100,
+            StatGain::Phylactery => 5000,
         }
     }
 
     fn to_sound(self) -> Option<&'static str> {
         match self.to_stat_gain() {
             StatGain::Health(_) => Some("audio/pickup_heal.ogg"),
-            StatGain::NextLevel => None,
+            StatGain::NextLevel(_) => None,
             StatGain::Coins(_) => Some("audio/pickup_coins.ogg"),
             StatGain::Key(_) => Some("audio/pickup_key.ogg"),
+            StatGain::Phylactery => Some("audio/phylactery.ogg"),
         }
     }
 
@@ -99,10 +111,11 @@ impl Pickup {
         let (str, id) = match self {
             Pickup::Apple => ("apple.png", 0),
             Pickup::MedPack => ("medpack.png", 0),
-            Pickup::NextLevel => ("portal.png", 0),
+            Pickup::NextLevel(level_index) => (level_index.to_style().portal_sprite, 0),
             Pickup::Coin => ("coin.png", 0),
-            Pickup::CoinPile => ("gem.png", 0),
+            Pickup::Gem => ("gem.png", 0),
             Pickup::Key(id) => ("key.png", *id as USprite),
+            Pickup::Phylactery => ("phylactery.png", 0),
         };
         Sprite3d {
             tile: tiles.get_item(str).tile(id),

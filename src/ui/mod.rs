@@ -9,7 +9,7 @@ pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_event::<menus::ButtonAction>()
+        app.add_event::<menus::OnClick>()
             .insert_resource(menus::MenuInfo::main_menu())
             .add_systems(OnEnter(GameState::MainMenu), menus::spawn_menu)
             .add_systems(OnEnter(GameState::GameMenu), menus::spawn_menu)

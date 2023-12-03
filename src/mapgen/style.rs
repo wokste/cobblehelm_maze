@@ -5,102 +5,121 @@ use crate::{
 
 use super::randitem::RandItem;
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum LevelIndex {
+    Castle,
+    Caves,
+    Sewers,
+    Hell,
+    Machine,
+}
+
+impl LevelIndex {
+    pub fn to_style(&self) -> &'static LevelStyle {
+        &LEVEL_STYLES[*self as usize]
+    }
+}
+
 pub struct LevelStyle {
+    pub portal_sprite: &'static str,
     pub rooms: &'static [WallTile],
     pub doors: &'static [DoorType],
     pub monsters: &'static [MonsterType],
 }
 
-pub fn make_by_level(level: u8) -> LevelStyle {
-    match level {
-        1 => LevelStyle {
-            // The castle
-            rooms: &[
-                WallTile::Castle,
-                WallTile::TempleBrown,
-                WallTile::TempleGray,
-                WallTile::TempleGreen,
-                WallTile::GoldBrickWall,
-                WallTile::WoodWall,
-                WallTile::Cave,
-            ],
-            doors: &[DoorType::Chips],
-            monsters: &[
-                MonsterType::EyeMonster1,
-                MonsterType::Goblin,
-                MonsterType::Imp,
-                MonsterType::Laima,
-            ],
-        },
-        2 => LevelStyle {
-            // Caves below the castle
-            rooms: &[
-                WallTile::Castle,
-                WallTile::Cave,
-                WallTile::GrayBlueTiles,
-                WallTile::TempleBrown,
-                WallTile::TempleGray,
-                WallTile::Beehive,
-                WallTile::TempleGreen,
-                WallTile::GoldBrickWall,
-                WallTile::Sewer,
-            ],
-            doors: &[],
-            monsters: &[
-                MonsterType::EyeMonster1,
-                MonsterType::Laima,
-                MonsterType::Ettin,
-                MonsterType::EyeMonster2,
-                MonsterType::Goblin,
-            ],
-        },
-        3 => LevelStyle {
-            // The sewers
-            rooms: &[
-                WallTile::Sewer,
-                WallTile::TempleGreen,
-                WallTile::TempleGray,
-                WallTile::Cave,
-                WallTile::GrayBlueTiles,
-            ],
-            doors: &[DoorType::Chips],
-            monsters: &[
-                MonsterType::Laima,
-                MonsterType::EyeMonster2,
-                MonsterType::Goblin,
-                MonsterType::EyeMonster1,
-            ],
-        },
-        4 => LevelStyle {
-            // In hell
-            rooms: &[WallTile::Demonic, WallTile::TempleGray, WallTile::WoodWall],
-            doors: &[DoorType::Chips],
-            monsters: &[
-                MonsterType::Imp,
-                MonsterType::EyeMonster2,
-                MonsterType::Demon,
-                MonsterType::Ettin,
-            ],
-        },
-        _ => LevelStyle {
-            // Welcome to the machine
-            rooms: &[
-                WallTile::MetalIron,
-                WallTile::MetalBronze,
-                WallTile::MetalCorrugated,
-                WallTile::GoldBrickWall,
-                WallTile::GrayBlueTiles,
-            ],
-            doors: &[],
-            monsters: &[
-                MonsterType::IronGolem,
-                MonsterType::EyeMonster2,
-                MonsterType::Ettin,
-                MonsterType::Demon,
-            ],
-        },
-    }
-}
+const LEVEL_STYLES: [LevelStyle; 5] = [
+    LevelStyle {
+        portal_sprite: "portal_castle.png",
+        // The castle
+        rooms: &[
+            WallTile::Castle,
+            WallTile::TempleBrown,
+            WallTile::TempleGray,
+            WallTile::TempleGreen,
+            WallTile::GoldBrickWall,
+            WallTile::WoodWall,
+            WallTile::Cave,
+        ],
+        doors: &[DoorType::Chips],
+        monsters: &[
+            MonsterType::EyeMonster1,
+            MonsterType::Goblin,
+            MonsterType::Imp,
+            MonsterType::Laima,
+        ],
+    },
+    LevelStyle {
+        portal_sprite: "portal_cave.png",
+        // Caves below the castle
+        rooms: &[
+            WallTile::Castle,
+            WallTile::Cave,
+            WallTile::GrayBlueTiles,
+            WallTile::TempleBrown,
+            WallTile::TempleGray,
+            WallTile::Beehive,
+            WallTile::TempleGreen,
+            WallTile::GoldBrickWall,
+            WallTile::Sewer,
+        ],
+        doors: &[],
+        monsters: &[
+            MonsterType::EyeMonster1,
+            MonsterType::Laima,
+            MonsterType::Ettin,
+            MonsterType::EyeMonster2,
+            MonsterType::Goblin,
+        ],
+    },
+    LevelStyle {
+        portal_sprite: "portal_sewers.png",
+        // The sewers
+        rooms: &[
+            WallTile::Sewer,
+            WallTile::TempleGreen,
+            WallTile::TempleGray,
+            WallTile::Cave,
+            WallTile::GrayBlueTiles,
+        ],
+        doors: &[DoorType::Chips],
+        monsters: &[
+            MonsterType::Laima,
+            MonsterType::EyeMonster2,
+            MonsterType::Goblin,
+            MonsterType::EyeMonster1,
+        ],
+    },
+    LevelStyle {
+        portal_sprite: "portal_hell.png",
+        // In hell
+        rooms: &[WallTile::Demonic, WallTile::TempleGray, WallTile::WoodWall],
+        doors: &[DoorType::Chips],
+        monsters: &[
+            MonsterType::Imp,
+            MonsterType::EyeMonster2,
+            MonsterType::Demon,
+            MonsterType::Ettin,
+        ],
+    },
+    LevelStyle {
+        portal_sprite: "portal_machine.png",
+        // Welcome to the machine
+        rooms: &[
+            WallTile::MetalIron,
+            WallTile::MetalBronze,
+            WallTile::MetalCorrugated,
+            WallTile::GoldBrickWall,
+            WallTile::GrayBlueTiles,
+        ],
+        doors: &[],
+        monsters: &[
+            MonsterType::IronGolem,
+            MonsterType::EyeMonster2,
+            MonsterType::Ettin,
+            MonsterType::Demon,
+        ],
+    },
+];
 
 pub fn choose_shape(tile: WallTile, rng: &mut fastrand::Rng) -> super::RoomShape {
     use super::RoomShape::*;
