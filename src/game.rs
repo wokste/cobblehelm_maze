@@ -87,6 +87,10 @@ fn start_level(
     }
     game_data.level_spawned = true;
 
+    if let Err(msg) = game_data.adjust_for_debug(&cl_args) {
+        warn!("Could not set command line level settings. {}", msg);
+    }
+
     for entity in level_query.iter_mut() {
         commands.entity(entity).despawn();
     }
@@ -100,7 +104,7 @@ fn start_level(
     println!("Seed: {}", rng.get_seed());
 
     // Get initial data
-    let map_gen_result = crate::mapgen::make_map(level, game_data.level_index, &mut rng);
+    let map_gen_result = crate::mapgen::make_map(level, game_data.level_style, &mut rng);
     if cl_args.verbose {
         crate::mapgen::print_map(&map_gen_result.tilemap);
     }
@@ -143,7 +147,7 @@ fn start_level(
     }
 
     // Add the monsters
-    let level_style = game_data.level_index.to_style();
+    let level_style = game_data.level_style.to_style();
     let monster_count = level * 3 + 12;
     for _ in 0..monster_count {
         use crate::mapgen::randitem::RandItem;

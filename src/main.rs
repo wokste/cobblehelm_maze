@@ -32,7 +32,11 @@ pub struct CommandLineArgs {
 
     /// Select a specific seed
     #[arg(long)]
-    map_seed: Option<u64>,
+    seed: Option<u64>,
+
+    /// Format used is '<level>:<style>'
+    #[arg(long)]
+    level: Option<String>,
 
     #[arg(long)]
     difficulty: Option<f32>,
@@ -124,10 +128,11 @@ pub struct GameInfo {
     pub score: i32,
     pub coins: i32,
     pub level: u8,
-    pub level_index: LevelIndex,
+    pub level_style: LevelIndex,
     pub level_spawned: bool,
     pub time: Stopwatch,
     pub key_flags: u8,
+    pub cheater: bool,
 }
 
 impl Default for GameInfo {
@@ -137,11 +142,38 @@ impl Default for GameInfo {
             score: 0,
             coins: 0,
             level: 1,
-            level_index: LevelIndex::Castle,
+            level_style: LevelIndex::Castle,
             level_spawned: false,
             time: Stopwatch::default(),
             key_flags: 0,
+            cheater: false,
         }
+    }
+}
+
+impl GameInfo {
+    pub fn adjust_for_debug(&mut self, args: &CommandLineArgs) -> Result<(), String> {
+        let Some(level_str) = &args.level else {return Ok(());};
+        let split: tinyvec::TinyVec<[&str; 2]> = level_str.split(':').collect();
+
+        if split.len() != 2 {
+            return Err(format!(
+                "Level `{}` does not have the correct format.",
+                level_str
+            ));
+        }
+
+        let level = split[0].parse().map_err(|_| format!("Not an int"))?;
+        let level_style = crate::mapgen::style::LevelIndex::from_str(split[1])?;
+
+        if level < 1 || level > 5 {
+            return Err(format!("Level {} not in range", level));
+        }
+        self.level = level;
+        self.level_style = level_style;
+        self.cheater = true;
+
+        Ok(())
     }
 }
 
@@ -179,7 +211,7 @@ impl GameSettings {
 
     pub fn from_cl(args: &CommandLineArgs) -> Self {
         Self {
-            map_seed: args.map_seed,
+            map_seed: args.seed,
             difficulty: args.difficulty.unwrap_or(1.0),
         }
     }
@@ -188,7 +220,7 @@ impl GameSettings {
 impl GameInfo {
     fn next_level(&mut self, level_index: LevelIndex) {
         self.level += 1;
-        self.level_index = level_index;
+        self.level_style = level_index;
         self.key_flags = 0;
         self.level_spawned = false;
     }

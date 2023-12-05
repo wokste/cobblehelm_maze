@@ -18,6 +18,19 @@ impl LevelIndex {
     pub fn to_style(&self) -> &'static LevelStyle {
         &LEVEL_STYLES[*self as usize]
     }
+
+    pub fn from_str(name: &str) -> Result<Self, String> {
+        Ok(match name {
+            "castle" => Self::Castle,
+            "caves" => Self::Caves,
+            "sewers" => Self::Sewers,
+            "hell" => Self::Hell,
+            "machine" => Self::Machine,
+            _ => {
+                return Err(format!("Level style {} unknown", name));
+            }
+        })
+    }
 }
 
 pub struct LevelStyle {

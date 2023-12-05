@@ -78,6 +78,18 @@ pub fn connect_rooms_organic<'a>(
             cur_pos.z += delta.z.signum()
         }
     }
+
+    // Widen corridors
+    for pos in added_floors.clone() {
+        let (dx, dz) = rng.choice([(-1, 0), (1, 0), (0, -1), (0, 1)]).unwrap();
+        let pos = pos + Coords::new(dx, dz);
+
+        if map[pos].is_solid() {
+            map[pos] = tile;
+            added_floors.push(pos);
+        }
+    }
+
     add_walls(map, added_floors, e.data0.wall, false);
 }
 
