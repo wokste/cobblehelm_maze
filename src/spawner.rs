@@ -112,6 +112,8 @@ impl Spawner<'_, '_, '_, '_, '_> {
             if self.map_data.can_see_player(pos.to_vec(0.5), 15.0) {
                 continue;
             }
+
+            return Ok(pos);
         }
         Err("Could not find a proper spawn pos")
     }
