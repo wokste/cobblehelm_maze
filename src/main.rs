@@ -7,6 +7,7 @@ mod map;
 mod mapgen;
 mod physics;
 mod render;
+mod spawner;
 mod ui;
 mod utils;
 

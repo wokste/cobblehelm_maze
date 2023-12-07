@@ -139,7 +139,7 @@ pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
         WallTile::TempleGreen => "temple_gray_wall.png",
         WallTile::Cave => "cave_wall.png",
         WallTile::Beehive => "hive.png",
-        WallTile::Demonic => "demonic_wall.png", // TODO: Asset
+        WallTile::Demonic => "demonic_wall.png",
         WallTile::MetalIron => "plates_iron.png",
         WallTile::MetalBronze => "plates_bronze.png",
         WallTile::Sewer => "sewer_wall.png",

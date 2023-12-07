@@ -7,8 +7,7 @@ use crate::{
     combat::projectile::ProjectileType,
     grid::{Coords, Grid},
     map::MapData,
-    physics::MapCollisionEvent,
-    render::{spritemap::SpriteSeq, RenderResource},
+    render::spritemap::SpriteSeq,
 };
 
 type RealF32 = ordered_float::NotNan<f32>;
@@ -119,7 +118,7 @@ impl MonsterType {
         }
     }
 
-    fn get_tile_seq(&self, tiles: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
+    pub fn get_tile_seq(&self, tiles: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
         use MonsterType as MT;
         let str = match self {
             MT::Imp => "imp.png",
@@ -132,32 +131,6 @@ impl MonsterType {
             MT::Demon => "demon_fire.png",
         };
         tiles.get_monster(str)
-    }
-
-    pub fn spawn(
-        &self,
-        commands: &mut Commands,
-        map_data: &mut ResMut<crate::map::MapData>,
-        meshes: &mut ResMut<Assets<Mesh>>,
-        render_res: &mut ResMut<RenderResource>,
-        rng: &mut fastrand::Rng,
-    ) -> Result<(), &'static str> {
-        let pos = choose_spawn_pos(map_data, rng)?;
-        let uv = self.get_tile_seq(&render_res.sprites);
-
-        commands
-            .spawn(uv.to_sprite_bundle(pos.to_vec(self.jumps(), 0.0), meshes, render_res))
-            .insert(crate::render::Animation::new(uv, rng.f32() * 0.04 + 0.16))
-            .insert(self.make_ai())
-            .insert(pos)
-            .insert(self.make_stats())
-            .insert(self.make_weapon())
-            .insert(crate::physics::PhysicsBody::new(
-                0.5,
-                MapCollisionEvent::Stop,
-            ));
-
-        Ok(())
     }
 
     pub fn get_score(&self) -> i32 {
@@ -215,7 +188,7 @@ pub struct AiMover {
 }
 
 impl AiMover {
-    fn new(pos: Coords, has_monster_grid: &mut Grid<bool>) -> Self {
+    pub fn new(pos: Coords, has_monster_grid: &mut Grid<bool>) -> Self {
         debug_assert!(!has_monster_grid[pos]);
         has_monster_grid[pos] = true;
 
@@ -281,26 +254,6 @@ impl AiMover {
         self.f += dist;
         self.f >= 1.0
     }
-}
-
-fn choose_spawn_pos(
-    map_data: &mut ResMut<crate::map::MapData>,
-    rng: &mut fastrand::Rng,
-) -> Result<AiMover, &'static str> {
-    for _ in 0..4096 {
-        let pos = map_data.solid_map.size().shrink(1).rand(rng);
-
-        if map_data.solid_map[pos] || map_data.monster_map[pos] {
-            continue;
-        }
-
-        if map_data.can_see_player(pos.to_vec(0.5), 15.0) {
-            continue;
-        }
-
-        return Ok(AiMover::new(pos, &mut map_data.monster_map));
-    }
-    Err("Could not find a proper spawn pos")
 }
 
 pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transform)>) {

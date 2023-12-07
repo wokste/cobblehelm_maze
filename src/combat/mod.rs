@@ -42,7 +42,7 @@ impl Plugin for CombatPlugin {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum MonsterType {
     Imp = 1,
     Goblin,

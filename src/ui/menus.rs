@@ -36,7 +36,7 @@ pub enum MenuType {
     MainMenu,
     GameOver,
     Paused,
-    ToLevel(LevelIndex),
+    NextLevel(LevelIndex),
     Victory,
 }
 
@@ -51,7 +51,7 @@ pub enum OnClick {
     PlayDaily,
     Resume,
     ToMainMenu,
-    ToLevel(LevelIndex),
+    NextLevel(LevelIndex),
     BuyHealth,
     Quit,
 }
@@ -98,13 +98,13 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu:
                     );
                     make_button(parent, asset_server, "Quit Game", OnClick::ToMainMenu);
                 }
-                MenuType::ToLevel(index) => {
+                MenuType::NextLevel(index) => {
                     parent.spawn(make_menu_head(asset_server, "Level Complete"));
                     make_button(
                         parent,
                         asset_server,
                         "Play Next Level",
-                        OnClick::ToLevel(index),
+                        OnClick::NextLevel(index),
                     );
                 }
                 MenuType::Victory => {
@@ -289,7 +289,7 @@ pub fn button_press(
                 game_state.set(GameState::InGame);
                 menu_info.unset();
             }
-            OnClick::ToLevel(level_index) => {
+            OnClick::NextLevel(level_index) => {
                 game_data.next_level(*level_index);
                 game_state.set(GameState::InGame);
                 menu_info.unset();

@@ -2,6 +2,7 @@ use bevy::{prelude::*, window::CursorGrabMode};
 
 use crate::{
     combat::player::Player, lifecycle::LevelObject, map::MapData, mapgen::style::LevelIndex,
+    spawner::Spawner,
 };
 
 #[derive(Default, Debug, Hash, PartialEq, Eq, Clone, Copy, States)]
@@ -76,7 +77,7 @@ fn start_level(
     mut game_data: ResMut<crate::GameInfo>,
     mut map_data: ResMut<MapData>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut render_res: ResMut<crate::render::RenderResource>,
+    render_res: ResMut<crate::render::RenderResource>,
     mut level_query: Query<Entity, With<LevelObject>>,
     mut player_query: Query<&mut Transform, With<Player>>,
     game_settings: Res<crate::GameSettings>,
@@ -148,20 +149,19 @@ fn start_level(
 
     // Add the monsters
     let level_style = game_data.level_style.to_style();
+
+    let mut spawner = Spawner {
+        map_data,
+        commands,
+        meshes,
+        render_res,
+    };
+
     let monster_count = level * 3 + 12;
     for _ in 0..monster_count {
         use crate::mapgen::randitem::RandItem;
-        let monster_type = level_style.monsters.rand_front_loaded(&mut rng);
-        let err = monster_type.spawn(
-            &mut commands,
-            &mut map_data,
-            &mut meshes,
-            &mut render_res,
-            &mut rng,
-        );
-        if let Err(err) = err {
-            println!("Failed top spawn monster: {}", err);
-        }
+        let monster_type = *level_style.monsters.rand_front_loaded(&mut rng);
+        spawner.try_spawn_monster(monster_type, &mut rng);
     }
 
     // Add level portal or phylactery
@@ -173,31 +173,23 @@ fn start_level(
             crate::items::pickup::Pickup::Phylactery
         };
 
-        item.spawn_at_pos(*pos, &mut commands, &mut meshes, &mut render_res);
+        spawner.spawn_item_at_pos(*pos, item);
     }
 
     // Add pickups
     {
-        let level = level as i32;
         use crate::items::pickup::Pickup::*;
-        for (item_type, count) in [
-            (Apple, 5),
-            (MedPack, 1),
-            (Coin, level + 5),
-            (Gem, level * (level - 1) / 2),
-        ] {
-            for _ in 0..count {
-                let err = item_type.spawn(
-                    &mut commands,
-                    &map_data,
-                    &mut meshes,
-                    &mut render_res,
-                    &mut rng,
-                );
-                if let Err(err) = err {
-                    println!("Failed top spawn item: {}", err);
-                }
-            }
+        for _ in 0..(level + 1) {
+            spawner.try_spawn_item(Apple, &mut rng);
+        }
+        spawner.try_spawn_item(MedPack, &mut rng);
+
+        let mut coins = get_coin_count(level, game_data.level_style);
+        while coins > 0 {
+            let (item, value) = if coins > 5 { (Gem, 5) } else { (Coin, 1) };
+
+            spawner.try_spawn_item(item, &mut rng);
+            coins -= value;
         }
     }
 
@@ -208,15 +200,9 @@ fn start_level(
         rng.shuffle(&mut keys);
 
         for key in keys.iter().take(2) {
-            let err = key.spawn(
-                &mut commands,
-                &map_data,
-                &mut meshes,
-                &mut render_res,
-                &mut rng,
-            );
-            if let Err(err) = err {
-                println!("Failed top spawn item: {}", err);
+            match spawner.choose_item_pos(&mut rng) {
+                Ok(pos) => spawner.spawn_item_at_pos(pos, *key),
+                Err(err) => println!("Failed top spawn item: {}", err),
             }
         }
     }
@@ -236,4 +222,16 @@ fn choose_level_style(level: u8, first: bool, rng: &mut fastrand::Rng) -> LevelI
         5 => LevelIndex::Machine,
         _ => panic!("Map id should be between 1 and 5"),
     }
+}
+
+fn get_coin_count(level: u8, level_style: LevelIndex) -> i32 {
+    let level_mult = (level + 1) as i32;
+    let style_mult = match level_style {
+        LevelIndex::Castle => 2,
+        LevelIndex::Caves => 4,
+        LevelIndex::Sewers => 6,
+        LevelIndex::Hell => 8,
+        LevelIndex::Machine => 10,
+    };
+    level_mult * style_mult
 }
