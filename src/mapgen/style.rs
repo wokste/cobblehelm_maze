@@ -15,8 +15,65 @@ pub enum LevelIndex {
 }
 
 impl LevelIndex {
-    pub fn to_style(&self) -> &'static LevelStyle {
-        &LEVEL_STYLES[*self as usize]
+    pub fn portal_sprite(self) -> &'static str {
+        match self {
+            Self::Castle => "portal_castle.png",
+            Self::Caves => "portal_cave.png",
+            Self::Sewers => "portal_sewers.png",
+            Self::Hell => "portal_hell.png",
+            Self::Machine => "portal_machine.png",
+        }
+    }
+
+    pub fn rooms(self) -> &'static [WallTile] {
+        use WallTile::*;
+        match self {
+            Self::Castle => &[
+                Castle,
+                BrownTemple,
+                GrayTemple,
+                GreenTemple,
+                GoldBricks,
+                Wood1,
+                Cave,
+            ],
+            Self::Caves => &[
+                Castle,
+                Cave,
+                GrayBlueTiles,
+                BrownTemple,
+                GrayTemple,
+                Beehive,
+                GreenTemple,
+                GoldBricks,
+                Sewer,
+            ],
+            Self::Sewers => &[Sewer, GreenTemple, GrayTemple, Cave, GrayBlueTiles],
+            Self::Hell => &[Demonic, GrayTemple, Wood1],
+            Self::Machine => &[Iron, Bronze, CorrugatedMetal, GoldBricks, GrayBlueTiles],
+        }
+    }
+
+    pub fn doors(self) -> &'static [DoorType] {
+        use DoorType::*;
+        match self {
+            Self::Castle => &[Chips],
+            Self::Caves => &[],
+            Self::Sewers => &[Chips],
+            Self::Hell => &[],
+            Self::Machine => &[Chips],
+        }
+    }
+
+    pub fn monsters(self) -> &'static [MonsterType] {
+        use MonsterType::*;
+        match self {
+            Self::Castle => &[EyeMonster1, Goblin, Imp, Laima],
+            Self::Caves => &[EyeMonster1, Laima, Ettin, EyeMonster2, Goblin],
+            Self::Sewers => &[Laima, EyeMonster2, Goblin, EyeMonster1],
+            Self::Hell => &[Imp, EyeMonster2, Demon, Ettin],
+            Self::Machine => &[IronGolem, EyeMonster2, Ettin, Demon],
+        }
     }
 
     pub fn from_str(name: &str) -> Result<Self, String> {
@@ -33,148 +90,44 @@ impl LevelIndex {
     }
 }
 
-pub struct LevelStyle {
-    pub portal_sprite: &'static str,
-    pub rooms: &'static [WallTile],
-    pub doors: &'static [DoorType],
-    pub monsters: &'static [MonsterType],
-}
-
-const LEVEL_STYLES: [LevelStyle; 5] = [
-    LevelStyle {
-        portal_sprite: "portal_castle.png",
-        // The castle
-        rooms: &[
-            WallTile::Castle,
-            WallTile::TempleBrown,
-            WallTile::TempleGray,
-            WallTile::TempleGreen,
-            WallTile::GoldBrickWall,
-            WallTile::WoodWall,
-            WallTile::Cave,
-        ],
-        doors: &[DoorType::Chips],
-        monsters: &[
-            MonsterType::EyeMonster1,
-            MonsterType::Goblin,
-            MonsterType::Imp,
-            MonsterType::Laima,
-        ],
-    },
-    LevelStyle {
-        portal_sprite: "portal_cave.png",
-        // Caves below the castle
-        rooms: &[
-            WallTile::Castle,
-            WallTile::Cave,
-            WallTile::GrayBlueTiles,
-            WallTile::TempleBrown,
-            WallTile::TempleGray,
-            WallTile::Beehive,
-            WallTile::TempleGreen,
-            WallTile::GoldBrickWall,
-            WallTile::Sewer,
-        ],
-        doors: &[],
-        monsters: &[
-            MonsterType::EyeMonster1,
-            MonsterType::Laima,
-            MonsterType::Ettin,
-            MonsterType::EyeMonster2,
-            MonsterType::Goblin,
-        ],
-    },
-    LevelStyle {
-        portal_sprite: "portal_sewers.png",
-        // The sewers
-        rooms: &[
-            WallTile::Sewer,
-            WallTile::TempleGreen,
-            WallTile::TempleGray,
-            WallTile::Cave,
-            WallTile::GrayBlueTiles,
-        ],
-        doors: &[DoorType::Chips],
-        monsters: &[
-            MonsterType::Laima,
-            MonsterType::EyeMonster2,
-            MonsterType::Goblin,
-            MonsterType::EyeMonster1,
-        ],
-    },
-    LevelStyle {
-        portal_sprite: "portal_hell.png",
-        // In hell
-        rooms: &[WallTile::Demonic, WallTile::TempleGray, WallTile::WoodWall],
-        doors: &[DoorType::Chips],
-        monsters: &[
-            MonsterType::Imp,
-            MonsterType::EyeMonster2,
-            MonsterType::Demon,
-            MonsterType::Ettin,
-        ],
-    },
-    LevelStyle {
-        portal_sprite: "portal_machine.png",
-        // Welcome to the machine
-        rooms: &[
-            WallTile::MetalIron,
-            WallTile::MetalBronze,
-            WallTile::MetalCorrugated,
-            WallTile::GoldBrickWall,
-            WallTile::GrayBlueTiles,
-        ],
-        doors: &[],
-        monsters: &[
-            MonsterType::IronGolem,
-            MonsterType::EyeMonster2,
-            MonsterType::Ettin,
-            MonsterType::Demon,
-        ],
-    },
-];
-
 pub fn choose_shape(tile: WallTile, rng: &mut fastrand::Rng) -> super::RoomShape {
     use super::RoomShape::*;
     let slice: &[super::RoomShape] = match tile {
         WallTile::Castle => &[Constructed, DoubleRect, Mirror],
-        WallTile::TempleBrown => &[DoubleRect, Constructed],
-        WallTile::TempleGray => &[Mirror, Constructed],
-        WallTile::TempleGreen => &[Constructed, DoubleRect, Mirror],
+        WallTile::BrownTemple => &[DoubleRect, Constructed],
+        WallTile::GrayTemple => &[Mirror, Constructed],
+        WallTile::GreenTemple => &[Constructed, DoubleRect, Mirror],
         WallTile::Demonic => &[DoubleRect, Constructed, Mirror],
-        WallTile::MetalIron => &[Mirror, Constructed],
-        WallTile::MetalBronze => &[Mirror, Constructed],
+        WallTile::Iron => &[Mirror, Constructed],
+        WallTile::Bronze => &[Mirror, Constructed],
         WallTile::Cave => &[Organic],
         WallTile::Beehive => &[Organic],
         WallTile::Sewer => &[DoubleRect],
-        WallTile::MetalCorrugated => &[DoubleRect, Constructed],
-        WallTile::GoldBrickWall => &[DoubleRect, Constructed],
+        WallTile::CorrugatedMetal => &[DoubleRect, Constructed],
+        WallTile::GoldBricks => &[DoubleRect, Constructed],
         WallTile::GrayBlueTiles => &[DoubleRect, Constructed],
-        WallTile::WoodWall => &[DoubleRect, Mirror],
+        WallTile::Wood1 => &[DoubleRect, Mirror],
     };
     *slice.rand_front_loaded(rng)
 }
 
 pub fn choose_floor(tile: WallTile, rng: &mut fastrand::Rng) -> FloorTile {
+    use FloorTile::*;
     let slice: &[FloorTile] = match tile {
-        WallTile::Castle => &[FloorTile::Sand, FloorTile::BrownFloor, FloorTile::GrayFloor],
-        WallTile::TempleBrown => &[FloorTile::BrownFloor, FloorTile::Sand],
-        WallTile::TempleGray => &[
-            FloorTile::GrayFloor,
-            FloorTile::RainbowTiles,
-            FloorTile::Sand,
-        ],
-        WallTile::TempleGreen => &[FloorTile::Sand],
-        WallTile::Cave => &[FloorTile::Sand],
-        WallTile::Beehive => &[FloorTile::Sand],
-        WallTile::Demonic => &[FloorTile::Sand],
-        WallTile::MetalIron => &[FloorTile::GrayFloor, FloorTile::RainbowTiles],
-        WallTile::MetalBronze => &[FloorTile::GrayFloor, FloorTile::RainbowTiles],
-        WallTile::Sewer => &[FloorTile::Sand],
-        WallTile::MetalCorrugated => &[FloorTile::Sand, FloorTile::GrayFloor],
-        WallTile::GoldBrickWall => &[FloorTile::Sand],
-        WallTile::GrayBlueTiles => &[FloorTile::GrayFloor, FloorTile::RainbowTiles],
-        WallTile::WoodWall => &[FloorTile::Sand],
+        WallTile::Castle => &[Sand, BrownFloor, GrayFloor],
+        WallTile::BrownTemple => &[BrownFloor, Sand],
+        WallTile::GrayTemple => &[GrayFloor, RainbowTiles, Sand],
+        WallTile::GreenTemple => &[Sand],
+        WallTile::Cave => &[Sand],
+        WallTile::Beehive => &[Sand],
+        WallTile::Demonic => &[Sand],
+        WallTile::Iron => &[GrayFloor, RainbowTiles],
+        WallTile::Bronze => &[GrayFloor, RainbowTiles],
+        WallTile::Sewer => &[Sand],
+        WallTile::CorrugatedMetal => &[Sand, GrayFloor],
+        WallTile::GoldBricks => &[Sand],
+        WallTile::GrayBlueTiles => &[GrayFloor, RainbowTiles],
+        WallTile::Wood1 => &[Sand],
     };
     *slice.rand_front_loaded(rng)
 }

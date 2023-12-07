@@ -38,7 +38,7 @@ impl MeshBuilder {
     fn add_rect(&mut self, p: Vec3, dir0: Vec3, dir1: Vec3, uv: Vec2) {
         let normal = dir0.cross(dir1);
 
-        let scale = 64 as f32 / TILESET_SIZE as f32;
+        let scale = 64.0 / TILESET_SIZE as f32;
 
         let uv0 = Vec2::new(scale, 0.0);
         let uv1 = Vec2::new(0.0, scale);
@@ -134,19 +134,19 @@ pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
 pub fn wall_tex_id(tile: WallTile, sprite_map: &SpriteMap) -> SpriteSeq {
     let str = match tile {
         WallTile::Castle => "castle.png",
-        WallTile::TempleBrown => "temple_brown.png",
-        WallTile::TempleGray => "temple_gray_wall.png",
-        WallTile::TempleGreen => "temple_gray_wall.png",
+        WallTile::BrownTemple => "temple_brown.png",
+        WallTile::GrayTemple => "temple_gray_wall.png",
+        WallTile::GreenTemple => "temple_gray_wall.png",
         WallTile::Cave => "cave_wall.png",
         WallTile::Beehive => "hive.png",
         WallTile::Demonic => "demonic_wall.png",
-        WallTile::MetalIron => "plates_iron.png",
-        WallTile::MetalBronze => "plates_bronze.png",
+        WallTile::Iron => "plates_iron.png",
+        WallTile::Bronze => "plates_bronze.png",
         WallTile::Sewer => "sewer_wall.png",
-        WallTile::MetalCorrugated => "plates_corrugated.png",
-        WallTile::GoldBrickWall => "gold_brick_wall.png",
+        WallTile::CorrugatedMetal => "plates_corrugated.png",
+        WallTile::GoldBricks => "gold_brick_wall.png",
         WallTile::GrayBlueTiles => "gray_blue_tiles.png",
-        WallTile::WoodWall => "wood_wall.png",
+        WallTile::Wood1 => "wood_wall.png",
     };
     sprite_map.get_block(str)
 }

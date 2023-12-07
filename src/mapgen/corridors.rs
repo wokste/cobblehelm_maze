@@ -51,10 +51,10 @@ fn connect_rooms_constructed<'a>(map: &mut Grid<Tile>, e: EdgeData<'a, RoomMetaD
     add_walls(map, added_floors, e.data0.wall, true);
 }
 
-pub fn connect_rooms_organic<'a>(
+pub fn connect_rooms_organic(
     map: &mut Grid<Tile>,
     rng: &mut fastrand::Rng,
-    e: EdgeData<'a, RoomMetaData>,
+    e: EdgeData<'_, RoomMetaData>,
 ) {
     let tile = Tile::Open(e.data0.floor, e.data0.ceil);
     let mut cur_pos = e.c0;

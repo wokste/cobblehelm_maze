@@ -54,7 +54,7 @@ pub struct SpritePos {
 }
 
 impl SpritePos {
-    pub fn to_uv(&self) -> Vec2 {
+    pub fn to_uv(self) -> Vec2 {
         assert!(self.scale == SpriteScale::Basic);
         Vec2::new(self.scale.scale(self.x), self.scale.scale(self.y))
     }

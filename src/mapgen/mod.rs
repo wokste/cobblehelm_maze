@@ -30,12 +30,10 @@ pub enum RoomShape {
 pub fn make_map(level: u8, level_style: LevelIndex, rng: &mut fastrand::Rng) -> MapGenResult {
     let mut map = Grid::<Tile>::new(48, 48);
 
-    let styles = level_style.to_style();
-
     let mut graph = graph::Graph::default();
 
     for _ in 0..50 {
-        let style = *styles.rooms.rand_front_loaded(rng);
+        let style = *level_style.rooms().rand_front_loaded(rng);
         let metadata = rooms::RoomMetaData::new(style, rng);
         let room = metadata.make_room(rng);
 

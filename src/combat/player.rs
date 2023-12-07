@@ -323,6 +323,8 @@ pub fn handle_player_input(
                 InputAction::Fire => firing = true,
                 InputAction::Interact => {
                     // TODO: Do interaction
+                    game_state.set(crate::game::GameState::GameMenu);
+                    menu_info.set(MenuType::Shop);
                 }
                 InputAction::Pause => {
                     game_state.set(crate::game::GameState::GameMenu);

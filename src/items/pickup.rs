@@ -110,7 +110,7 @@ impl Pickup {
         let (str, id) = match self {
             Pickup::Apple => ("apple.png", 0),
             Pickup::MedPack => ("medpack.png", 0),
-            Pickup::NextLevel(level_index) => (level_index.to_style().portal_sprite, 0),
+            Pickup::NextLevel(level_index) => (level_index.portal_sprite(), 0),
             Pickup::Coin => ("coin.png", 0),
             Pickup::Gem => ("gem.png", 0),
             Pickup::Key(id) => ("key.png", *id as USprite),

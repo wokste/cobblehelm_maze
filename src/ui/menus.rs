@@ -36,6 +36,7 @@ pub enum MenuType {
     MainMenu,
     GameOver,
     Paused,
+    Shop,
     NextLevel(LevelIndex),
     Victory,
 }
@@ -63,8 +64,7 @@ pub fn spawn_menu(mut commands: Commands, asset_server: Res<AssetServer>, menu: 
 pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu: &MenuInfo) {
     let Some(menu_type) = menu.menu_type
     else {
-        assert!(false, "Menu loaded while no menu is configured");
-        return;
+        panic!("Menu loaded while no menu is configured");
     };
     let _menu = commands
         .spawn((
@@ -90,12 +90,6 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu:
                 MenuType::Paused => {
                     parent.spawn(make_menu_head(asset_server, "Paused"));
                     make_button(parent, asset_server, "Resume", OnClick::Resume);
-                    make_button(
-                        parent,
-                        asset_server,
-                        "Buy Health Upgrade",
-                        OnClick::BuyHealth,
-                    );
                     make_button(parent, asset_server, "Quit Game", OnClick::ToMainMenu);
                 }
                 MenuType::NextLevel(index) => {
@@ -111,6 +105,16 @@ pub fn make_menu(commands: &mut Commands, asset_server: &Res<AssetServer>, menu:
                     parent.spawn(make_menu_head(asset_server, "You win"));
                     make_button(parent, asset_server, "Continue playing", OnClick::Resume);
                     make_button(parent, asset_server, "Quit", OnClick::ToMainMenu);
+                }
+                MenuType::Shop => {
+                    parent.spawn(make_menu_head(asset_server, "Stuff Shop"));
+                    make_button(
+                        parent,
+                        asset_server,
+                        "Buy Health Upgrade",
+                        OnClick::BuyHealth,
+                    );
+                    make_button(parent, asset_server, "Close", OnClick::Resume);
                 }
             };
         })

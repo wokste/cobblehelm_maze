@@ -148,7 +148,7 @@ fn start_level(
     }
 
     // Add the monsters
-    let level_style = game_data.level_style.to_style();
+    let level_style = game_data.level_style;
 
     let mut spawner = Spawner {
         map_data,
@@ -160,7 +160,7 @@ fn start_level(
     let monster_count = level * 3 + 12;
     for _ in 0..monster_count {
         use crate::mapgen::randitem::RandItem;
-        let monster_type = *level_style.monsters.rand_front_loaded(&mut rng);
+        let monster_type = *level_style.monsters().rand_front_loaded(&mut rng);
         spawner.try_spawn_monster(monster_type, &mut rng);
     }
 

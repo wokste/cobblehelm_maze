@@ -125,7 +125,7 @@ impl SpriteMapBuilder {
             return Ok(());
         };
         for os_path in dir {
-            let os_path = os_path.map_err(|e| MapBuildError::IO(e))?;
+            let os_path = os_path.map_err(MapBuildError::IO)?;
             let key = os_path.file_name().to_str().unwrap().to_string();
             let os_path: PathBuf = Path::new(".").join(folder).join(os_path.file_name());
 
@@ -138,7 +138,7 @@ impl SpriteMapBuilder {
     }
 
     pub fn should_build(&self, images: &ResMut<Assets<Image>>) -> bool {
-        if self.loaded == true {
+        if self.loaded {
             return false;
         }
 
@@ -161,8 +161,8 @@ impl SpriteMapBuilder {
         assert!(self.should_build(images));
         println!("Build started");
         // Create the texture map image
-        let width = super::spritemap::TILESET_SIZE as u32;
-        let height = super::spritemap::TILESET_SIZE as u32;
+        let width = super::spritemap::TILESET_SIZE;
+        let height = super::spritemap::TILESET_SIZE;
         let mut dst_image = Image::new(
             Extent3d {
                 width,

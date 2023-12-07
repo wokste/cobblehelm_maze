@@ -164,10 +164,11 @@ impl GameInfo {
             ));
         }
 
-        let level = split[0].parse().map_err(|_| format!("Not an int"))?;
+        let Ok(level) = split[0]
+            .parse::<u8>() else {return Err("Not an int".to_string());};
         let level_style = crate::mapgen::style::LevelIndex::from_str(split[1])?;
 
-        if level < 1 || level > 5 {
+        if !(1..=5).contains(&level) {
             return Err(format!("Level {} not in range", level));
         }
         self.level = level;

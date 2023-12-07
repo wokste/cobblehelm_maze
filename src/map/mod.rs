@@ -12,19 +12,19 @@ pub enum Tile {
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WallTile {
     Castle,
-    TempleBrown,
-    TempleGray,
-    TempleGreen,
+    BrownTemple,
+    GrayTemple,
+    GreenTemple,
     Cave,
     Sewer,
     Beehive,
     Demonic,
-    MetalIron,
-    MetalBronze,
-    MetalCorrugated,
-    GoldBrickWall,
+    Iron,
+    Bronze,
+    CorrugatedMetal,
+    GoldBricks,
     GrayBlueTiles,
-    WoodWall,
+    Wood1,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

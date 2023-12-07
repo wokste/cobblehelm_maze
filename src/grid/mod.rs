@@ -144,4 +144,25 @@ impl<T> IndexMut<(i32, i32)> for Grid<T> {
     }
 }
 
-// TODO: Unittest for to_coords() and to_index();
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn coords_index_bijective() {
+        let grid = Grid::<u8>::new(8, 8);
+
+        fn test(grid: &Grid<u8>, x: i32, z: i32) {
+            let index = grid.to_index(x, z);
+            let output = Grid::<u8>::to_coord(grid.size().p1, index);
+
+            assert_eq!(x, output.x);
+            assert_eq!(z, output.z);
+        }
+
+        test(&grid, 0, 0);
+        test(&grid, 0, 7);
+        test(&grid, 7, 0);
+        test(&grid, 7, 7);
+    }
+}
