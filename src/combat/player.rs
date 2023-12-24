@@ -68,6 +68,12 @@ pub enum InputAction {
     Pause,
 }
 
+impl InputAction {
+    fn fire_once(&self) -> bool {
+        matches!(self, Self::Interact | Self::Pause)
+    }
+}
+
 #[derive(Resource, Serialize, Deserialize)]
 pub struct InputMap {
     pub keys: HashMap<KeyCode, InputAction>,
@@ -126,36 +132,6 @@ impl Default for InputMap {
         }
     }
 }
-
-/*
-impl InputMap {
-    pub fn swap_hands(&mut self) {
-        // Swap the two sticks
-        std::mem::swap(&mut self.pad_move_x, &mut self.pad_rot_x);
-        std::mem::swap(&mut self.pad_move_y, &mut self.pad_rot_y);
-
-        // Swap WASD and arrow keys.
-        type KC = KeyCode;
-        fn swap_keys(map: &mut HashMap<KeyCode, InputAction>, l: KC, r: KC) {
-            let l_action = map.remove(&l);
-            let r_action = map.remove(&r);
-
-            if let Some(r_action) = r_action {
-                map.insert(l, r_action);
-            }
-
-            if let Some(l_action) = l_action {
-                map.insert(r, l_action);
-            }
-        }
-
-        swap_keys(&mut self.keys, KC::W, KC::Up);
-        swap_keys(&mut self.keys, KC::A, KC::Left);
-        swap_keys(&mut self.keys, KC::S, KC::Down);
-        swap_keys(&mut self.keys, KC::D, KC::Right);
-    }
-}
-*/
 
 /// Keeps track of mouse motion events, pitch, and yaw
 #[derive(Resource, Default)]
@@ -242,12 +218,20 @@ pub fn get_player_input(
 
     for key in keys.get_pressed() {
         if let Some(act) = key_map.keys.get(key) {
+            if act.fire_once() && !keys.just_pressed(*key) {
+                continue;
+            }
+
             acts.send(*act);
         }
     }
 
     for button in mouse.get_pressed() {
         if let Some(act) = key_map.mouse_buttons.get(button) {
+            if act.fire_once() && !mouse.just_pressed(*button) {
+                continue;
+            }
+
             acts.send(*act);
         }
     }
@@ -278,8 +262,15 @@ pub fn get_player_input(
                 gamepad,
                 button_type: *button_type,
             };
-            if pad_buttons.pressed(button) {
-                acts.send(*action);
+
+            if action.fire_once() {
+                if pad_buttons.just_pressed(button) {
+                    acts.send(*action);
+                }
+            } else {
+                if pad_buttons.pressed(button) {
+                    acts.send(*action);
+                }
             }
         }
     };

@@ -18,7 +18,6 @@ pub struct MapGenResult {
     pub tilemap: Grid<Tile>,
     pub player_pos: Coords,
     pub spawn_objects: Vec<(Coords, SpawnObject)>,
-    // TODO: Stuff like locations for keys and end of level positions.
 }
 #[derive(Copy, Clone)]
 pub enum RoomShape {

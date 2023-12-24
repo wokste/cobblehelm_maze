@@ -235,10 +235,9 @@ pub fn button_keys(
                     out_events.send(button.action);
                 }
             }
-            // TODO: If the button press to enter menu is changed into just_pressed, this would work
-            //KeyCode::Escape => {
-            //    out_events.send(OnClick::Resume);
-            //}
+            KeyCode::Escape => {
+                out_events.send(OnClick::Resume);
+            }
             _ => {}
         }
     }
