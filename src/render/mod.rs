@@ -44,37 +44,43 @@ impl RenderResource {
         let w2 = game_size / 2.0;
         let h2 = game_size / 2.0;
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        let vertices = vec![
+
+        let mut positions = vec![
             [-w2, -h2, 0.0],
             [w2, -h2, 0.0],
             [w2, h2, 0.0],
             [-w2, h2, 0.0],
         ];
 
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-        mesh.insert_attribute(
-            Mesh::ATTRIBUTE_NORMAL,
-            vec![
-                [0.0, 0.0, 1.0],
-                [0.0, 0.0, 1.0],
-                [0.0, 0.0, 1.0],
-                [0.0, 0.0, 1.0],
-            ],
-        );
+        let mut normals = vec![
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+        ];
 
-        if key.flipped {
-            mesh.insert_attribute(
-                Mesh::ATTRIBUTE_UV_0,
-                vec![[x0, y1], [x1, y1], [x1, y0], [x0, y0]],
-            );
-        } else {
-            mesh.insert_attribute(
-                Mesh::ATTRIBUTE_UV_0,
-                vec![[x1, y1], [x0, y1], [x0, y0], [x1, y0]],
-            );
+        let mut uv0 = match key.flipped {
+            true => vec![[x0, y1], [x1, y1], [x1, y0], [x0, y0]],
+            false => vec![[x1, y1], [x0, y1], [x0, y0], [x1, y0]],
+        };
+
+        if key.two_sided {
+            for index in 0..4 {
+                positions.push(positions[index]);
+                uv0.push(uv0[index]);
+                normals.push([0.0, 0.0, -1.0]);
+            }
         }
 
-        mesh.set_indices(Some(Indices::U32(vec![0, 2, 1, 0, 3, 2])));
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uv0);
+
+        if key.two_sided {
+            mesh.set_indices(Some(Indices::U32(vec![0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7])));
+        } else {
+            mesh.set_indices(Some(Indices::U32(vec![0, 2, 1, 0, 3, 2])));
+        }
         mesh
     }
 }

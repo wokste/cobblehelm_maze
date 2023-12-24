@@ -136,7 +136,7 @@ fn choose_level_transition_items(rng: &mut fastrand::Rng, level: u8) -> Vec<Spaw
             let mut alt_style = BASE_LEVELS[alt_style_index as usize];
 
             if base_style == alt_style {
-                alt_style = *ALT_LEVELS.rand_front_loaded(rng); // TODO:
+                alt_style = *ALT_LEVELS.rand_front_loaded(rng);
             }
 
             portals.push(SO::Portal { style: alt_style })

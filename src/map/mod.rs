@@ -1,4 +1,4 @@
-use crate::grid::Grid;
+use crate::{grid::Grid, render::spritemap::SpriteSeq};
 use bevy::prelude::{Resource, Transform, Vec3};
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
@@ -43,6 +43,14 @@ pub enum CeilingTile {
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DoorType {
     Wood,
+}
+impl DoorType {
+    pub fn make_sprite(&self, sprites: &crate::render::spritemap::SpriteMap) -> SpriteSeq {
+        let str = match self {
+            DoorType::Wood => "door_wood1.png",
+        };
+        sprites.get_block(str)
+    }
 }
 
 impl Tile {

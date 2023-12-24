@@ -1,7 +1,10 @@
 use bevy::{
     asset::Assets,
     ecs::system::{Commands, ResMut},
+    math::Vec3,
+    pbr::PbrBundle,
     render::mesh::Mesh,
+    transform::components::Transform,
 };
 
 use crate::{
@@ -9,6 +12,7 @@ use crate::{
     grid::Coords,
     items::pickup::Pickup,
     physics::MapCollisionEvent,
+    render::Sprite3d,
     spawnobject::SpawnObject,
 };
 
@@ -128,14 +132,12 @@ impl Spawner<'_, '_, '_, '_, '_> {
     }
 
     // --- Objects ---
-    pub(crate) fn spawn_object_at_pos(
+    pub fn spawn_object_at_pos(
         &mut self,
         pos: Coords,
         object_type: &SpawnObject,
         rng: &mut fastrand::Rng,
     ) {
-        //let uv = object_type.make_sprite(&self.render_res.sprites);
-
         //let size = uv.tile.scale.game_size();
 
         match object_type {
@@ -147,7 +149,33 @@ impl Spawner<'_, '_, '_, '_, '_> {
                 door_type,
                 vertical,
             } => {
-                // TODO
+                let uv = door_type.make_sprite(&self.render_res.sprites);
+
+                let sprite = Sprite3d {
+                    tile: uv.tile_start(),
+                    flipped: false,
+                    two_sided: true,
+                };
+
+                let mut direction = if *vertical { Vec3::X } else { Vec3::Z };
+
+                // Flip half the doors, just to add a bit of randomization
+                if rng.bool() {
+                    direction = -direction;
+                };
+
+                let transform =
+                    Transform::from_translation(pos.to_vec(0.5)).looking_to(direction, Vec3::Y);
+
+                self.commands
+                    .spawn(PbrBundle {
+                        mesh: self.render_res.get_mesh(sprite, &mut self.meshes),
+                        material: self.render_res.material.clone(),
+                        transform,
+                        ..Default::default()
+                    })
+                    .insert(crate::lifecycle::LevelObject)
+                    .insert(sprite);
             }
             SpawnObject::Phylactery {} => self.spawn_item_at_pos(pos, Pickup::Phylactery),
         }
