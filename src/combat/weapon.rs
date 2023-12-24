@@ -98,6 +98,7 @@ impl Weapon {
                 ProjectileType::Rock => "audio/shoot_rock.ogg",
                 ProjectileType::BlueBlob => "audio/shoot_blueblob.ogg",
                 ProjectileType::Shock => "audio/shoot_shock.ogg",
+                ProjectileType::Snowball => "audio/shoot_snow.ogg",
             }
         }
 

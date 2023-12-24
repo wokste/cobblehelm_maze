@@ -42,7 +42,7 @@ pub enum CeilingTile {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DoorType {
-    Chips,
+    Wood,
 }
 
 impl Tile {

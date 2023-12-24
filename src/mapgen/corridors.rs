@@ -1,5 +1,6 @@
 use crate::grid::{Coords, Grid};
-use crate::map::{Tile, WallTile};
+use crate::map::{DoorType, Tile, WallTile};
+use crate::spawnobject::SpawnObject;
 
 use super::graph::EdgeData;
 use super::rooms::RoomMetaData;
@@ -8,14 +9,19 @@ pub fn connect_rooms<'a>(
     map: &mut Grid<Tile>,
     rng: &mut fastrand::Rng,
     e: EdgeData<'a, RoomMetaData>,
+    spawn_objects: &mut Vec<(Coords, SpawnObject)>,
 ) {
     match e.data0.shape {
-        super::RoomShape::Organic => connect_rooms_organic(map, rng, e),
-        _ => connect_rooms_constructed(map, e),
+        super::RoomShape::Organic => connect_rooms_organic(map, rng, e, spawn_objects),
+        _ => connect_rooms_constructed(map, e, spawn_objects),
     }
 }
 
-fn connect_rooms_constructed<'a>(map: &mut Grid<Tile>, e: EdgeData<'a, RoomMetaData>) {
+fn connect_rooms_constructed<'a>(
+    map: &mut Grid<Tile>,
+    e: EdgeData<'a, RoomMetaData>,
+    spawn_objects: &mut Vec<(Coords, SpawnObject)>,
+) {
     let tile = Tile::Open(e.data0.floor, e.data0.ceil);
     /*let _door_tile = if level_style.doors.is_empty() {
         None
@@ -48,13 +54,14 @@ fn connect_rooms_constructed<'a>(map: &mut Grid<Tile>, e: EdgeData<'a, RoomMetaD
         }
     }
 
-    add_walls(map, added_floors, e.data0.wall, true);
+    add_walls(map, added_floors, spawn_objects, e.data0.wall, true);
 }
 
 pub fn connect_rooms_organic(
     map: &mut Grid<Tile>,
     rng: &mut fastrand::Rng,
     e: EdgeData<'_, RoomMetaData>,
+    spawn_objects: &mut Vec<(Coords, SpawnObject)>,
 ) {
     let tile = Tile::Open(e.data0.floor, e.data0.ceil);
     let mut cur_pos = e.c0;
@@ -90,10 +97,16 @@ pub fn connect_rooms_organic(
         }
     }
 
-    add_walls(map, added_floors, e.data0.wall, false);
+    add_walls(map, added_floors, spawn_objects, e.data0.wall, false);
 }
 
-fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, add_doors: bool) {
+fn add_walls(
+    map: &mut Grid<Tile>,
+    added_floors: Vec<Coords>,
+    spawn_objects: &mut Vec<(Coords, SpawnObject)>,
+    wall: WallTile,
+    add_doors: bool,
+) {
     for floor_pos in added_floors {
         // Add walls
         let Tile::Open(_,_) = map[floor_pos] else {continue;};
@@ -117,8 +130,15 @@ fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, ad
                 && !map[b].is_solid()
                 && map[t] != map[b]
             {
-                // TODO: Add door (-)
-                //map[floor_pos] = Tile::Floor(FloorTile::Door);
+                // Add door (-)
+                // TODO: Choose door type intelligently
+                spawn_objects.push((
+                    floor_pos,
+                    SpawnObject::Door {
+                        door_type: DoorType::Wood,
+                        vertical: false,
+                    },
+                ));
             }
 
             if map[t].is_solid()
@@ -127,8 +147,15 @@ fn add_walls(map: &mut Grid<Tile>, added_floors: Vec<Coords>, wall: WallTile, ad
                 && !map[r].is_solid()
                 && map[l] != map[r]
             {
-                // TODO: Add door (|)
-                //map[floor_pos] = Tile::Floor(FloorTile::Door);
+                // Add door (|)
+                // TODO: Choose door type intelligently
+                spawn_objects.push((
+                    floor_pos,
+                    SpawnObject::Door {
+                        door_type: DoorType::Wood,
+                        vertical: true,
+                    },
+                ));
             }
         }
     }

@@ -1,7 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 
 use super::styles::*;
-use crate::{combat::CreatureStats, game::GameState, mapgen::style::LevelIndex, GameSettings};
+use crate::{combat::CreatureStats, game::GameState, mapgen::style::LevelStyle, GameSettings};
 
 #[derive(Component)]
 pub struct MenuMarker;
@@ -37,7 +37,7 @@ pub enum MenuType {
     GameOver,
     Paused,
     Shop,
-    NextLevel(LevelIndex),
+    NextLevel(LevelStyle),
     Victory,
 }
 
@@ -52,7 +52,7 @@ pub enum OnClick {
     PlayDaily,
     Resume,
     ToMainMenu,
-    NextLevel(LevelIndex),
+    NextLevel(LevelStyle),
     BuyHealth,
     Quit,
 }

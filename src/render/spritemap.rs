@@ -111,6 +111,7 @@ impl SpriteSeq {
         let sprite = Sprite3d {
             tile,
             flipped: false,
+            two_sided: false,
         };
 
         Sprite3dBundle {

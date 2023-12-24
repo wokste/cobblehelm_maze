@@ -14,6 +14,7 @@ pub enum ProjectileType {
     Shock,
     Rock,
     Fire,
+    Snowball,
 }
 
 impl ProjectileType {
@@ -24,6 +25,7 @@ impl ProjectileType {
             ProjectileType::Rock => 6.0,
             ProjectileType::Fire => 6.0,
             ProjectileType::Shock => 2.0,
+            ProjectileType::Snowball => 6.0,
         }
     }
 
@@ -34,6 +36,7 @@ impl ProjectileType {
             ProjectileType::Shock => "shock.png",
             ProjectileType::Rock => "rock.png",
             ProjectileType::Fire => "fire.png",
+            ProjectileType::Snowball => "snowball.png",
         };
         tiles.get_projectile(str)
     }

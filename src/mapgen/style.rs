@@ -5,23 +5,36 @@ use crate::{
 
 use super::randitem::RandItem;
 
+pub const BASE_LEVELS: [LevelStyle; 5] = [
+    LevelStyle::Castle,
+    LevelStyle::Caves,
+    LevelStyle::Sewers,
+    LevelStyle::Machine,
+    LevelStyle::Hell,
+];
+
+pub const ALT_LEVELS: [LevelStyle; 1] = [LevelStyle::Ice];
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub enum LevelIndex {
+pub enum LevelStyle {
     Castle,
     Caves,
     Sewers,
-    Hell,
     Machine,
+    Hell,
+
+    Ice,
 }
 
-impl LevelIndex {
+impl LevelStyle {
     pub fn portal_sprite(self) -> &'static str {
         match self {
             Self::Castle => "portal_castle.png",
             Self::Caves => "portal_cave.png",
             Self::Sewers => "portal_sewers.png",
-            Self::Hell => "portal_hell.png",
             Self::Machine => "portal_machine.png",
+            Self::Hell => "portal_hell.png",
+            Self::Ice => "portal_ice.png",
         }
     }
 
@@ -49,19 +62,21 @@ impl LevelIndex {
                 Sewer,
             ],
             Self::Sewers => &[Sewer, GreenTemple, GrayTemple, Cave, GrayBlueTiles],
-            Self::Hell => &[Demonic, GrayTemple, Wood1],
             Self::Machine => &[Iron, Bronze, CorrugatedMetal, GoldBricks, GrayBlueTiles],
+            Self::Hell => &[Demonic, GrayTemple, Wood1],
+            Self::Ice => &[Cave, GrayTemple, GreenTemple, BrownTemple],
         }
     }
 
     pub fn doors(self) -> &'static [DoorType] {
         use DoorType::*;
         match self {
-            Self::Castle => &[Chips],
+            Self::Castle => &[Wood],
             Self::Caves => &[],
-            Self::Sewers => &[Chips],
+            Self::Sewers => &[Wood],
+            Self::Machine => &[Wood],
             Self::Hell => &[],
-            Self::Machine => &[Chips],
+            Self::Ice => &[],
         }
     }
 
@@ -71,8 +86,10 @@ impl LevelIndex {
             Self::Castle => &[EyeMonster1, Goblin, Imp, Laima],
             Self::Caves => &[EyeMonster1, Laima, Ettin, EyeMonster2, Goblin],
             Self::Sewers => &[Laima, EyeMonster2, Goblin, EyeMonster1],
+            Self::Machine => &[IronGolem, EyeMonster2, Ettin],
             Self::Hell => &[Imp, EyeMonster2, Demon, Ettin],
-            Self::Machine => &[IronGolem, EyeMonster2, Ettin, Demon],
+
+            Self::Ice => &[Ettin, Goblin, Snowman, EyeMonster2],
         }
     }
 
@@ -81,8 +98,9 @@ impl LevelIndex {
             "castle" => Self::Castle,
             "caves" => Self::Caves,
             "sewers" => Self::Sewers,
-            "hell" => Self::Hell,
             "machine" => Self::Machine,
+            "hell" => Self::Hell,
+            "ice" => Self::Ice,
             _ => {
                 return Err(format!("Level style {} unknown", name));
             }

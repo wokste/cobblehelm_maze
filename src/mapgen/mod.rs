@@ -1,5 +1,6 @@
 use crate::grid::*;
 use crate::map::*;
+use crate::spawnobject::SpawnObject;
 
 mod corridors;
 mod graph;
@@ -11,12 +12,12 @@ use randitem::RandItem;
 
 use crate::grid::GridTransform;
 
-use self::style::LevelIndex;
+use self::style::LevelStyle;
 
 pub struct MapGenResult {
     pub tilemap: Grid<Tile>,
     pub player_pos: Coords,
-    pub portal_pos: tinyvec::ArrayVec<[Coords; 4]>,
+    pub spawn_objects: Vec<(Coords, SpawnObject)>,
     // TODO: Stuff like locations for keys and end of level positions.
 }
 #[derive(Copy, Clone)]
@@ -27,10 +28,12 @@ pub enum RoomShape {
     DoubleRect,
 }
 
-pub fn make_map(level: u8, level_style: LevelIndex, rng: &mut fastrand::Rng) -> MapGenResult {
+pub fn make_map(level: u8, level_style: LevelStyle, rng: &mut fastrand::Rng) -> MapGenResult {
     let mut map = Grid::<Tile>::new(48, 48);
 
     let mut graph = graph::Graph::default();
+
+    let mut spawn_objects = vec![];
 
     for _ in 0..50 {
         let style = *level_style.rooms().rand_front_loaded(rng);
@@ -51,19 +54,18 @@ pub fn make_map(level: u8, level_style: LevelIndex, rng: &mut fastrand::Rng) -> 
     graph.add_more_edges(rng, 0.5);
 
     for edge in graph.to_edges() {
-        corridors::connect_rooms(&mut map, rng, edge);
+        corridors::connect_rooms(&mut map, rng, edge, &mut spawn_objects);
     }
 
     let player_pos = choose_pos(&map, rng);
     let (dir_map, dist_map) = crate::grid::find_path4_to(&map, |tile| tile.is_solid(), player_pos);
 
-    let portal_count = if level < 4 { 2 } else { 1 };
-    let portal_pos = choose_portal_pos(&dist_map, rng, portal_count);
+    add_level_transition_objects(&dist_map, rng, &mut spawn_objects, level);
 
     MapGenResult {
         tilemap: map,
         player_pos,
-        portal_pos,
+        spawn_objects,
     }
 }
 
@@ -106,29 +108,71 @@ pub fn print_map(map: &Grid<Tile>) {
     }
 }
 
-fn choose_portal_pos(
+fn add_level_transition_objects(
     dist_map: &Grid<u32>,
     rng: &mut fastrand::Rng,
-    count: u8,
-) -> tinyvec::ArrayVec<[Coords; 4]> {
-    let mut out = tinyvec::ArrayVec::<[Coords; 4]>::new();
+    spawn_objects: &mut Vec<(Coords, SpawnObject)>,
+    level: u8,
+) {
+    let items_to_spawn = choose_level_transition_items(rng, level);
+    spawn_object_instances(dist_map, rng, spawn_objects, items_to_spawn)
+}
 
+fn choose_level_transition_items(rng: &mut fastrand::Rng, level: u8) -> Vec<SpawnObject> {
+    use style::{ALT_LEVELS, BASE_LEVELS};
+    use SpawnObject as SO;
+
+    let style_index = (level - 1) as usize + 1;
+
+    if style_index < BASE_LEVELS.len() {
+        let base_style = BASE_LEVELS[style_index];
+        let mut portals = vec![SO::Portal { style: base_style }];
+
+        // The last level is always the same and has no choice
+        // Otherwise make a second portal to the last level
+        if style_index < BASE_LEVELS.len() - 1 {
+            let alt_style_index =
+                (level as i32 + rng.i32(-1..=1)).clamp(0, BASE_LEVELS.len() as i32 - 1);
+            let mut alt_style = BASE_LEVELS[alt_style_index as usize];
+
+            if base_style == alt_style {
+                alt_style = *ALT_LEVELS.rand_front_loaded(rng); // TODO:
+            }
+
+            portals.push(SO::Portal { style: alt_style })
+        }
+
+        portals
+    } else {
+        // In the endboss level, add a phylactery and the lich.
+        vec![SpawnObject::Phylactery]
+    }
+}
+
+fn spawn_object_instances(
+    dist_map: &Grid<u32>,
+    rng: &mut fastrand::Rng,
+    spawn_objects: &mut Vec<(Coords, SpawnObject)>,
+    objects_to_spawn: Vec<SpawnObject>,
+) {
     let mut positions: Vec<_> = dist_map
         .iter()
         .filter(|(_, dist)| *dist != u32::MAX)
         .collect();
 
-    if let Some((_, max_dist)) = positions.iter().max_by_key(|(_, d)| d) {
-        let required_dist = max_dist * 8 / 10;
-        positions.retain(|(_, dist)| *dist >= required_dist);
+    let Some((_, max_dist)) = positions.iter().max_by_key(|(_, d)| d) else {
+        panic!("Can't spawn objects");
+        // TODO: Maybe not panic
+    };
 
-        for _ in 0..count {
-            let index = rng.usize(0..positions.len());
-            out.push(positions[index].0);
-            positions.swap_remove(index);
-        }
+    let required_dist = max_dist * 8 / 10;
+    positions.retain(|(_, dist)| *dist >= required_dist);
+
+    for obj in objects_to_spawn.iter() {
+        let index = rng.usize(0..positions.len());
+        spawn_objects.push((positions[index].0, *obj));
+        positions.swap_remove(index);
     }
-    out
 }
 
 fn choose_pos(map: &Grid<Tile>, rng: &mut fastrand::Rng) -> Coords {

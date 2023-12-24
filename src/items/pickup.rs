@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     combat::{player::Player, CreatureStats},
-    mapgen::style::LevelIndex,
+    mapgen::style::LevelStyle,
     physics::PhysicsBody,
     render::{spritemap::USprite, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
@@ -13,7 +13,7 @@ use crate::{
 pub enum Pickup {
     Apple,
     MedPack,
-    NextLevel(LevelIndex),
+    NextLevel(LevelStyle),
     Coin,
     Gem,
     Phylactery,
@@ -23,7 +23,7 @@ pub enum Pickup {
 enum StatGain {
     Health(i16),
     PercHealth(i16),
-    NextLevel(LevelIndex),
+    NextLevel(LevelStyle),
     Coins(i32),
     Phylactery,
     Key(u8),
@@ -119,6 +119,7 @@ impl Pickup {
         Sprite3d {
             tile: tiles.get_item(str).tile(id),
             flipped: false,
+            two_sided: false,
         }
     }
 }

@@ -1,7 +1,7 @@
 use bevy::{prelude::*, window::CursorGrabMode};
 
 use crate::{
-    combat::player::Player, lifecycle::LevelObject, map::MapData, mapgen::style::LevelIndex,
+    combat::player::Player, lifecycle::LevelObject, map::MapData, mapgen::style::LevelStyle,
     spawner::Spawner,
 };
 
@@ -111,7 +111,8 @@ fn start_level(
     }
 
     let player_pos = Transform::from_translation(map_gen_result.player_pos.to_vec(0.7))
-        .looking_at(map_gen_result.portal_pos[0].to_vec(0.7), Vec3::Y);
+        .looking_to(Vec3::X, Vec3::Y);
+    //    .looking_at(map_gen_result.spawn_objects[0].to_vec(0.7), Vec3::Y);
     map_data.solid_map = map_gen_result.tilemap.map(|t| t.is_solid());
     map_data.monster_map = map_gen_result.tilemap.map(|t| t.is_solid());
     map_data.los_map = map_gen_result.tilemap.map(|t| t.is_solid());
@@ -165,15 +166,8 @@ fn start_level(
     }
 
     // Add level portal or phylactery
-    for (i, pos) in map_gen_result.portal_pos.iter().enumerate() {
-        let item = if level < 5 {
-            let level_style = choose_level_style(level + 1, i == 0, &mut rng);
-            crate::items::pickup::Pickup::NextLevel(level_style)
-        } else {
-            crate::items::pickup::Pickup::Phylactery
-        };
-
-        spawner.spawn_item_at_pos(*pos, item);
+    for (pos, object_type) in map_gen_result.spawn_objects.iter() {
+        spawner.spawn_object_at_pos(*pos, object_type, &mut rng);
     }
 
     // Add pickups
@@ -208,30 +202,15 @@ fn start_level(
     }
 }
 
-fn choose_level_style(level: u8, first: bool, rng: &mut fastrand::Rng) -> LevelIndex {
-    let mut adjusted_level = level as i32;
-    if !first {
-        adjusted_level += rng.i32(-1..=1);
-        adjusted_level = adjusted_level.clamp(1, 5);
-    }
-    match adjusted_level {
-        1 => LevelIndex::Castle,
-        2 => LevelIndex::Caves,
-        3 => LevelIndex::Sewers,
-        4 => LevelIndex::Hell,
-        5 => LevelIndex::Machine,
-        _ => panic!("Map id should be between 1 and 5"),
-    }
-}
-
-fn get_coin_count(level: u8, level_style: LevelIndex) -> i32 {
+fn get_coin_count(level: u8, level_style: LevelStyle) -> i32 {
     let level_mult = (level + 1) as i32;
     let style_mult = match level_style {
-        LevelIndex::Castle => 2,
-        LevelIndex::Caves => 4,
-        LevelIndex::Sewers => 6,
-        LevelIndex::Hell => 8,
-        LevelIndex::Machine => 10,
+        LevelStyle::Castle => 2,
+        LevelStyle::Caves => 4,
+        LevelStyle::Sewers => 6,
+        LevelStyle::Hell => 8,
+        LevelStyle::Machine => 10,
+        LevelStyle::Ice => 7,
     };
     level_mult * style_mult
 }

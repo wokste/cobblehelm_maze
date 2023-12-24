@@ -133,6 +133,7 @@ impl Animation {
 
         Sprite3d {
             flipped: false,
+            two_sided: false,
             tile,
         }
     }
@@ -145,6 +146,7 @@ impl Animation {
 pub struct Sprite3d {
     pub tile: spritemap::SpritePos,
     pub flipped: bool,
+    pub two_sided: bool,
 }
 
 impl Sprite3d {
@@ -160,6 +162,7 @@ impl Sprite3d {
             sprite: Sprite3d {
                 tile: self.tile,
                 flipped: false,
+                two_sided: false,
             },
             pbr: PbrBundle {
                 mesh: render_res.get_mesh(self, meshes),

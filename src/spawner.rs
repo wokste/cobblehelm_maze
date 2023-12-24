@@ -9,6 +9,7 @@ use crate::{
     grid::Coords,
     items::pickup::Pickup,
     physics::MapCollisionEvent,
+    spawnobject::SpawnObject,
 };
 
 pub struct Spawner<'c1, 'c2, 'ma, 'me, 'r> {
@@ -79,6 +80,16 @@ impl Spawner<'_, '_, '_, '_, '_> {
             return false;
         };
 
+        self.spawn_monster_at_pos(pos, monster, rng);
+        true
+    }
+
+    pub fn spawn_monster_at_pos(
+        &mut self,
+        pos: Coords,
+        monster: MonsterType,
+        rng: &mut fastrand::Rng,
+    ) {
         let pos = AiMover::new(pos, &mut self.map_data.monster_map);
         let uv = monster.get_tile_seq(&self.render_res.sprites);
 
@@ -97,8 +108,6 @@ impl Spawner<'_, '_, '_, '_, '_> {
                 0.5,
                 MapCollisionEvent::Stop,
             ));
-
-        true
     }
 
     pub fn choose_monster_pos(&mut self, rng: &mut fastrand::Rng) -> Result<Coords, &'static str> {
@@ -116,5 +125,31 @@ impl Spawner<'_, '_, '_, '_, '_> {
             return Ok(pos);
         }
         Err("Could not find a proper spawn pos")
+    }
+
+    // --- Objects ---
+    pub(crate) fn spawn_object_at_pos(
+        &mut self,
+        pos: Coords,
+        object_type: &SpawnObject,
+        rng: &mut fastrand::Rng,
+    ) {
+        //let uv = object_type.make_sprite(&self.render_res.sprites);
+
+        //let size = uv.tile.scale.game_size();
+
+        match object_type {
+            SpawnObject::Portal { style } => self.spawn_item_at_pos(pos, Pickup::NextLevel(*style)),
+            SpawnObject::Monster { monster_type } => {
+                self.spawn_monster_at_pos(pos, *monster_type, rng)
+            }
+            SpawnObject::Door {
+                door_type,
+                vertical,
+            } => {
+                // TODO
+            }
+            SpawnObject::Phylactery {} => self.spawn_item_at_pos(pos, Pickup::Phylactery),
+        }
     }
 }

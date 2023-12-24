@@ -8,13 +8,14 @@ mod mapgen;
 mod physics;
 mod render;
 mod spawner;
+mod spawnobject;
 mod ui;
 mod utils;
 
 use bevy::{prelude::*, time::Stopwatch};
 
 use clap::Parser;
-use mapgen::style::LevelIndex;
+use mapgen::style::LevelStyle;
 
 #[derive(Parser, Resource, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -129,7 +130,7 @@ pub struct GameInfo {
     pub score: i32,
     pub coins: i32,
     pub level: u8,
-    pub level_style: LevelIndex,
+    pub level_style: LevelStyle,
     pub level_spawned: bool,
     pub time: Stopwatch,
     pub key_flags: u8,
@@ -143,7 +144,7 @@ impl Default for GameInfo {
             score: 0,
             coins: 0,
             level: 1,
-            level_style: LevelIndex::Castle,
+            level_style: LevelStyle::Castle,
             level_spawned: false,
             time: Stopwatch::default(),
             key_flags: 0,
@@ -166,7 +167,7 @@ impl GameInfo {
 
         let Ok(level) = split[0]
             .parse::<u8>() else {return Err("Not an int".to_string());};
-        let level_style = crate::mapgen::style::LevelIndex::from_str(split[1])?;
+        let level_style = crate::mapgen::style::LevelStyle::from_str(split[1])?;
 
         if !(1..=5).contains(&level) {
             return Err(format!("Level {} not in range", level));
@@ -220,7 +221,7 @@ impl GameSettings {
 }
 
 impl GameInfo {
-    fn next_level(&mut self, level_index: LevelIndex) {
+    fn next_level(&mut self, level_index: LevelStyle) {
         self.level += 1;
         self.level_style = level_index;
         self.key_flags = 0;

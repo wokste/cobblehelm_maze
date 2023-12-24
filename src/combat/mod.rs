@@ -42,7 +42,7 @@ impl Plugin for CombatPlugin {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum MonsterType {
     Imp = 1,
     Goblin,
@@ -50,6 +50,7 @@ pub enum MonsterType {
     EyeMonster2,
     Ettin,
     Laima,
+    Snowman,
     IronGolem,
     Demon,
 }
@@ -66,6 +67,7 @@ pub enum DamageType {
     Normal,
     Fire,
     Electric,
+    Cold,
 }
 
 #[derive(Event, Debug, PartialEq, Eq)]

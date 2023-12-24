@@ -27,6 +27,7 @@ impl MonsterType {
             MT::EyeMonster1 => AI::new(Flags::Follow),
             MT::Ettin => AI::new(Flags::Approach),
             MT::Laima => AI::new(Flags::Approach),
+            MT::Snowman => AI::new(Flags::empty()),
             MT::IronGolem => AI::new(Flags::empty()),
             MT::EyeMonster2 => AI::new(Flags::empty()),
             MT::Demon => AI::new(Flags::Approach | Flags::Follow),
@@ -50,8 +51,9 @@ impl MonsterType {
             MT::EyeMonster2 => (2.0, 10),
             MT::Ettin => (2.0, 20),
             MT::Laima => (1.5, 18),
-            MT::IronGolem => (1.0, 40),
-            MT::Demon => (1.0, 20),
+            MT::Snowman => (0.8, 25),
+            MT::IronGolem => (1.0, 30),
+            MT::Demon => (1.0, 40),
         };
         CreatureStats {
             speed,
@@ -97,6 +99,16 @@ impl MonsterType {
             MT::Laima => {
                 Weapon::new_ranged(1.2, ProjectileType::Shock, 4.0, 20, DamageType::Electric)
             }
+            MT::Snowman => Weapon::new(
+                0.15,
+                2,
+                DamageType::Cold,
+                7.0,
+                WeaponEffect::Ranged {
+                    ptype: ProjectileType::Snowball,
+                    accuracy: 0.3,
+                },
+            ),
             MT::IronGolem => Weapon::new_ranged(
                 0.7,
                 ProjectileType::RedSpikes,
@@ -127,6 +139,7 @@ impl MonsterType {
             MT::EyeMonster2 => "eye_monster2.png",
             MT::Ettin => "ettin.png",
             MT::Laima => "laima.png",
+            MT::Snowman => "snowman.png",
             MT::IronGolem => "iron_golem.png",
             MT::Demon => "demon_fire.png",
         };
@@ -141,8 +154,9 @@ impl MonsterType {
             MonsterType::EyeMonster2 => 70,
             MonsterType::Ettin => 100,
             MonsterType::Laima => 30,
-            MonsterType::IronGolem => 140,
-            MonsterType::Demon => 170,
+            MonsterType::Snowman => 60,
+            MonsterType::IronGolem => 120,
+            MonsterType::Demon => 200,
         }
     }
 }
