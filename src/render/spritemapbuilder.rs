@@ -128,10 +128,7 @@ impl SpriteMapBuilder {
             let os_path = os_path.map_err(MapBuildError::IO)?;
             let key = os_path.file_name().to_str().unwrap().to_string();
             let os_path: PathBuf = Path::new(".").join(folder).join(os_path.file_name());
-
-            println!("Loading image: {:?}", os_path);
             let handle: Handle<Image> = asset_server.load(os_path);
-
             self.loading.push((key, handle, group));
         }
         Ok(())

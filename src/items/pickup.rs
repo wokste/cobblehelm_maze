@@ -46,6 +46,7 @@ impl Pickup {
     const fn can_take(self, stats: &CreatureStats) -> bool {
         match self.to_stat_gain() {
             StatGain::Health(_) => stats.hp < stats.hp_max,
+            StatGain::PercHealth(_) => stats.hp < stats.hp_max,
             _ => true,
         }
     }
