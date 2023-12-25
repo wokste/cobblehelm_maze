@@ -14,14 +14,15 @@ opt-level = 3
 
 [dependencies]
 bevy = { version = "*", features = ["dynamic_linking", "serialize"] }
-bitflags = "2.3"
+bitflags = "*"
 clap = { version = "*", features = ["derive"] }
 derive_more = "*"
 fastrand = "*"
 serde = { version = "*", features = ["derive"] }
-tinyvec = "1.6"
+tinyvec = "*"
 vergen = { version = "*", features = ["build", "git", "gitcl"] }
 ordered-float = "*"
+noise = "*"
 
 [build-dependencies]
 vergen = { version = "*", features = ["build", "git", "gitcl"] }

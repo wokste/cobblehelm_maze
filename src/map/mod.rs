@@ -33,6 +33,7 @@ pub enum FloorTile {
     BrownFloor,
     GrayFloor,
     RainbowTiles,
+    Ice,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

@@ -10,6 +10,7 @@ use bevy::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    interactable::{Interactable, TriggerEvent},
     physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
     ui::menus::{MenuInfo, MenuType},
 };
@@ -263,14 +264,10 @@ pub fn get_player_input(
                 button_type: *button_type,
             };
 
-            if action.fire_once() {
-                if pad_buttons.just_pressed(button) {
-                    acts.send(*action);
-                }
-            } else {
-                if pad_buttons.pressed(button) {
-                    acts.send(*action);
-                }
+            if (action.fire_once() && pad_buttons.just_pressed(button))
+                || (!action.fire_once() && pad_buttons.pressed(button))
+            {
+                acts.send(*action);
             }
         }
     };
@@ -281,7 +278,7 @@ pub fn handle_player_input(
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     mut state: ResMut<InputState>,
     time: Res<Time>,
-    mut query: Query<
+    mut player_query: Query<
         (
             &CreatureStats,
             &mut Transform,
@@ -290,12 +287,14 @@ pub fn handle_player_input(
         ),
         With<Player>,
     >,
+    mut interactable_query: Query<(Entity, &Interactable, &Transform), Without<Player>>,
+    mut trigger_events: EventWriter<TriggerEvent>,
     key_map: Res<InputMap>,
     mut menu_info: ResMut<MenuInfo>,
 ) {
     let delta_time = time.delta_seconds();
     let state_delta = state.as_mut();
-    for (stats, mut transform, mut movable, mut weapon) in query.iter_mut() {
+    for (stats, mut transform, mut movable, mut weapon) in player_query.iter_mut() {
         let mut firing = false;
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
@@ -313,9 +312,30 @@ pub fn handle_player_input(
                 InputAction::RotRight => state_delta.yaw -= key_map.button_rot_rate * delta_time,
                 InputAction::Fire => firing = true,
                 InputAction::Interact => {
-                    // TODO: Do interaction
-                    game_state.set(crate::game::GameState::GameMenu);
-                    menu_info.set(MenuType::Shop);
+                    for (target, interactable, interactable_pos) in interactable_query.iter_mut() {
+                        if !Interactable::in_range(&transform, interactable_pos) {
+                            continue;
+                        }
+
+                        match interactable {
+                            Interactable::SelfTrigger => trigger_events.send(TriggerEvent {
+                                target,
+                                instigator: None,
+                            }),
+                            Interactable::Trigger(entities) => {
+                                for e in entities {
+                                    trigger_events.send(TriggerEvent {
+                                        target: *e,
+                                        instigator: None,
+                                    })
+                                }
+                            }
+                            Interactable::Shop => {
+                                game_state.set(crate::game::GameState::GameMenu);
+                                menu_info.set(MenuType::Shop);
+                            }
+                        }
+                    }
                 }
                 InputAction::Pause => {
                     game_state.set(crate::game::GameState::GameMenu);

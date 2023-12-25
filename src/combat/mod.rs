@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     game::GameState,
+    interactable,
     ui::menus::{MenuInfo, MenuType},
 };
 

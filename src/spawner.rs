@@ -10,9 +10,10 @@ use bevy::{
 use crate::{
     combat::{ai::AiMover, MonsterType},
     grid::Coords,
+    interactable::{Door, Interactable},
     items::pickup::Pickup,
     physics::MapCollisionEvent,
-    render::Sprite3d,
+    render::{FaceCamera, Sprite3d},
     spawnobject::SpawnObject,
 };
 
@@ -147,17 +148,12 @@ impl Spawner<'_, '_, '_, '_, '_> {
             }
             SpawnObject::Door {
                 door_type,
-                vertical,
+                is_vertical,
             } => {
                 let uv = door_type.make_sprite(&self.render_res.sprites);
+                let door = Door::new(*door_type, uv, *is_vertical);
 
-                let sprite = Sprite3d {
-                    tile: uv.tile_start(),
-                    flipped: false,
-                    two_sided: true,
-                };
-
-                let mut direction = if *vertical { Vec3::X } else { Vec3::Z };
+                let mut direction = if *is_vertical { Vec3::X } else { Vec3::Z };
 
                 // Flip half the doors, just to add a bit of randomization
                 if rng.bool() {
@@ -169,12 +165,36 @@ impl Spawner<'_, '_, '_, '_, '_> {
 
                 self.commands
                     .spawn(PbrBundle {
+                        mesh: self
+                            .render_res
+                            .get_mesh(door.make_sprite3d(), &mut self.meshes),
+                        material: self.render_res.material.clone(),
+                        transform,
+                        ..Default::default()
+                    })
+                    .insert(crate::lifecycle::LevelObject)
+                    .insert(Interactable::SelfTrigger)
+                    .insert(door.make_sprite3d())
+                    .insert(door);
+            }
+            SpawnObject::Shop => {
+                let uv = &self.render_res.sprites.misc["vending_machine.png"];
+                let sprite = Sprite3d::new(uv.tile_start()).make_two_sided();
+
+                // TODO: Choose dir
+                let transform =
+                    Transform::from_translation(pos.to_vec(0.5)).looking_to(Vec3::X, Vec3::Y);
+
+                self.commands
+                    .spawn(PbrBundle {
                         mesh: self.render_res.get_mesh(sprite, &mut self.meshes),
                         material: self.render_res.material.clone(),
                         transform,
                         ..Default::default()
                     })
                     .insert(crate::lifecycle::LevelObject)
+                    .insert(Interactable::Shop)
+                    .insert(FaceCamera)
                     .insert(sprite);
             }
             SpawnObject::Phylactery {} => self.spawn_item_at_pos(pos, Pickup::Phylactery),

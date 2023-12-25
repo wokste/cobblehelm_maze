@@ -21,6 +21,7 @@ impl Plugin for GamePlugin {
         app.add_systems(OnEnter(GameState::MainMenu), despawn_game)
             .add_systems(OnEnter(GameState::InGame), (start_level, capture_mouse))
             .add_systems(OnExit(GameState::InGame), release_mouse)
+            .add_event::<crate::interactable::TriggerEvent>()
             .insert_resource(crate::map::MapData::default())
             .insert_resource(crate::render::RenderResource::default())
             .insert_resource(crate::GameInfo::default())
@@ -29,6 +30,8 @@ impl Plugin for GamePlugin {
                 Update,
                 (
                     crate::physics::do_physics.after(crate::combat::player::get_player_input),
+                    crate::interactable::update_doors
+                        .after(crate::combat::player::get_player_input),
                     crate::items::pickup::check_pickups.after(crate::physics::do_physics),
                     crate::render::face_camera.after(crate::physics::do_physics),
                     crate::render::animate_sprites,

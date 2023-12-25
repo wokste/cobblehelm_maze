@@ -127,6 +127,7 @@ pub fn floor_tex_id(tile: FloorTile, sprite_map: &SpriteMap) -> SpriteSeq {
         FloorTile::BrownFloor => "floor_brown.png",
         FloorTile::GrayFloor => "temple_gray_floor.png",
         FloorTile::RainbowTiles => "rainbow_tiles.png",
+        FloorTile::Ice => "floor_ice.png",
     };
     sprite_map.get_block(str)
 }

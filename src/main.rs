@@ -1,6 +1,7 @@
 mod combat;
 mod game;
 mod grid;
+mod interactable;
 mod items;
 mod lifecycle;
 mod map;

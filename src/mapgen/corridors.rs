@@ -5,10 +5,10 @@ use crate::spawnobject::SpawnObject;
 use super::graph::EdgeData;
 use super::rooms::RoomMetaData;
 
-pub fn connect_rooms<'a>(
+pub fn connect_rooms(
     map: &mut Grid<Tile>,
     rng: &mut fastrand::Rng,
-    e: EdgeData<'a, RoomMetaData>,
+    e: EdgeData<'_, RoomMetaData>,
     spawn_objects: &mut Vec<(Coords, SpawnObject)>,
 ) {
     match e.data0.shape {
@@ -17,9 +17,9 @@ pub fn connect_rooms<'a>(
     }
 }
 
-fn connect_rooms_constructed<'a>(
+fn connect_rooms_constructed(
     map: &mut Grid<Tile>,
-    e: EdgeData<'a, RoomMetaData>,
+    e: EdgeData<'_, RoomMetaData>,
     spawn_objects: &mut Vec<(Coords, SpawnObject)>,
 ) {
     let tile = Tile::Open(e.data0.floor, e.data0.ceil);
@@ -136,7 +136,7 @@ fn add_walls(
                     floor_pos,
                     SpawnObject::Door {
                         door_type: DoorType::Wood,
-                        vertical: false,
+                        is_vertical: false,
                     },
                 ));
             }
@@ -153,7 +153,7 @@ fn add_walls(
                     floor_pos,
                     SpawnObject::Door {
                         door_type: DoorType::Wood,
-                        vertical: true,
+                        is_vertical: true,
                     },
                 ));
             }

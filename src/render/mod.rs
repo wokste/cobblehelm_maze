@@ -156,6 +156,19 @@ pub struct Sprite3d {
 }
 
 impl Sprite3d {
+    pub fn new(tile: spritemap::SpritePos) -> Self {
+        Self {
+            tile,
+            flipped: false,
+            two_sided: false,
+        }
+    }
+
+    pub fn make_two_sided(mut self) -> Self {
+        self.two_sided = true;
+        self
+    }
+
     pub fn to_sprite_bundle(
         self,
         pos: Vec3,

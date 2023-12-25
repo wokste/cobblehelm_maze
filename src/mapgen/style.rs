@@ -64,7 +64,7 @@ impl LevelStyle {
             Self::Sewers => &[Sewer, GreenTemple, GrayTemple, Cave, GrayBlueTiles],
             Self::Machine => &[Iron, Bronze, CorrugatedMetal, GoldBricks, GrayBlueTiles],
             Self::Hell => &[Demonic, GrayTemple, Wood1],
-            Self::Ice => &[Cave, GrayTemple, GreenTemple, BrownTemple],
+            Self::Ice => &[Cave, GrayTemple, GreenTemple, Sewer],
         }
     }
 
