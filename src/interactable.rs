@@ -12,7 +12,7 @@ use bevy::{
 
 use crate::{
     grid::Coords,
-    map::DoorType,
+    map::{DoorType, MapData},
     render::{spritemap::SpriteSeq, RenderResource, Sprite3d},
     GameInfo,
 };
@@ -63,6 +63,12 @@ impl Door {
         }
     }
 
+    pub fn update_collision(&self, pos: Coords, map: &mut ResMut<MapData>) {
+        let collision = !self.is_open;
+        map.solid_map[pos] = collision;
+        map.los_map[pos] = collision;
+    }
+
     pub fn sprite(&self) -> crate::render::spritemap::SpritePos {
         let id = match (self.door_type, self.is_open) {
             (_, true) => 1,
@@ -71,7 +77,7 @@ impl Door {
         self.sprites.tile(id)
     }
 
-    pub(crate) fn make_sprite3d(&self) -> Sprite3d {
+    pub fn make_sprite3d(&self) -> Sprite3d {
         Sprite3d {
             tile: self.sprite(),
             flipped: false,
@@ -86,6 +92,8 @@ pub fn update_doors(
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_res: ResMut<RenderResource>,
     game_info: Res<GameInfo>,
+
+    mut map: ResMut<MapData>,
 ) {
     for event in events.read() {
         if let Ok((mut door, mut sprite, transform, mut mesh)) = door_query.get_mut(event.target) {
@@ -107,7 +115,8 @@ pub fn update_doors(
             *mesh = render_res.get_mesh(*sprite, &mut meshes);
 
             let pos = Coords::from_vec(transform.translation);
-            // TODO: Collision
+
+            door.update_collision(pos, &mut map);
         }
     }
 }

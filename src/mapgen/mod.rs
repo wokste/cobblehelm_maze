@@ -62,8 +62,9 @@ pub fn make_map(level: u8, level_style: LevelStyle, rng: &mut fastrand::Rng) -> 
 
     level_transitions::add_level_transition_objects(&dist_map, rng, &mut spawn_objects, level);
 
-    // TODO: only add the ice to the ice map
-    add_ice(&mut map, rng);
+    if level_style == LevelStyle::Ice {
+        add_ice(&mut map, rng);
+    }
 
     MapGenResult {
         tilemap: map,

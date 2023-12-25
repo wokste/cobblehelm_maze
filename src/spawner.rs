@@ -153,6 +153,8 @@ impl Spawner<'_, '_, '_, '_, '_> {
                 let uv = door_type.make_sprite(&self.render_res.sprites);
                 let door = Door::new(*door_type, uv, *is_vertical);
 
+                door.update_collision(pos, &mut self.map_data);
+
                 let mut direction = if *is_vertical { Vec3::X } else { Vec3::Z };
 
                 // Flip half the doors, just to add a bit of randomization
