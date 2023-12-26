@@ -38,10 +38,6 @@ fn choose_level_transition_items(rng: &mut fastrand::Rng, level: u8) -> Vec<Spaw
             portals.push(SO::Portal { style: alt_style })
         }
 
-        // TODO: This should probably be somewhere else
-        portals.push(SO::Shop);
-        portals.push(SO::Shop);
-
         portals
     } else {
         // In the endboss level, add a phylactery and the lich.

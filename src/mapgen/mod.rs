@@ -58,9 +58,18 @@ pub fn make_map(level: u8, level_style: LevelStyle, rng: &mut fastrand::Rng) -> 
     }
 
     let player_pos = choose_pos(&map, rng);
-    let (dir_map, dist_map) = crate::grid::find_path4_to(&map, |tile| tile.is_solid(), player_pos);
+    let (_dir_map, dist_map) = crate::grid::find_path4_to(&map, |tile| tile.is_solid(), player_pos);
 
     level_transitions::add_level_transition_objects(&dist_map, rng, &mut spawn_objects, level);
+
+    // And add some shops
+    // At level 1 the player has too few coins, so it isn't useful.
+    if level != 1 {
+        let shop_count = rng.i32(1..=3);
+        for _ in 0..shop_count {
+            spawn_objects.push((choose_pos(&map, rng), SpawnObject::Shop));
+        }
+    }
 
     spawn_objects.retain(|(pos, obj)| obj.validate_pos(*pos, &map));
 
