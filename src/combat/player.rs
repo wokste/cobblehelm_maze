@@ -374,6 +374,10 @@ pub fn handle_player_interactions(
                                 game_state.set(crate::game::GameState::GameMenu);
                                 menu_info.set(MenuType::Shop);
                             }
+                            Interactable::NextLevel(level_style) => {
+                                game_state.set(crate::game::GameState::GameMenu);
+                                menu_info.set(MenuType::NextLevel(*level_style));
+                            }
                         }
                     }
                 }

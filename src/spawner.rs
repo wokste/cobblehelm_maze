@@ -142,7 +142,26 @@ impl Spawner<'_, '_, '_, '_, '_> {
         //let size = uv.tile.scale.game_size();
 
         match object_type {
-            SpawnObject::Portal { style } => self.spawn_item_at_pos(pos, Pickup::NextLevel(*style)),
+            SpawnObject::Portal { style } => {
+                // TODO: get_portal?
+                let uv = &self.render_res.sprites.get_item(style.portal_sprite());
+                let sprite = Sprite3d::new(uv.tile_start());
+
+                let transform =
+                    Transform::from_translation(pos.to_vec(0.5)).looking_to(Vec3::X, Vec3::Y);
+
+                self.commands
+                    .spawn(PbrBundle {
+                        mesh: self.render_res.get_mesh(sprite, &mut self.meshes),
+                        material: self.render_res.material.clone(),
+                        transform,
+                        ..Default::default()
+                    })
+                    .insert(crate::lifecycle::LevelObject)
+                    .insert(FaceCamera)
+                    .insert(Interactable::NextLevel(*style))
+                    .insert(sprite);
+            }
             SpawnObject::Monster { monster_type } => {
                 self.spawn_monster_at_pos(pos, *monster_type, rng)
             }

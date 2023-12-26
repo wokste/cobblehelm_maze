@@ -2,7 +2,6 @@ use bevy::prelude::*;
 
 use crate::{
     combat::{player::Player, CreatureStats},
-    mapgen::style::LevelStyle,
     physics::PhysicsBody,
     render::{spritemap::USprite, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
@@ -13,7 +12,6 @@ use crate::{
 pub enum Pickup {
     Apple,
     MedPack,
-    NextLevel(LevelStyle),
     Coin,
     Gem,
     Phylactery,
@@ -23,7 +21,6 @@ pub enum Pickup {
 enum StatGain {
     Health(i16),
     PercHealth(i16),
-    NextLevel(LevelStyle),
     Coins(i32),
     Phylactery,
     Key(u8),
@@ -35,7 +32,6 @@ impl Pickup {
         match self {
             Pickup::Apple => StatGain::Health(15),
             Pickup::MedPack => StatGain::PercHealth(50),
-            Pickup::NextLevel(level_style) => StatGain::NextLevel(level_style),
             Pickup::Coin => StatGain::Coins(1),
             Pickup::Gem => StatGain::Coins(5),
             Pickup::Key(id) => StatGain::Key(1 << id),
@@ -67,10 +63,6 @@ impl Pickup {
                 let gain = (damage * perc + 50) / 100;
                 stats.hp += gain;
             }
-            StatGain::NextLevel(level_index) => {
-                game_state.set(crate::game::GameState::GameMenu);
-                menu_info.set(MenuType::NextLevel(level_index));
-            }
             StatGain::Coins(gain) => {
                 game_info.coins += gain;
             }
@@ -89,7 +81,6 @@ impl Pickup {
         match self.to_stat_gain() {
             StatGain::Health(_) => 0,
             StatGain::PercHealth(_) => 0,
-            StatGain::NextLevel(_) => level * 250,
             StatGain::Coins(count) => count * 25,
             StatGain::Key(_) => level * 100,
             StatGain::Phylactery => 5000,
@@ -100,7 +91,6 @@ impl Pickup {
         match self.to_stat_gain() {
             StatGain::Health(_) => Some("audio/pickup_heal.ogg"),
             StatGain::PercHealth(_) => Some("audio/pickup_heal.ogg"),
-            StatGain::NextLevel(_) => None,
             StatGain::Coins(_) => Some("audio/pickup_coins.ogg"),
             StatGain::Key(_) => Some("audio/pickup_key.ogg"),
             StatGain::Phylactery => Some("audio/phylactery.ogg"),
@@ -111,7 +101,6 @@ impl Pickup {
         let (str, id) = match self {
             Pickup::Apple => ("apple.png", 0),
             Pickup::MedPack => ("medpack.png", 0),
-            Pickup::NextLevel(level_index) => (level_index.portal_sprite(), 0),
             Pickup::Coin => ("coin.png", 0),
             Pickup::Gem => ("gem.png", 0),
             Pickup::Key(id) => ("key.png", *id as USprite),

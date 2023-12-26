@@ -13,6 +13,7 @@ use bevy::{
 use crate::{
     grid::Coords,
     map::{DoorType, MapData},
+    mapgen::style::LevelStyle,
     render::{spritemap::SpriteSeq, RenderResource, Sprite3d},
     GameInfo,
 };
@@ -23,6 +24,7 @@ pub enum Interactable {
     #[allow(dead_code)] // TODO: Remove after 0.2
     Trigger(Vec<Entity>),
     Shop,
+    NextLevel(LevelStyle),
 }
 
 impl Interactable {
