@@ -62,6 +62,8 @@ pub fn make_map(level: u8, level_style: LevelStyle, rng: &mut fastrand::Rng) -> 
 
     level_transitions::add_level_transition_objects(&dist_map, rng, &mut spawn_objects, level);
 
+    spawn_objects.retain(|(pos, obj)| obj.validate_pos(*pos, &map));
+
     if level_style == LevelStyle::Ice {
         add_ice(&mut map, rng);
     }
