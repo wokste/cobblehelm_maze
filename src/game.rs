@@ -146,8 +146,7 @@ fn start_level(
             })
             .id();
 
-        assert_eq!(game_data.player, None); // TODO: Remove
-
+        assert_eq!(game_data.player, None);
         game_data.player = Some(player);
     }
 
