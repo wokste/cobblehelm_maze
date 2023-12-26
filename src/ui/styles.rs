@@ -8,6 +8,7 @@ pub const MENU_STYLE: Style = {
     let mut style = Style::DEFAULT;
     style.flex_direction = FlexDirection::Column;
     style.justify_content = JustifyContent::Center;
+    style.position_type = PositionType::Absolute;
     style.align_items = AlignItems::Center;
     style.margin = UiRect {
         left: Val::Auto,

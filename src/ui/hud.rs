@@ -79,7 +79,7 @@ pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
             NodeBundle {
                 style: Style {
                     flex_direction: FlexDirection::Row,
-                    justify_content: JustifyContent::Center,
+                    justify_content: JustifyContent::SpaceEvenly,
                     align_items: AlignItems::Center,
                     width: Val::Percent(100.0),
                     height: Val::Px(100.0),

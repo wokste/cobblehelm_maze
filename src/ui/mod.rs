@@ -15,8 +15,8 @@ impl Plugin for UIPlugin {
             .add_systems(OnEnter(GameState::GameMenu), menus::spawn_menu)
             .add_systems(OnExit(GameState::MainMenu), menus::despawn_menu)
             .add_systems(OnExit(GameState::GameMenu), menus::despawn_menu)
-            .add_systems(OnEnter(GameState::InGame), hud::spawn)
-            .add_systems(OnExit(GameState::InGame), hud::despawn)
+            .add_systems(OnExit(GameState::MainMenu), hud::spawn)
+            .add_systems(OnEnter(GameState::MainMenu), hud::despawn)
             .add_systems(
                 Update,
                 (
@@ -30,7 +30,7 @@ impl Plugin for UIPlugin {
             )
             .add_systems(
                 Update,
-                (hud::update_hud.run_if(in_state(GameState::InGame)),),
+                (hud::update_hud.run_if(not(in_state(GameState::MainMenu))),),
             );
     }
 }
