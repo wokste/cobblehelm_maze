@@ -99,11 +99,18 @@ impl RoomMetaData {
 
         let mut map = Grid::<Tile>::new(x_max, z_max);
 
+        let dz_min = 1;
+        let dz_max = (z_max / 2) - 1;
+
+        let mut dz = rng.i32(dz_min..=dz_max);
+
         for x in 1..x_max - 1 {
-            let dz = rng.i32(1..(z_max / 2));
             for z in dz..z_max - dz {
                 map[(x, z)] = Tile::Open(self.floor, self.ceil);
             }
+
+            // Add two fate dice to the size and then clamp it. This will likely be similar in size.
+            dz = (dz + rng.i32(-1..=1) + rng.i32(-1..=1)).clamp(dz_min, dz_max);
         }
         map
     }

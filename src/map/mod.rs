@@ -62,6 +62,13 @@ impl Tile {
             Tile::Void => true,
         }
     }
+
+    pub fn is_on_ice(&self) -> bool {
+        match self {
+            Tile::Open(FloorTile::Ice, _) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Resource)]
@@ -70,6 +77,7 @@ pub struct MapData {
     pub los_map: Grid<bool>,
     pub monster_map: Grid<bool>,
     pub player_pos: Transform,
+    pub tile_map: Grid<Tile>,
 }
 
 impl Default for MapData {
@@ -79,6 +87,7 @@ impl Default for MapData {
             los_map: Grid::<bool>::new(1, 1),
             monster_map: Grid::<bool>::new(1, 1),
             player_pos: Transform::IDENTITY,
+            tile_map: Grid::<Tile>::new(1, 1),
         }
     }
 }

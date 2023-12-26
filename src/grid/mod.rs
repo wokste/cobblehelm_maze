@@ -10,6 +10,7 @@ pub use pathfinding::*;
 pub use rect::Rect;
 pub use transform::GridTransform;
 
+#[derive(Clone)]
 pub struct Grid<T> {
     tiles: Vec<T>,
     size: Coords,

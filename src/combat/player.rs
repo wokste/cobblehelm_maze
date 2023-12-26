@@ -10,7 +10,9 @@ use bevy::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    grid::Coords,
     interactable::{Interactable, TriggerEvent},
+    map::MapData,
     physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
     ui::menus::{MenuInfo, MenuType},
 };
@@ -273,29 +275,19 @@ pub fn get_player_input(
     };
 }
 
-pub fn handle_player_input(
+pub fn handle_player_movement(
     mut acts: EventReader<InputAction>,
-    mut game_state: ResMut<NextState<crate::game::GameState>>,
     mut state: ResMut<InputState>,
     time: Res<Time>,
-    mut player_query: Query<
-        (
-            &CreatureStats,
-            &mut Transform,
-            &mut PhysicsMovable,
-            &mut Weapon,
-        ),
-        With<Player>,
-    >,
-    mut interactable_query: Query<(Entity, &Interactable, &Transform), Without<Player>>,
-    mut trigger_events: EventWriter<TriggerEvent>,
+    mut player_query: Query<(&CreatureStats, &mut Transform, &mut PhysicsMovable), With<Player>>,
     key_map: Res<InputMap>,
-    mut menu_info: ResMut<MenuInfo>,
+    map: Res<MapData>,
 ) {
     let delta_time = time.delta_seconds();
     let state_delta = state.as_mut();
-    for (stats, mut transform, mut movable, mut weapon) in player_query.iter_mut() {
-        let mut firing = false;
+
+    // TODO: This can probably be an `if let Ok()` instead of a loop, since the player is unique.
+    for (stats, mut transform, mut movable) in player_query.iter_mut() {
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -310,6 +302,54 @@ pub fn handle_player_input(
                 InputAction::Right => velocity += right,
                 InputAction::RotLeft => state_delta.yaw += key_map.button_rot_rate * delta_time,
                 InputAction::RotRight => state_delta.yaw -= key_map.button_rot_rate * delta_time,
+                InputAction::Move {
+                    right: right_perc,
+                    forward: forward_perc,
+                } => {
+                    velocity += forward * (*forward_perc) + right * -(*right_perc);
+                }
+                _ => {}
+            };
+        }
+
+        // == Movement ==
+        // Only normalize if the distance is above one
+
+        let tile = map.tile_map[Coords::from_vec(transform.translation)];
+
+        if tile.is_on_ice() {
+            if velocity.length_squared() > 0.2 {
+                movable.velocity = velocity.normalize() * stats.speed
+            };
+        } else {
+            movable.velocity = if velocity.length_squared() > 1.0 {
+                velocity.normalize()
+            } else {
+                velocity
+            } * stats.speed;
+        }
+
+        // == Rotation ==
+        state_delta.clamp_mouse();
+        state_delta.pitch = 0.0;
+        transform.rotation = state_delta.to_quat();
+    }
+}
+
+pub fn handle_player_interactions(
+    mut acts: EventReader<InputAction>,
+    mut game_state: ResMut<NextState<crate::game::GameState>>,
+    mut player_query: Query<(&Transform, &mut Weapon), With<Player>>,
+    mut interactable_query: Query<(Entity, &Interactable, &Transform), Without<Player>>,
+    mut trigger_events: EventWriter<TriggerEvent>,
+    mut menu_info: ResMut<MenuInfo>,
+) {
+    // TODO: This can probably be an `if let Ok()` instead of a loop, since the player is unique.
+    for (transform, mut weapon) in player_query.iter_mut() {
+        let mut firing = false;
+
+        for act in acts.read() {
+            match act {
                 InputAction::Fire => firing = true,
                 InputAction::Interact => {
                     for (target, interactable, interactable_pos) in interactable_query.iter_mut() {
@@ -341,27 +381,9 @@ pub fn handle_player_input(
                     game_state.set(crate::game::GameState::GameMenu);
                     menu_info.set(MenuType::Paused);
                 }
-                InputAction::Move {
-                    right: right_perc,
-                    forward: forward_perc,
-                } => {
-                    velocity += forward * (*forward_perc) + right * -(*right_perc);
-                }
+                _ => {}
             };
         }
-
-        // == Movement ==
-        // Only normalize if the distance is above one
-        movable.velocity = if velocity.length_squared() > 1.0 {
-            velocity.normalize()
-        } else {
-            velocity
-        } * stats.speed;
-
-        // == Rotation ==
-        state_delta.clamp_mouse();
-        state_delta.pitch = 0.0;
-        transform.rotation = state_delta.to_quat();
 
         // == Fire ==
         weapon.set_fire_state(firing);

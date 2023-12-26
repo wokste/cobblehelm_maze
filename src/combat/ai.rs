@@ -51,7 +51,7 @@ impl MonsterType {
             MT::EyeMonster2 => (2.0, 10),
             MT::Ettin => (2.0, 20),
             MT::Laima => (1.5, 18),
-            MT::Snowman => (0.8, 25),
+            MT::Snowman => (0.8, 10),
             MT::IronGolem => (1.0, 30),
             MT::Demon => (1.0, 40),
         };

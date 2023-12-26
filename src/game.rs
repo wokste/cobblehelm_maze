@@ -29,9 +29,9 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (
-                    crate::physics::do_physics.after(crate::combat::player::get_player_input),
+                    crate::physics::do_physics.after(crate::combat::player::handle_player_movement),
                     crate::interactable::update_doors
-                        .after(crate::combat::player::get_player_input),
+                        .after(crate::combat::player::handle_player_interactions),
                     crate::items::pickup::check_pickups.after(crate::physics::do_physics),
                     crate::render::face_camera.after(crate::physics::do_physics),
                     crate::render::animate_sprites,
@@ -116,10 +116,13 @@ fn start_level(
     let player_pos = Transform::from_translation(map_gen_result.player_pos.to_vec(0.7))
         .looking_to(Vec3::X, Vec3::Y);
     //    .looking_at(map_gen_result.spawn_objects[0].to_vec(0.7), Vec3::Y);
-    map_data.solid_map = map_gen_result.tilemap.map(|t| t.is_solid());
-    map_data.monster_map = map_gen_result.tilemap.map(|t| t.is_solid());
-    map_data.los_map = map_gen_result.tilemap.map(|t| t.is_solid());
-    map_data.player_pos = player_pos;
+    *map_data = MapData {
+        solid_map: map_gen_result.tilemap.map(|t| t.is_solid()),
+        los_map: map_gen_result.tilemap.map(|t| t.is_solid()),
+        monster_map: map_gen_result.tilemap.map(|t| t.is_solid()),
+        player_pos,
+        tile_map: map_gen_result.tilemap.clone(),
+    };
 
     // Spawn the map mesh
     commands
