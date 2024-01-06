@@ -5,24 +5,72 @@ use bevy::{
 
 use crate::map::MapData;
 
+#[derive(Clone, Copy, PartialEq)]
 pub enum MapCollisionEvent {
     Bounce(f32),
     Destroy,
     Stop,
 }
 
-#[derive(Component)]
-pub struct PhysicsBody {
+#[derive(Component, Clone)]
+pub struct Collider {
+    pub pos: Vec3,
     pub radius: f32,
     pub on_hit_wall: MapCollisionEvent,
 }
 
-impl PhysicsBody {
-    pub fn new(radius: f32, on_hit_wall: MapCollisionEvent) -> Self {
+impl Collider {
+    pub fn new(pos: Vec3, radius: f32, on_hit_wall: MapCollisionEvent) -> Self {
         Self {
+            pos,
             radius,
             on_hit_wall,
         }
+    }
+
+    pub fn with_pos<'a>(&self, pos: Vec3) -> Self {
+        let mut clone = self.clone();
+        clone.pos = pos;
+        clone
+    }
+
+    pub fn collide_other(&self, other: &Self) -> bool {
+        let xz_dist = self.radius + other.radius;
+        let xz_dist_squared = xz_dist * xz_dist;
+
+        self.pos.distance_squared(other.pos) <= xz_dist_squared
+    }
+
+    // TODO: Better return type
+    fn collide_map(&self, grid_solid: &crate::grid::Grid<bool>) -> bool {
+        /*
+        TODO: Ceiling and floor heights
+        let floor_height = 0.0;
+        let ceil_height = 1.0;
+
+        if pos.y - radius < floor_height {
+            return true;
+        }
+
+        if pos.y + radius > ceil_height {
+            return true;
+        }
+        */
+
+        let x0 = f32::floor(self.pos.x - self.radius) as i32;
+        let x1 = f32::floor(self.pos.x + self.radius) as i32;
+        let z0 = f32::floor(self.pos.z - self.radius) as i32;
+        let z1 = f32::floor(self.pos.z + self.radius) as i32;
+
+        for z in z0..=z1 {
+            for x in x0..=x1 {
+                if grid_solid[(x, z)] {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 }
 
@@ -46,20 +94,20 @@ impl PhysicsMovable {
         }
     }
 
-    fn move_bounce(&mut self, pos: &mut Vec3, dt: f32, map: &MapData, pb: &PhysicsBody) {
+    fn move_bounce(&mut self, pb: &mut Collider, dt: f32, map: &MapData) {
         let mut new_velocity = Vec3::ZERO;
 
         for axis in self.velocity_axis() {
-            let new_pos = *pos + (axis * dt);
-            if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
-                *pos = new_pos;
+            let new_pos = pb.pos + (axis * dt);
+            if !pb.with_pos(new_pos).collide_map(&map.solid_map) {
+                pb.pos = new_pos;
                 new_velocity += axis;
                 continue;
             }
             if let MapCollisionEvent::Bounce(bounce) = pb.on_hit_wall {
-                let new_pos = *pos + (axis * dt * -bounce);
-                if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
-                    *pos = new_pos;
+                let new_pos = pb.pos + (axis * dt * -bounce);
+                if !pb.with_pos(new_pos).collide_map(&map.solid_map) {
+                    pb.pos = new_pos;
                     new_velocity += axis;
                     continue;
                 }
@@ -69,43 +117,14 @@ impl PhysicsMovable {
     }
 }
 
-// TODO: Better return type
-fn check_map_collision(grid_solid: &crate::grid::Grid<bool>, pos: Vec3, radius: f32) -> bool {
-    let floor_height = 0.0;
-    let ceil_height = 1.0;
-
-    if pos.y - radius < floor_height {
-        return true;
-    }
-
-    if pos.y + radius > ceil_height {
-        return true;
-    }
-
-    let x0 = f32::floor(pos.x - radius) as i32;
-    let x1 = f32::floor(pos.x + radius) as i32;
-    let z0 = f32::floor(pos.z - radius) as i32;
-    let z1 = f32::floor(pos.z + radius) as i32;
-
-    for z in z0..=z1 {
-        for x in x0..=x1 {
-            if grid_solid[(x, z)] {
-                return true;
-            }
-        }
-    }
-
-    false
-}
-
 pub fn do_physics(
     mut commands: Commands,
     time: Res<Time>,
     map: Res<MapData>,
-    mut query: Query<(Entity, &mut Transform, &mut PhysicsMovable, &PhysicsBody)>,
+    mut query: Query<(Entity, &mut Transform, &mut PhysicsMovable, &mut Collider)>,
 ) {
     let dt = time.delta_seconds();
-    for (entity, mut transform, mut movable, pb) in query.iter_mut() {
+    for (entity, mut transform, mut movable, mut pb) in query.iter_mut() {
         if movable.velocity.is_nan() {
             continue;
         }
@@ -113,15 +132,17 @@ pub fn do_physics(
         let delta = movable.velocity * dt;
 
         let new_pos = transform.translation + delta;
-        if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
-            transform.translation = new_pos;
+        if !pb.with_pos(new_pos).collide_map(&map.solid_map) {
+            pb.pos = new_pos;
         } else {
             match pb.on_hit_wall {
                 MapCollisionEvent::Bounce(_) | MapCollisionEvent::Stop => {
-                    movable.move_bounce(&mut transform.translation, dt, &map, pb);
+                    movable.move_bounce(&mut pb, dt, &map);
                 }
                 MapCollisionEvent::Destroy => commands.entity(entity).despawn(),
             }
         }
+
+        transform.translation = pb.pos;
     }
 }

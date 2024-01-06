@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     combat::{player::Player, CreatureStats},
-    physics::PhysicsBody,
+    physics::Collider,
     render::{spritemap::USprite, Sprite3d},
     ui::menus::{MenuInfo, MenuType},
     GameInfo,
@@ -108,21 +108,16 @@ impl Pickup {
 
 pub fn check_pickups(
     mut commands: Commands,
-    mut player_query: Query<(&PhysicsBody, &mut CreatureStats, &Transform), With<Player>>,
-    mut pickup_query: Query<(Entity, &Pickup, &PhysicsBody, &Transform)>,
+    mut player_query: Query<(&Collider, &mut CreatureStats), With<Player>>,
+    mut pickup_query: Query<(Entity, &Pickup, &Collider)>,
     mut game: ResMut<crate::GameInfo>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     asset_server: Res<AssetServer>,
     mut menu_info: ResMut<MenuInfo>,
 ) {
-    for (player_body, mut stats, player_transform) in player_query.iter_mut() {
-        for (pickup_entity, pickup, pickup_body, pickup_transform) in pickup_query.iter_mut() {
-            let distance = pickup_body.radius + player_body.radius;
-            if pickup_transform
-                .translation
-                .distance_squared(player_transform.translation)
-                > distance * distance
-            {
+    for (player_body, mut stats) in player_query.iter_mut() {
+        for (pickup_entity, pickup, pickup_body) in pickup_query.iter_mut() {
+            if !player_body.collide_other(pickup_body) {
                 continue;
             }
 

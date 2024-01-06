@@ -10,7 +10,7 @@ pub enum HudField {
     Score(i32),
     Coins(i32),
     Level(u8),
-    Time(f32),
+    Time(i32),
     Dir(f32),
     //    Status,
 }
@@ -32,7 +32,7 @@ impl HudField {
             HudField::Score(val) => *val = game.score,
             HudField::Coins(val) => *val = game.coins,
             HudField::Level(val) => *val = game.level,
-            HudField::Time(val) => *val = game.time.elapsed_secs(),
+            HudField::Time(val) => *val = game.time.elapsed_secs() as i32,
             HudField::Dir(val) => *val = input.yaw,
         };
     }
@@ -111,11 +111,11 @@ pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
             ));
             parent.spawn((
                 make_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudField::Time(f32::NAN),
+                HudField::Time(-1),
             ));
             parent.spawn((
                 make_text(&asset_server, "", FONT_P, TextAlignment::Center),
-                HudField::Dir(0.0),
+                HudField::Dir(f32::NEG_INFINITY),
             ));
         })
         .id();

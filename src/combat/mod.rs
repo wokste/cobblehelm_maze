@@ -25,8 +25,12 @@ impl Plugin for CombatPlugin {
                 (
                     player::gamepad_connections,
                     player::get_player_input,
-                    player::handle_player_movement.after(player::get_player_input),
-                    player::handle_player_interactions.after(player::get_player_input),
+                    (
+                        player::handle_player_move,
+                        player::handle_player_rotate,
+                        player::handle_player_interactions,
+                    )
+                        .after(player::get_player_input),
                     player::update_map,
                     ai::ai_los.after(player::update_map),
                     ai::ai_move.after(ai::ai_los),

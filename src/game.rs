@@ -29,7 +29,7 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (
-                    crate::physics::do_physics.after(crate::combat::player::handle_player_movement),
+                    crate::physics::do_physics.after(crate::combat::player::handle_player_move),
                     crate::interactable::update_doors
                         .after(crate::combat::player::handle_player_interactions),
                     crate::items::pickup::check_pickups.after(crate::physics::do_physics),
@@ -142,7 +142,9 @@ fn start_level(
         *player_transform = player_pos;
     } else {
         let player = commands
-            .spawn(crate::combat::player::PlayerBundle::default())
+            .spawn(crate::combat::player::PlayerBundle::new(
+                map_gen_result.player_pos.to_vec(0.7),
+            ))
             .insert(PbrBundle {
                 transform: player_pos,
                 ..default()

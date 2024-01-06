@@ -7,6 +7,7 @@ use crate::{
     combat::projectile::ProjectileType,
     grid::{Coords, Grid},
     map::MapData,
+    physics::Collider,
     render::spritemap::SpriteSeq,
 };
 
@@ -270,9 +271,9 @@ impl AiMover {
     }
 }
 
-pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Transform)>) {
-    for (mut ai, transform) in monster_query.iter_mut() {
-        if map_data.can_see_player(transform.translation, SIGHT_RADIUS) {
+pub fn ai_los(map_data: Res<MapData>, mut monster_query: Query<(&mut AI, &Collider)>) {
+    for (mut ai, collider) in monster_query.iter_mut() {
+        if map_data.can_see_player(collider.pos, SIGHT_RADIUS) {
             ai.state = AIState::SeePlayer(map_data.player_pos.translation);
         } else if let AIState::SeePlayer(pos) = ai.state {
             if ai.flags.contains(Flags::Follow) {
@@ -348,10 +349,10 @@ impl FuzzyPath {
 pub fn ai_move(
     mut map_data: ResMut<MapData>,
     time: Res<Time>,
-    mut monster_query: Query<(&mut AI, &mut AiMover, &CreatureStats, &mut Transform)>,
+    mut monster_query: Query<(&mut AI, &mut AiMover, &CreatureStats, &mut Collider)>,
 ) {
     let time = time.delta().as_secs_f32();
-    for (mut ai_state, mut ai_mover, stats, mut transform) in monster_query.iter_mut() {
+    for (mut ai_state, mut ai_mover, stats, mut collider) in monster_query.iter_mut() {
         if stats.speed == 0.0 {
             continue;
         }
@@ -400,6 +401,6 @@ pub fn ai_move(
             Some(t) => t.jumps(),
             None => false,
         };
-        transform.translation = ai_mover.to_vec(ai_jumps, stats.speed);
+        collider.pos = ai_mover.to_vec(ai_jumps, stats.speed);
     }
 }

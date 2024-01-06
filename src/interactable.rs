@@ -14,6 +14,7 @@ use crate::{
     grid::Coords,
     map::{DoorType, MapData},
     mapgen::style::LevelStyle,
+    physics::Collider,
     render::{spritemap::SpriteSeq, RenderResource, Sprite3d},
     GameInfo,
 };
@@ -28,14 +29,16 @@ pub enum Interactable {
 }
 
 impl Interactable {
-    pub fn in_range(player: &Transform, interactable: &Transform) -> bool {
+    // TODO: Should the interactable be a collider?
+    pub fn in_range(player: &Transform, interactable: &Collider) -> bool {
         const ARM_LENGTH: f32 = 0.7;
-        const RADIUS: f32 = 0.7;
+        // TODO: Create collider
+        let radius_sq: f32 = interactable.radius * interactable.radius;
 
         let hand_pos = player.translation + player.forward() * ARM_LENGTH;
         // TODO: Cache look_pos
 
-        hand_pos.distance_squared(interactable.translation) < RADIUS * RADIUS
+        hand_pos.distance_squared(interactable.pos) < radius_sq
     }
 }
 
@@ -99,9 +102,11 @@ pub fn update_doors(
 ) {
     for event in events.read() {
         if let Ok((mut door, mut sprite, transform, mut mesh)) = door_query.get_mut(event.target) {
-            //if door.is_open {
-            //    continue;
-            //}
+            // This fixes a KNOWN BUG where you could close a door while standing in it. This causes you to be stuck in the door.
+            // TODO: Find a better fix.
+            if door.is_open {
+                continue;
+            }
 
             // Locked doors
             if (door.required_key & !game_info.key_flags) != 0 {

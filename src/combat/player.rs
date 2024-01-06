@@ -13,7 +13,7 @@ use crate::{
     grid::Coords,
     interactable::{Interactable, TriggerEvent},
     map::MapData,
-    physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
+    physics::{Collider, MapCollisionEvent, PhysicsMovable},
     ui::menus::{MenuInfo, MenuType},
 };
 
@@ -23,13 +23,13 @@ use super::{projectile::ProjectileType, weapon::Weapon, CreatureStats};
 pub struct PlayerBundle {
     pub player: Player,
     pub stats: CreatureStats,
-    pub physisc: PhysicsBody,
+    pub physisc: Collider,
     pub velocity: PhysicsMovable,
     pub weapon: Weapon,
 }
 
-impl Default for PlayerBundle {
-    fn default() -> Self {
+impl PlayerBundle {
+    pub fn new(pos: Vec3) -> Self {
         let mut weapon = Weapon::new_ranged(
             0.3,
             ProjectileType::BlueBlob,
@@ -42,7 +42,7 @@ impl Default for PlayerBundle {
         Self {
             player: Player {},
             stats: CreatureStats::player(),
-            physisc: PhysicsBody::new(0.125, MapCollisionEvent::Stop),
+            physisc: Collider::new(pos, 0.125, MapCollisionEvent::Stop),
             weapon,
             velocity: PhysicsMovable::default(),
         }
@@ -275,19 +275,13 @@ pub fn get_player_input(
     };
 }
 
-pub fn handle_player_movement(
+pub fn handle_player_move(
     mut acts: EventReader<InputAction>,
-    mut state: ResMut<InputState>,
-    time: Res<Time>,
-    mut player_query: Query<(&CreatureStats, &mut Transform, &mut PhysicsMovable), With<Player>>,
-    key_map: Res<InputMap>,
+    mut player_query: Query<(&CreatureStats, &Transform, &mut PhysicsMovable), With<Player>>,
     map: Res<MapData>,
 ) {
-    let delta_time = time.delta_seconds();
-    let state_delta = state.as_mut();
-
     // TODO: This can probably be an `if let Ok()` instead of a loop, since the player is unique.
-    for (stats, mut transform, mut movable) in player_query.iter_mut() {
+    for (stats, transform, mut movable) in player_query.iter_mut() {
         let mut velocity = Vec3::ZERO;
         let local_z = transform.local_z();
         let forward = -Vec3::new(local_z.x, 0., local_z.z);
@@ -295,13 +289,10 @@ pub fn handle_player_movement(
 
         for act in acts.read() {
             match act {
-                InputAction::None => {}
                 InputAction::Forward => velocity += forward,
                 InputAction::Backward => velocity -= forward,
                 InputAction::Left => velocity -= right,
                 InputAction::Right => velocity += right,
-                InputAction::RotLeft => state_delta.yaw += key_map.button_rot_rate * delta_time,
-                InputAction::RotRight => state_delta.yaw -= key_map.button_rot_rate * delta_time,
                 InputAction::Move {
                     right: right_perc,
                     forward: forward_perc,
@@ -328,6 +319,28 @@ pub fn handle_player_movement(
                 velocity
             } * stats.speed;
         }
+    }
+}
+
+pub fn handle_player_rotate(
+    mut acts: EventReader<InputAction>,
+    mut state: ResMut<InputState>,
+    time: Res<Time>,
+    mut player_query: Query<&mut Transform, With<Player>>,
+    key_map: Res<InputMap>,
+) {
+    let delta_time = time.delta_seconds();
+    let state_delta = state.as_mut();
+
+    // TODO: This can probably be an `if let Ok()` instead of a loop, since the player is unique.
+    for mut transform in player_query.iter_mut() {
+        for act in acts.read() {
+            match act {
+                InputAction::RotLeft => state_delta.yaw += key_map.button_rot_rate * delta_time,
+                InputAction::RotRight => state_delta.yaw -= key_map.button_rot_rate * delta_time,
+                _ => {}
+            };
+        }
 
         // == Rotation ==
         state_delta.clamp_mouse();
@@ -340,7 +353,7 @@ pub fn handle_player_interactions(
     mut acts: EventReader<InputAction>,
     mut game_state: ResMut<NextState<crate::game::GameState>>,
     mut player_query: Query<(&Transform, &mut Weapon), With<Player>>,
-    mut interactable_query: Query<(Entity, &Interactable, &Transform), Without<Player>>,
+    mut interactable_query: Query<(Entity, &Interactable, &Collider), Without<Player>>,
     mut trigger_events: EventWriter<TriggerEvent>,
     mut menu_info: ResMut<MenuInfo>,
 ) {
@@ -352,8 +365,11 @@ pub fn handle_player_interactions(
             match act {
                 InputAction::Fire => firing = true,
                 InputAction::Interact => {
-                    for (target, interactable, interactable_pos) in interactable_query.iter_mut() {
-                        if !Interactable::in_range(&transform, interactable_pos) {
+                    for (target, interactable, interactable_collider) in
+                        interactable_query.iter_mut()
+                    {
+                        // TODO: Should have a collider
+                        if !Interactable::in_range(&transform, interactable_collider) {
                             continue;
                         }
 

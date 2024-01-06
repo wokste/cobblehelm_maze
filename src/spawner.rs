@@ -12,7 +12,7 @@ use crate::{
     grid::Coords,
     interactable::{Door, Interactable},
     items::pickup::Pickup,
-    physics::MapCollisionEvent,
+    physics::{Collider, MapCollisionEvent},
     render::{FaceCamera, Sprite3d},
     spawnobject::SpawnObject,
 };
@@ -43,16 +43,14 @@ impl Spawner<'_, '_, '_, '_, '_> {
         let uv = item.make_sprite(&self.render_res.sprites);
 
         let size = uv.tile.scale.game_size();
+        let pos = pos.to_vec(size * 0.5);
 
         self.commands
-            .spawn(uv.to_sprite_bundle(
-                pos.to_vec(size * 0.5),
-                &mut self.meshes,
-                &mut self.render_res,
-            ))
+            .spawn(uv.to_sprite_bundle(pos, &mut self.meshes, &mut self.render_res))
             .insert(crate::render::FaceCamera)
             .insert(item)
-            .insert(crate::physics::PhysicsBody::new(
+            .insert(crate::physics::Collider::new(
+                pos,
                 0.5, // TODO: Size
                 MapCollisionEvent::Stop,
             ));
@@ -95,21 +93,19 @@ impl Spawner<'_, '_, '_, '_, '_> {
         monster: MonsterType,
         rng: &mut fastrand::Rng,
     ) {
-        let pos = AiMover::new(pos, &mut self.map_data.monster_map);
+        let mover = AiMover::new(pos, &mut self.map_data.monster_map);
+        let pos = mover.to_vec(monster.jumps(), 0.0);
         let uv = monster.get_tile_seq(&self.render_res.sprites);
 
         self.commands
-            .spawn(uv.to_sprite_bundle(
-                pos.to_vec(monster.jumps(), 0.0),
-                &mut self.meshes,
-                &mut self.render_res,
-            ))
+            .spawn(uv.to_sprite_bundle(pos, &mut self.meshes, &mut self.render_res))
             .insert(crate::render::Animation::new(uv, rng.f32() * 0.04 + 0.16))
             .insert(monster.make_ai())
-            .insert(pos)
+            .insert(mover)
             .insert(monster.make_stats())
             .insert(monster.make_weapon())
-            .insert(crate::physics::PhysicsBody::new(
+            .insert(crate::physics::Collider::new(
+                pos,
                 0.5,
                 MapCollisionEvent::Stop,
             ));
@@ -160,6 +156,7 @@ impl Spawner<'_, '_, '_, '_, '_> {
                     .insert(crate::lifecycle::LevelObject)
                     .insert(FaceCamera)
                     .insert(Interactable::NextLevel(*style))
+                    .insert(Collider::new(pos.to_vec(0.5), 0.5, MapCollisionEvent::Stop))
                     .insert(sprite);
             }
             SpawnObject::Monster { monster_type } => {
@@ -195,6 +192,7 @@ impl Spawner<'_, '_, '_, '_, '_> {
                     })
                     .insert(crate::lifecycle::LevelObject)
                     .insert(Interactable::SelfTrigger)
+                    .insert(Collider::new(pos.to_vec(0.5), 0.5, MapCollisionEvent::Stop))
                     .insert(door.make_sprite3d())
                     .insert(door);
             }
@@ -215,6 +213,7 @@ impl Spawner<'_, '_, '_, '_, '_> {
                     })
                     .insert(crate::lifecycle::LevelObject)
                     .insert(Interactable::Shop)
+                    .insert(Collider::new(pos.to_vec(0.5), 0.5, MapCollisionEvent::Stop))
                     .insert(FaceCamera)
                     .insert(sprite);
             }

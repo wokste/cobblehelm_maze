@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    physics::{MapCollisionEvent, PhysicsBody, PhysicsMovable},
+    physics::{Collider, MapCollisionEvent, PhysicsMovable},
     render::{spritemap::SpriteSeq, RenderResource},
 };
 
@@ -77,7 +77,7 @@ pub fn spawn_projectile(
     let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(pos, meshes, render_res));
     proto_projectile.insert(crate::render::Animation::new(uv, 0.1));
     proto_projectile.insert(ptype.make_projectile(team, instigator, weapon));
-    proto_projectile.insert(PhysicsBody::new(0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
+    proto_projectile.insert(Collider::new(pos, 0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
     proto_projectile.insert(PhysicsMovable::new(velocity));
 
     if weapon.range.is_finite() {
@@ -87,24 +87,20 @@ pub fn spawn_projectile(
 
 pub fn check_collisions(
     mut commands: Commands,
-    mut projectile_query: Query<(Entity, &Projectile, &PhysicsBody, &Transform)>,
-    mut target_query: Query<(Entity, &PhysicsBody, &CreatureStats, &Transform)>,
+    mut projectile_query: Query<(Entity, &Projectile, &Collider)>,
+    mut target_query: Query<(Entity, &Collider, &CreatureStats)>,
     mut ev_damage: EventWriter<DamageEvent>,
 ) {
-    for (projectile_entity, projectile, projectile_body, projectile_transform) in
-        projectile_query.iter_mut()
-    {
-        for (target_entity, target_body, stats, target_transform) in target_query.iter_mut() {
+    for (projectile_entity, projectile, projectile_body) in projectile_query.iter_mut() {
+        let projectile_body = projectile_body;
+
+        for (target_entity, target_body, stats) in target_query.iter_mut() {
             if projectile.team == stats.team {
                 continue;
             }
 
-            let distance = projectile_body.radius + target_body.radius;
-            if projectile_transform
-                .translation
-                .distance_squared(target_transform.translation)
-                > distance * distance
-            {
+            let target_body = target_body;
+            if !projectile_body.collide_other(target_body) {
                 continue;
             }
 

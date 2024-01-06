@@ -10,6 +10,8 @@ use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::time::{Time, Timer, TimerMode};
 
+use crate::physics::Collider;
+
 use self::spritemap::SpriteSeq;
 
 #[derive(Resource, Default)]
@@ -98,10 +100,11 @@ pub struct FaceCamera;
 
 pub fn face_camera(
     cam_query: Query<&Transform, With<Camera>>,
-    mut query: Query<&mut Transform, (With<FaceCamera>, Without<Camera>)>,
+    mut query: Query<(&mut Transform, &Collider), (With<FaceCamera>, Without<Camera>)>,
 ) {
     let cam_transform = cam_query.single();
-    for mut transform in query.iter_mut() {
+    for (mut transform, collider) in query.iter_mut() {
+        transform.translation = collider.pos;
         let mut delta = cam_transform.translation - transform.translation;
         delta.y = 0.0;
         delta += transform.translation;
