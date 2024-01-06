@@ -60,7 +60,7 @@ pub enum MonsterType {
 pub enum Team {
     Players,
     Monsters,
-    //    Environment,
+    Environment,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

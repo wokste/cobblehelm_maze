@@ -6,8 +6,9 @@ use bevy::{
 use crate::map::MapData;
 
 pub enum MapCollisionEvent {
-    Stop,
+    Bounce(f32),
     Destroy,
+    Stop,
 }
 
 #[derive(Component)]
@@ -34,15 +35,37 @@ impl PhysicsMovable {
     pub fn new(velocity: Vec3) -> Self {
         Self { velocity }
     }
-}
 
-fn split_deltas(delta: Vec3) -> [Vec3; 2] {
-    let delta_abs = delta.abs();
+    fn velocity_axis(&self) -> [Vec3; 2] {
+        let vel = self.velocity;
 
-    if delta_abs.x > delta_abs.z {
-        [Vec3::new(delta.x, 0., 0.), Vec3::new(0., 0., delta.z)]
-    } else {
-        [Vec3::new(0., 0., delta.z), Vec3::new(delta.x, 0., 0.)]
+        if vel.x.abs() > vel.z.abs() {
+            [Vec3::new(vel.x, 0., 0.), Vec3::new(0., 0., vel.z)]
+        } else {
+            [Vec3::new(0., 0., vel.z), Vec3::new(vel.x, 0., 0.)]
+        }
+    }
+
+    fn move_bounce(&mut self, pos: &mut Vec3, dt: f32, map: &MapData, pb: &PhysicsBody) {
+        let mut new_velocity = Vec3::ZERO;
+
+        for axis in self.velocity_axis() {
+            let new_pos = *pos + (axis * dt);
+            if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
+                *pos = new_pos;
+                new_velocity += axis;
+                continue;
+            }
+            if let MapCollisionEvent::Bounce(bounce) = pb.on_hit_wall {
+                let new_pos = *pos + (axis * dt * -bounce);
+                if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
+                    *pos = new_pos;
+                    new_velocity += axis;
+                    continue;
+                }
+            }
+        }
+        self.velocity = new_velocity;
     }
 }
 
@@ -79,28 +102,23 @@ pub fn do_physics(
     mut commands: Commands,
     time: Res<Time>,
     map: Res<MapData>,
-    mut query: Query<(Entity, &mut Transform, &PhysicsMovable, &PhysicsBody)>,
+    mut query: Query<(Entity, &mut Transform, &mut PhysicsMovable, &PhysicsBody)>,
 ) {
-    let delta_time = time.delta_seconds();
-    for (entity, mut transform, velocity, pb) in query.iter_mut() {
-        if velocity.velocity.is_nan() {
+    let dt = time.delta_seconds();
+    for (entity, mut transform, mut movable, pb) in query.iter_mut() {
+        if movable.velocity.is_nan() {
             continue;
         }
 
-        let delta = velocity.velocity * delta_time;
+        let delta = movable.velocity * dt;
 
         let new_pos = transform.translation + delta;
         if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
             transform.translation = new_pos;
         } else {
             match pb.on_hit_wall {
-                MapCollisionEvent::Stop => {
-                    for delta_sub in split_deltas(delta) {
-                        let new_pos = transform.translation + delta_sub;
-                        if !check_map_collision(&map.solid_map, new_pos, pb.radius) {
-                            transform.translation = new_pos;
-                        }
-                    }
+                MapCollisionEvent::Bounce(_) | MapCollisionEvent::Stop => {
+                    movable.move_bounce(&mut transform.translation, dt, &map, pb);
                 }
                 MapCollisionEvent::Destroy => commands.entity(entity).despawn(),
             }

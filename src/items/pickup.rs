@@ -19,7 +19,6 @@ pub enum Pickup {
 }
 
 enum StatGain {
-    Health(i16),
     PercHealth(i16),
     Coins(i32),
     Phylactery,
@@ -30,7 +29,7 @@ enum StatGain {
 impl Pickup {
     const fn to_stat_gain(self) -> StatGain {
         match self {
-            Pickup::Apple => StatGain::Health(15),
+            Pickup::Apple => StatGain::PercHealth(20),
             Pickup::MedPack => StatGain::PercHealth(50),
             Pickup::Coin => StatGain::Coins(1),
             Pickup::Gem => StatGain::Coins(5),
@@ -41,7 +40,6 @@ impl Pickup {
 
     const fn can_take(self, stats: &CreatureStats) -> bool {
         match self.to_stat_gain() {
-            StatGain::Health(_) => stats.hp < stats.hp_max,
             StatGain::PercHealth(_) => stats.hp < stats.hp_max,
             _ => true,
         }
@@ -55,13 +53,9 @@ impl Pickup {
         game_state: &mut ResMut<NextState<crate::game::GameState>>,
     ) {
         match self.to_stat_gain() {
-            StatGain::Health(gain) => {
-                stats.hp = i16::min(stats.hp + gain, stats.hp_max);
-            }
             StatGain::PercHealth(perc) => {
-                let damage = stats.hp_max - stats.hp;
-                let gain = (damage * perc + 50) / 100;
-                stats.hp += gain;
+                let gain = (stats.hp_max * perc + 50) / 100;
+                stats.hp = i16::min(stats.hp + gain, stats.hp_max);
             }
             StatGain::Coins(gain) => {
                 game_info.coins += gain;
@@ -79,7 +73,6 @@ impl Pickup {
 
     fn get_score(self, level: i32) -> i32 {
         match self.to_stat_gain() {
-            StatGain::Health(_) => 0,
             StatGain::PercHealth(_) => 0,
             StatGain::Coins(count) => count * 25,
             StatGain::Key(_) => level * 100,
@@ -89,7 +82,6 @@ impl Pickup {
 
     fn to_sound(self) -> Option<&'static str> {
         match self.to_stat_gain() {
-            StatGain::Health(_) => Some("audio/pickup_heal.ogg"),
             StatGain::PercHealth(_) => Some("audio/pickup_heal.ogg"),
             StatGain::Coins(_) => Some("audio/pickup_coins.ogg"),
             StatGain::Key(_) => Some("audio/pickup_key.ogg"),

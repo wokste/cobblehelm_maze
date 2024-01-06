@@ -63,12 +63,17 @@ pub fn make_map(level: u8, level_style: LevelStyle, rng: &mut fastrand::Rng) -> 
     level_transitions::add_level_transition_objects(&dist_map, rng, &mut spawn_objects, level);
 
     // And add some shops
-    // At level 1 the player has too few coins, so it isn't useful.
-    if level != 1 {
-        let shop_count = rng.i32(1..=3);
-        for _ in 0..shop_count {
-            spawn_objects.push((choose_pos(&map, rng), SpawnObject::Shop));
-        }
+    let shop_count = match level_style {
+        LevelStyle::Castle => 0, // At first level the player has too few coins, so it isn't useful.
+        LevelStyle::Caves => rng.i32(0..=2),
+        LevelStyle::Sewers => rng.i32(2..=4),
+        LevelStyle::Machine => rng.i32(5..=10),
+        LevelStyle::Hell => rng.i32(1..=3),
+        LevelStyle::Ice => rng.i32(0..=2),
+    };
+
+    for _ in 0..shop_count {
+        spawn_objects.push((choose_pos(&map, rng), SpawnObject::Shop));
     }
 
     spawn_objects.retain(|(pos, obj)| obj.validate_pos(*pos, &map));
