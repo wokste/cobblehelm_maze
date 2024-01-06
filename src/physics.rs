@@ -7,6 +7,7 @@ use crate::map::MapData;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum MapCollisionEvent {
+    #[allow(dead_code)] // TODO: Remove after 0.2
     Bounce(f32),
     Destroy,
     Stop,
@@ -16,16 +17,11 @@ pub enum MapCollisionEvent {
 pub struct Collider {
     pub pos: Vec3,
     pub radius: f32,
-    pub on_hit_wall: MapCollisionEvent,
 }
 
 impl Collider {
-    pub fn new(pos: Vec3, radius: f32, on_hit_wall: MapCollisionEvent) -> Self {
-        Self {
-            pos,
-            radius,
-            on_hit_wall,
-        }
+    pub fn new(pos: Vec3, radius: f32) -> Self {
+        Self { pos, radius }
     }
 
     pub fn with_pos<'a>(&self, pos: Vec3) -> Self {
@@ -74,14 +70,18 @@ impl Collider {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct PhysicsMovable {
     pub velocity: Vec3,
+    pub on_hit_wall: MapCollisionEvent,
 }
 
 impl PhysicsMovable {
-    pub fn new(velocity: Vec3) -> Self {
-        Self { velocity }
+    pub fn new(velocity: Vec3, on_hit_wall: MapCollisionEvent) -> Self {
+        Self {
+            velocity,
+            on_hit_wall,
+        }
     }
 
     fn velocity_axis(&self) -> [Vec3; 2] {
@@ -104,7 +104,7 @@ impl PhysicsMovable {
                 new_velocity += axis;
                 continue;
             }
-            if let MapCollisionEvent::Bounce(bounce) = pb.on_hit_wall {
+            if let MapCollisionEvent::Bounce(bounce) = self.on_hit_wall {
                 let new_pos = pb.pos + (axis * dt * -bounce);
                 if !pb.with_pos(new_pos).collide_map(&map.solid_map) {
                     pb.pos = new_pos;
@@ -135,7 +135,7 @@ pub fn do_physics(
         if !pb.with_pos(new_pos).collide_map(&map.solid_map) {
             pb.pos = new_pos;
         } else {
-            match pb.on_hit_wall {
+            match movable.on_hit_wall {
                 MapCollisionEvent::Bounce(_) | MapCollisionEvent::Stop => {
                     movable.move_bounce(&mut pb, dt, &map);
                 }

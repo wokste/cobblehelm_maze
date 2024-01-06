@@ -121,7 +121,6 @@ impl SpriteSeq {
             pbr: PbrBundle {
                 mesh: render_res.get_mesh(sprite, meshes),
                 material: render_res.material.clone(),
-                transform: Transform::from_translation(pos).looking_at(Vec3::ZERO, Vec3::Y),
                 ..Default::default()
             },
         }

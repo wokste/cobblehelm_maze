@@ -12,7 +12,7 @@ use crate::{
     grid::Coords,
     interactable::{Door, Interactable},
     items::pickup::Pickup,
-    physics::{Collider, MapCollisionEvent},
+    physics::Collider,
     render::{FaceCamera, Sprite3d},
     spawnobject::SpawnObject,
 };
@@ -50,9 +50,7 @@ impl Spawner<'_, '_, '_, '_, '_> {
             .insert(crate::render::FaceCamera)
             .insert(item)
             .insert(crate::physics::Collider::new(
-                pos,
-                0.5, // TODO: Size
-                MapCollisionEvent::Stop,
+                pos, 0.5, // TODO: Size
             ));
     }
 
@@ -104,11 +102,7 @@ impl Spawner<'_, '_, '_, '_, '_> {
             .insert(mover)
             .insert(monster.make_stats())
             .insert(monster.make_weapon())
-            .insert(crate::physics::Collider::new(
-                pos,
-                0.5,
-                MapCollisionEvent::Stop,
-            ));
+            .insert(crate::physics::Collider::new(pos, 0.5));
     }
 
     pub fn choose_monster_pos(&mut self, rng: &mut fastrand::Rng) -> Result<Coords, &'static str> {
@@ -143,20 +137,16 @@ impl Spawner<'_, '_, '_, '_, '_> {
                 let uv = &self.render_res.sprites.get_item(style.portal_sprite());
                 let sprite = Sprite3d::new(uv.tile_start());
 
-                let transform =
-                    Transform::from_translation(pos.to_vec(0.5)).looking_to(Vec3::X, Vec3::Y);
-
                 self.commands
                     .spawn(PbrBundle {
                         mesh: self.render_res.get_mesh(sprite, &mut self.meshes),
                         material: self.render_res.material.clone(),
-                        transform,
                         ..Default::default()
                     })
                     .insert(crate::lifecycle::LevelObject)
                     .insert(FaceCamera)
                     .insert(Interactable::NextLevel(*style))
-                    .insert(Collider::new(pos.to_vec(0.5), 0.5, MapCollisionEvent::Stop))
+                    .insert(Collider::new(pos.to_vec(0.5), 0.5))
                     .insert(sprite);
             }
             SpawnObject::Monster { monster_type } => {
@@ -192,7 +182,7 @@ impl Spawner<'_, '_, '_, '_, '_> {
                     })
                     .insert(crate::lifecycle::LevelObject)
                     .insert(Interactable::SelfTrigger)
-                    .insert(Collider::new(pos.to_vec(0.5), 0.5, MapCollisionEvent::Stop))
+                    .insert(Collider::new(pos.to_vec(0.5), 0.5))
                     .insert(door.make_sprite3d())
                     .insert(door);
             }
@@ -200,20 +190,15 @@ impl Spawner<'_, '_, '_, '_, '_> {
                 let uv = &self.render_res.sprites.misc["vending_machine.png"];
                 let sprite = Sprite3d::new(uv.tile_start()).make_two_sided();
 
-                // TODO: Choose dir
-                let transform =
-                    Transform::from_translation(pos.to_vec(0.5)).looking_to(Vec3::X, Vec3::Y);
-
                 self.commands
                     .spawn(PbrBundle {
                         mesh: self.render_res.get_mesh(sprite, &mut self.meshes),
                         material: self.render_res.material.clone(),
-                        transform,
                         ..Default::default()
                     })
                     .insert(crate::lifecycle::LevelObject)
                     .insert(Interactable::Shop)
-                    .insert(Collider::new(pos.to_vec(0.5), 0.5, MapCollisionEvent::Stop))
+                    .insert(Collider::new(pos.to_vec(0.5), 0.5))
                     .insert(FaceCamera)
                     .insert(sprite);
             }

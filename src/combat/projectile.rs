@@ -77,8 +77,8 @@ pub fn spawn_projectile(
     let mut proto_projectile = commands.spawn(uv.to_sprite_bundle(pos, meshes, render_res));
     proto_projectile.insert(crate::render::Animation::new(uv, 0.1));
     proto_projectile.insert(ptype.make_projectile(team, instigator, weapon));
-    proto_projectile.insert(Collider::new(pos, 0.10, MapCollisionEvent::Destroy)); // TODO: Electricity should have a higher radius.
-    proto_projectile.insert(PhysicsMovable::new(velocity));
+    proto_projectile.insert(Collider::new(pos, 0.10)); // TODO: Electricity should have a higher radius.
+    proto_projectile.insert(PhysicsMovable::new(velocity, MapCollisionEvent::Destroy));
 
     if weapon.range.is_finite() {
         proto_projectile.insert(crate::lifecycle::Ttl::new(weapon.range / ptype.speed()));

@@ -42,9 +42,9 @@ impl PlayerBundle {
         Self {
             player: Player {},
             stats: CreatureStats::player(),
-            physisc: Collider::new(pos, 0.125, MapCollisionEvent::Stop),
+            physisc: Collider::new(pos, 0.125),
             weapon,
-            velocity: PhysicsMovable::default(),
+            velocity: PhysicsMovable::new(Vec3::ZERO, MapCollisionEvent::Stop),
         }
     }
 }
